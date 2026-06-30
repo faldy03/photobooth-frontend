@@ -10,7 +10,9 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  Users,
+  MonitorSmartphone,
+  ReceiptText,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -137,16 +139,46 @@ export default function AdminLayout({
 
           <Link
             href="/admin/users"
-            title="Voucher"
+            title="Users"
             className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
               isActive("/admin/users")
                 ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
                 : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
             }`}
           >
-            <Ticket size={18} strokeWidth={2.5} className="shrink-0" />
+            <User size={18} strokeWidth={2.5} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Users</span>
+            )}
+          </Link>
+
+          <Link
+            href="/admin/transaction"
+            title="transaction"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+              isActive("/admin/transaction")
+                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
+                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+            }`}
+          >
+            <ReceiptText size={18} strokeWidth={2.5} className="shrink-0" />
+            {isSidebarOpen && (
+              <span className="whitespace-nowrap">Transactions</span>
+            )}
+          </Link>
+
+          <Link
+            href="/admin/kiosk"
+            title="kiosk"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+              isActive("/admin/kiosk")
+                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
+                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+            }`}
+          >
+            <MonitorSmartphone size={18} strokeWidth={2.5} className="shrink-0" />
+            {isSidebarOpen && (
+              <span className="whitespace-nowrap">Device</span>
             )}
           </Link>
         </nav>

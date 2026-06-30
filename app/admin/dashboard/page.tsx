@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { DollarSign, Ticket, ArrowUpRight, Activity, Users } from "lucide-react"; // 🚨 Impor ikon Users
+import { DollarSign, Ticket, ArrowUpRight, Activity, Users } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     revenue: 0,
     activeVouchers: 0,
-    totalUsers: 0, // 🚨 Tambahkan state untuk Total Pengguna
+    totalUsers: 0, 
   });
 
   useEffect(() => {
@@ -32,15 +32,18 @@ export default function AdminDashboard() {
           "Accept": "application/json"
         };
 
-        // 🚨 Ambil data Voucher dan Users secara BERSAMAAN (Paralel)
-        const [vouchersRes, usersRes] = await Promise.all([
+        // 🚨 Ambil data Voucher, Users, dan Statistik Transaksi secara BERSAMAAN (Paralel)
+        const [vouchersRes, usersRes, statsRes] = await Promise.all([
           fetch("http://127.0.0.1:8000/api/admin/vouchers", { headers }),
-          fetch("http://127.0.0.1:8000/api/admin/users", { headers })
+          fetch("http://127.0.0.1:8000/api/admin/users", { headers }),
+          fetch("http://127.0.0.1:8000/api/admin/transactions/statistics", { headers }) // API Statistik Baru
         ]);
 
         const vouchersData = await vouchersRes.json();
         const usersData = await usersRes.json();
+        const statsData = await statsRes.json();
         
+        // 1. Hitung Kupon Aktif
         let activeCount = 0;
         if (vouchersRes.ok) {
           const voucherList = vouchersData.data || vouchersData;
@@ -49,19 +52,26 @@ export default function AdminDashboard() {
           }
         }
 
+        // 2. Hitung Total Pengguna
         let userCount = 0;
         if (usersRes.ok) {
           const userList = usersData.data || usersData;
           if (Array.isArray(userList)) {
-            userCount = userList.length; // Menghitung total seluruh akun
+            userCount = userList.length; 
           }
+        }
+
+        // 3. Ambil Total Pendapatan
+        let totalRevenue = 0;
+        if (statsRes.ok && statsData.success) {
+          totalRevenue = statsData.data.total_revenue || 0;
         }
 
         // Memperbarui state dengan data dari database
         setStats({
-          revenue: 0, // TODO: Akan dihubungkan saat API Transaksi selesai
+          revenue: totalRevenue,       // 🚨 Data pendapatan asli dari database
           activeVouchers: activeCount,
-          totalUsers: userCount, // 🚨 Masukkan jumlah user ke dalam state
+          totalUsers: userCount, 
         });
 
       } catch (error) {
@@ -98,22 +108,30 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        {/* KARTU 1: PENDAPATAN */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white border-[4px] border-retro-charcoal p-6"
-          style={{ boxShadow: "6px 6px 0px 0px #262626" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-black uppercase tracking-wider">Total Pendapatan</span>
-            <DollarSign className="text-retro-red" size={24} strokeWidth={3} />
-          </div>
-          <h3 className="text-3xl font-black tracking-tight text-retro-charcoal">
-            Rp {stats.revenue.toLocaleString('id-ID')}
-          </h3>
-        </motion.div>
+        {/* 🚨 KARTU 1: PENDAPATAN (Diperbarui jadi interaktif & bisa diklik) */}
+        <Link href="/admin/transactions" className="block focus:outline-none group">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -4, x: -4 }}
+            className="bg-white border-[4px] border-retro-charcoal p-6 cursor-pointer transition-transform h-full group-active:translate-y-1 group-active:translate-x-1"
+            style={{ boxShadow: "6px 6px 0px 0px #262626" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-black uppercase tracking-wider group-hover:text-retro-red transition-colors">
+                Total Pendapatan
+              </span>
+              <div className="flex items-center gap-2">
+                <ArrowUpRight size={20} strokeWidth={3} className="text-retro-charcoal/50 group-hover:text-retro-red transition-colors" />
+                <DollarSign className="text-retro-charcoal group-hover:text-retro-red transition-colors" size={24} strokeWidth={3} />
+              </div>
+            </div>
+            <h3 className="text-3xl font-black tracking-tight text-retro-charcoal break-all">
+              Rp {Number(stats.revenue).toLocaleString('id-ID')}
+            </h3>
+          </motion.div>
+        </Link>
 
-        {/* KARTU 2: VOUCHER (Interaktif & Bisa Diklik) */}
+        {/* KARTU 2: VOUCHER */}
         <Link href="/admin/voucher" className="block focus:outline-none group">
           <motion.div 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -127,7 +145,7 @@ export default function AdminDashboard() {
               </span>
               <div className="flex items-center gap-2">
                 <ArrowUpRight size={20} strokeWidth={3} className="text-retro-charcoal/50 group-hover:text-retro-red transition-colors" />
-                <Ticket className="text-retro-charcoal" size={24} strokeWidth={3} />
+                <Ticket className="text-retro-charcoal group-hover:text-retro-red transition-colors" size={24} strokeWidth={3} />
               </div>
             </div>
             <h3 className="text-4xl font-black tracking-tight text-retro-charcoal flex items-baseline gap-2">
@@ -137,7 +155,7 @@ export default function AdminDashboard() {
           </motion.div>
         </Link>
 
-        {/* 🚨 KARTU 3: PENGGUNA (Interaktif & Bisa Diklik) */}
+        {/* KARTU 3: PENGGUNA */}
         <Link href="/admin/users" className="block focus:outline-none group">
           <motion.div 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -151,7 +169,7 @@ export default function AdminDashboard() {
               </span>
               <div className="flex items-center gap-2">
                 <ArrowUpRight size={20} strokeWidth={3} className="text-retro-charcoal/50 group-hover:text-retro-red transition-colors" />
-                <Users className="text-retro-charcoal" size={24} strokeWidth={3} />
+                <Users className="text-retro-charcoal group-hover:text-retro-red transition-colors" size={24} strokeWidth={3} />
               </div>
             </div>
             <h3 className="text-4xl font-black tracking-tight text-retro-charcoal flex items-baseline gap-2">

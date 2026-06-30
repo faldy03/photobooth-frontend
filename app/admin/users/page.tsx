@@ -14,17 +14,10 @@ import {
   ShieldAlert,
   CheckCircle2,
   XCircle,
+  RefreshCw, // 🚨 Ditambahkan agar seragam dengan Kios
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +26,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-// 🚨 BARIS "import error from next..." YANG SALAH SUDAH DIHAPUS DI SINI
 
 interface UserData {
   id: number;
@@ -47,7 +39,7 @@ interface UserData {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); // State error tetap aman di sini
+  const [error, setError] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,34 +60,35 @@ export default function UsersPage() {
   });
 
   // Ambil Data dari API
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(""); // Bersihkan pesan error saat memuat ulang
-      try {
-        const token = localStorage.getItem("admin_token");
-        const res = await fetch("http://127.0.0.1:8000/api/admin/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        });
-        const data = await res.json();
-        if (res.ok) {
-            setUsers(data.data || data);
-        } else {
-            throw new Error(data.message || "Gagal memuat data server.");
-        }
-      } catch (err: unknown) {
-        const errorMessage = (err as Error).message;
-        setError(errorMessage);
-        toast.error("Koneksi Terputus", {
-          description: errorMessage,
-        });
-      } finally {
-        setLoading(false);
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("admin_token");
+      const res = await fetch("http://127.0.0.1:8000/api/admin/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers(data.data || data);
+      } else {
+        throw new Error(data.message || "Gagal memuat data server.");
       }
-    };
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message;
+      setError(errorMessage);
+      toast.error("Koneksi Terputus", {
+        description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, [refreshTrigger]);
 
@@ -143,7 +136,7 @@ export default function UsersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Bersihkan error sebelum submit
+    setError("");
     try {
       const token = localStorage.getItem("admin_token");
       const url = isEditMode
@@ -207,7 +200,6 @@ export default function UsersPage() {
       toast.success("DIHAPUS!", { description: "Pengguna telah dihapus." });
       setIsDeleteOpen(false);
 
-      // Mengatasi bug halaman kosong jika menghapus item terakhir di sebuah halaman
       if (paginatedUsers.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       }
@@ -219,232 +211,201 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="w-full font-sans pb-10">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+    <div className="p-6 space-y-6 text-retro-charcoal max-w-6xl mx-auto font-sans pb-10">
+      
+      {/* HEADER MANAJEMEN */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-[4px] border-retro-charcoal pb-4">
         <div>
-          <h1 className="text-4xl font-black font-serif uppercase tracking-tight text-retro-charcoal flex items-center gap-3">
-            <Users size={36} className="text-retro-red" />
+          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2">
+            <Users size={32} className="text-[#FF0000]" />
             Manajemen Pengguna
           </h1>
-          <p className="text-sm font-bold mt-2 text-retro-charcoal/70 uppercase tracking-widest">
+          <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-1">
             Atur Akses Staf & Pelanggan
           </p>
         </div>
-        <Button
-          onClick={openAddModal}
-          className="flex items-center gap-2 bg-retro-charcoal hover:bg-retro-red text-white border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626] transition-all active:translate-y-1 active:shadow-none font-black uppercase tracking-widest h-12 px-6"
-        >
-          <Plus size={18} strokeWidth={3} /> Tambah Akun
-        </Button>
+
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button
+            onClick={openAddModal}
+            className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest h-12 px-6"
+          >
+            <Plus size={18} strokeWidth={3} /> Tambah Akun
+          </Button>
+          <Button
+            onClick={() => { fetchUsers(); }}
+            disabled={loading}
+            className="border-[3px] border-retro-charcoal bg-white hover:bg-[#EFE9DB] text-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none h-12 px-4"
+          >
+            <RefreshCw className={`${loading ? "animate-spin" : ""}`} size={18} />
+          </Button>
+        </div>
       </div>
 
       {/* BANNER ERROR */}
       {error && (
         <div className="mb-6 p-4 bg-red-100 border-[3px] border-retro-charcoal text-retro-charcoal font-bold flex items-center gap-3 shadow-[4px_4px_0_0_#262626]">
-          <AlertCircle size={24} className="text-retro-red shrink-0" />
+          <AlertCircle size={24} className="text-[#FF0000] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* PENCARIAN */}
-      <div className="mb-6 relative max-w-md">
-        <Search
-          className="absolute left-4 top-3.5 text-retro-charcoal/50"
-          size={20}
-          strokeWidth={3}
-        />
-        <Input
-          type="text"
-          placeholder="Cari nama atau email..."
-          className="pl-12 h-12 border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626]"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* PENCARIAN (Diselaraskan dengan Kios) */}
+      <div className="flex bg-white p-4 border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626]">
+        <div className="relative flex-1">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-retro-charcoal/50">
+            <Search size={18} strokeWidth={3} />
+          </span>
+          <Input
+            type="text"
+            placeholder="CARI NAMA ATAU EMAIL..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-11 h-12 border-[2px] border-retro-charcoal font-bold uppercase tracking-wider focus-visible:ring-retro-charcoal w-full md:w-1/2"
+          />
+        </div>
       </div>
 
-      {/* TABEL PENGGUNA */}
-      <div className="bg-white border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] overflow-hidden">
-        <Table>
-          <TableHeader className="bg-retro-cream border-b-[4px] border-retro-charcoal">
-            <TableRow>
-              <TableHead className="w-16 text-center font-black text-retro-charcoal uppercase tracking-wider">
-                No
-              </TableHead>
-              <TableHead className="font-black text-retro-charcoal uppercase tracking-wider">
-                Pengguna
-              </TableHead>
-              <TableHead className="font-black text-retro-charcoal uppercase tracking-wider">
-                Kontak
-              </TableHead>
-              <TableHead className="text-center font-black text-retro-charcoal uppercase tracking-wider">
-                Peran
-              </TableHead>
-              <TableHead className="text-center font-black text-retro-charcoal uppercase tracking-wider">
-                Status
-              </TableHead>
-              <TableHead className="text-center w-32 font-black text-retro-charcoal uppercase tracking-wider">
-                Aksi
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      {/* TABEL PENGGUNA (Raw Table Retro) */}
+      <div className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] bg-white overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[800px]">
+          <thead>
+            <tr className="bg-retro-charcoal text-white uppercase text-xs font-black tracking-widest border-b-[4px] border-retro-charcoal">
+              <th className="p-4 text-center w-16">No</th>
+              <th className="p-4">Pengguna</th>
+              <th className="p-4">Kontak (Email)</th>
+              <th className="p-4 text-center">Peran</th>
+              <th className="p-4 text-center">Status</th>
+              <th className="p-4 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y-[3px] divide-retro-charcoal font-bold text-sm">
             {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-32 text-center text-lg animate-pulse font-bold tracking-widest uppercase"
-                >
-                  Memuat data...
-                </TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                  <RefreshCw className="animate-spin inline mr-2" size={18} /> Memuat data pengguna...
+                </td>
+              </tr>
             ) : paginatedUsers.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-32 text-center text-lg font-bold uppercase tracking-widest text-retro-charcoal/50"
-                >
-                  Data tidak ditemukan.
-                </TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                  Data pengguna tidak ditemukan.
+                </td>
+              </tr>
             ) : (
               paginatedUsers.map((user, index) => (
-                <TableRow
-                  key={user.id}
-                  className="border-b-[2px] border-retro-charcoal/20"
-                >
-                  <TableCell className="text-center font-black text-lg">
+                <tr key={user.id} className="hover:bg-[#EFE9DB]/30 transition-colors">
+                  <td className="p-4 text-center text-lg font-black text-retro-charcoal/70">
                     {(currentPage - 1) * itemsPerPage + index + 1}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <UserCircle
-                        size={28}
-                        strokeWidth={2}
-                        className="text-retro-red"
-                      />
-                      <span className="font-black uppercase tracking-wider">
+                      <UserCircle size={28} strokeWidth={2} className="text-[#FF0000]" />
+                      <span className="font-black uppercase tracking-wider text-retro-charcoal">
                         {user.name}
                       </span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-bold text-sm bg-retro-cream px-2 py-1 border-[2px] border-retro-charcoal">
+                  </td>
+                  <td className="p-4">
+                    <span className="bg-white border-[2px] border-retro-charcoal text-retro-charcoal px-3 py-1.5 font-bold tracking-widest text-xs inline-block shadow-[3px_3px_0_0_#262626]">
                       {user.email}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-center">
+                  </td>
+                  <td className="p-4 text-center">
                     {user.role === "admin" ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-black bg-retro-red text-white px-2 py-1 uppercase tracking-widest border-[2px] border-retro-charcoal">
-                        <ShieldAlert size={12} /> Admin
+                      <span className="inline-flex items-center gap-1.5 bg-[#FF0000] text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                        <ShieldAlert size={12} strokeWidth={3} /> Admin
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-black bg-white text-retro-charcoal px-2 py-1 uppercase tracking-widest border-[2px] border-retro-charcoal">
+                      <span className="inline-flex items-center gap-1.5 bg-white text-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
                         User
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell className="text-center">
+                  </td>
+                  <td className="p-4 text-center">
                     {user.is_active ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-black text-green-700">
-                        <CheckCircle2 size={16} /> Aktif
+                      <span className="inline-flex items-center gap-1.5 text-green-800 bg-green-100 border-[2px] border-green-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#166534]">
+                        <CheckCircle2 size={12} strokeWidth={3} /> Aktif
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-black text-retro-red">
-                        <XCircle size={16} /> Diblokir
+                      <span className="inline-flex items-center gap-1.5 text-white bg-[#FF0000] border-[2px] border-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#262626]">
+                        <XCircle size={12} strokeWidth={3} /> Diblokir
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="p-4">
                     <div className="flex items-center justify-center gap-2">
                       <Button
                         onClick={() => openEditModal(user)}
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626] transition-transform active:translate-y-1 active:shadow-none hover:bg-retro-cream"
+                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
                       >
-                        <Edit
-                          size={14}
-                          strokeWidth={3}
-                          className="text-retro-charcoal"
-                        />
+                        <Edit size={14} strokeWidth={3} />
                       </Button>
                       <Button
                         onClick={() => {
                           setSelectedId(user.id);
                           setIsDeleteOpen(true);
                         }}
+                        variant="destructive"
                         size="icon"
-                        className="h-9 w-9 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626] transition-transform active:translate-y-1 active:shadow-none bg-retro-red hover:bg-[#CC0000]"
+                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-[#FF0000] text-white shadow-[2px_2px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
                       >
-                        <Trash2
-                          size={14}
-                          strokeWidth={3}
-                          className="text-white"
-                        />
+                        <Trash2 size={14} strokeWidth={3} />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
       {/* KONTROL PAGINASI */}
       {!loading && filteredUsers.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
-          <div className="text-sm font-black uppercase tracking-widest text-retro-charcoal">
-            Menampilkan{" "}
-            <span className="text-retro-red">
-              {(currentPage - 1) * itemsPerPage + 1}
-            </span>{" "}
-            -{" "}
-            <span className="text-retro-red">
-              {Math.min(currentPage * itemsPerPage, filteredUsers.length)}
-            </span>{" "}
-            dari <span className="text-retro-red">{filteredUsers.length}</span>{" "}
-            Pengguna
-          </div>
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t-[3px] border-dashed border-retro-charcoal pt-6">
+          <span className="text-sm font-black uppercase tracking-widest text-retro-charcoal/70">
+            TOTAL DATA PENGGUNA: <span className="text-[#FF0000]">{filteredUsers.length}</span> AKUN
+          </span>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-10 w-10 border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] disabled:opacity-50"
-            >
-              <ChevronLeft size={20} strokeWidth={3} />
-            </Button>
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-bold uppercase tracking-widest bg-white border-[2px] border-retro-charcoal px-3 py-2">
+              Hal {currentPage} / {totalPages}
+            </span>
 
-            <div className="h-10 px-4 flex items-center justify-center border-[3px] border-retro-charcoal bg-white font-black shadow-[3px_3px_0_0_#262626]">
-              {currentPage} / {totalPages}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+              >
+                <ChevronLeft size={18} />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+              >
+                <ChevronRight size={18} />
+              </Button>
             </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-10 w-10 border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] disabled:opacity-50"
-            >
-              <ChevronRight size={20} strokeWidth={3} />
-            </Button>
           </div>
         </div>
       )}
 
       {/* MODAL TAMBAH/EDIT */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="border-[4px] border-retro-charcoal rounded-none shadow-[8px_8px_0_0_#262626]">
+        <DialogContent className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight border-b-[4px] border-retro-charcoal pb-4 mb-2">
+            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-charcoal border-b-[4px] border-retro-charcoal pb-4 mb-2">
               {isEditMode ? "Ubah Data Akun" : "Registrasi Akun Baru"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             <div>
               <label className="block text-xs font-black uppercase tracking-widest mb-2">
                 Nama Lengkap
@@ -455,7 +416,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="border-[2px] border-retro-charcoal focus-visible:ring-retro-red"
+                className="border-[3px] border-retro-charcoal font-bold uppercase"
               />
             </div>
             <div>
@@ -469,7 +430,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="border-[2px] border-retro-charcoal focus-visible:ring-retro-red"
+                className="border-[3px] border-retro-charcoal font-bold"
               />
             </div>
             <div>
@@ -484,7 +445,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="border-[2px] border-retro-charcoal focus-visible:ring-retro-red"
+                className="border-[3px] border-retro-charcoal font-bold"
                 placeholder="Minimal 8 karakter..."
               />
             </div>
@@ -499,9 +460,8 @@ export default function UsersPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
-                  className="w-full h-10 px-3 border-[2px] border-retro-charcoal bg-white font-bold text-sm shadow-[2px_2px_0_0_#262626] outline-none focus:ring-0 focus:border-retro-red"
+                  className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none"
                 >
-                  <option value="">Pilih Hak Akses</option>
                   <option value="user">Pelanggan (User)</option>
                   <option value="admin">Staf (Admin)</option>
                 </select>
@@ -518,26 +478,26 @@ export default function UsersPage() {
                       is_active: e.target.value === "true",
                     })
                   }
-                  className="w-full h-10 px-3 border-[2px] border-retro-charcoal bg-white font-bold text-sm shadow-[2px_2px_0_0_#262626] outline-none focus:ring-0 focus:border-retro-red"
+                  className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none"
                 >
                   <option value="true">Aktif</option>
-                  <option value="false">Diblokir / Nonaktif</option>
+                  <option value="false">Diblokir</option>
                 </select>
               </div>
             </div>
 
-            <DialogFooter className="mt-6 pt-4 border-t-[4px] border-retro-charcoal">
+            <DialogFooter className="mt-6 border-t-[3px] border-dashed border-retro-charcoal pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="border-[2px] border-retro-charcoal font-black uppercase tracking-widest"
+                className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
               >
                 Batal
               </Button>
               <Button
                 type="submit"
-                className="bg-retro-charcoal hover:bg-retro-red text-white border-[2px] border-retro-charcoal font-black uppercase tracking-widest shadow-[4px_4px_0_0_#262626] active:translate-y-1 active:shadow-none transition-all"
+                className="bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
               >
                 Simpan Data
               </Button>
@@ -548,35 +508,34 @@ export default function UsersPage() {
 
       {/* MODAL HAPUS */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="border-[4px] border-retro-charcoal rounded-none shadow-[8px_8px_0_0_#262626] sm:max-w-md">
+        <DialogContent className="sm:max-w-md border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-red border-b-[4px] border-retro-charcoal pb-4 mb-2">
-              Peringatan Penghancuran
+            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-[#FF0000] border-b-[4px] border-retro-charcoal pb-4 mb-2">
+              Cabut Akses Pengguna?
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
-              Apakah Anda yakin ingin menghapus akun ini secara permanen?
-            </p>
+          <div className="py-4 text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
+            Apakah Anda yakin ingin menghapus akun pengguna ini secara permanen?
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex gap-2 border-t-[3px] border-dashed border-retro-charcoal pt-4">
             <Button
               variant="outline"
               onClick={() => setIsDeleteOpen(false)}
-              className="border-[2px] border-retro-charcoal font-black uppercase tracking-widest hover:bg-retro-cream"
+              className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
             >
               Batal
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              className="bg-retro-red hover:bg-[#CC0000] border-[2px] border-retro-charcoal font-black uppercase tracking-widest shadow-[4px_4px_0_0_#262626] transition-transform active:translate-y-1 active:shadow-none"
+              className="bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
             >
               Ya, Hapus!
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
