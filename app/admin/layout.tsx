@@ -13,6 +13,8 @@ import {
   MonitorSmartphone,
   ReceiptText,
   User,
+  Image as ImageIcon,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -181,6 +183,37 @@ export default function AdminLayout({
               <span className="whitespace-nowrap">Device</span>
             )}
           </Link>
+
+          <Link
+            href="/admin/photo-assets"
+            title="Photo Assets"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+              isActive("/admin/photo-assets")
+                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
+                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+            }`}
+          >
+            <ImageIcon size={18} strokeWidth={2.5} className="shrink-0" />
+            {isSidebarOpen && (
+              <span className="whitespace-nowrap">Photo Assets</span>
+            )}
+          </Link>
+
+          <Link
+            href="/admin/settings"
+            title="System Settings"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+              isActive("/admin/settings")
+                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
+                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+            }`}
+          >
+            <Settings size={18} strokeWidth={2.5} className="shrink-0" />
+            {isSidebarOpen && (
+              <span className="whitespace-nowrap">System Settings</span>
+            )}
+          </Link>
+          
         </nav>
       </aside>
 
