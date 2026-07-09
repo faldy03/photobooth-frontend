@@ -3,22 +3,64 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Plus, Edit, Trash2, Image as ImageIcon, CheckCircle2, XCircle, 
-  AlertCircle, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Upload
+  AlertCircle, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Upload, LayoutGrid
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+interface Slot {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface PhotoAsset {
   id: number;
   name: string;
   type: 'frame' | 'filter';
   file_path: string;
-  image_url: string; // URL lengkap dari append controller Laravel
+  image_url: string; 
   is_active: boolean;
+  config?: { slots: Slot[] } | null;
   created_at: string;
 }
+
+// =========================================================================
+// DAFTAR PRESET LAYOUT OTOMATIS
+// Tambahkan konfigurasi frame baru di sini jika di masa depan ada desain baru
+// =========================================================================
+const LAYOUT_PRESETS = {
+  "2r_strip_3": [
+    { id: 1, x: 125, y: 230, width: 420, height: 320 },
+    { id: 2, x: 125, y: 615, width: 420, height: 320 },
+    { id: 3, x: 125, y: 1000, width: 420, height: 320 },
+    { id: 4, x: 655, y: 230, width: 420, height: 320 },
+    { id: 5, x: 655, y: 615, width: 420, height: 320 },
+    { id: 6, x: 655, y: 1000, width: 420, height: 320 }
+  ],
+  // =========================================================
+  // PRESET 2 BARU: 2R Double Strip (Lubang Kotak/Square)
+  // Cocok untuk frame Picta Anda yang terbaru!
+  // =========================================================
+  "2r_strip_square": [
+    { id: 1, x: 60, y: 60, width: 480, height: 480 },
+    { id: 2, x: 60, y: 600, width: 480, height: 480 },
+    { id: 3, x: 60, y: 1140, width: 480, height: 480 },
+    { id: 4, x: 660, y: 60, width: 480, height: 480 },
+    { id: 5, x: 660, y: 600, width: 480, height: 480 },
+    { id: 6, x: 660, y: 1140, width: 480, height: 480 }
+  ],
+  "4r_grid_4": [
+    { id: 1, x: 100, y: 100, width: 450, height: 750 },
+    { id: 2, x: 650, y: 100, width: 450, height: 750 },
+    { id: 3, x: 100, y: 950, width: 450, height: 750 },
+    { id: 4, x: 650, y: 950, width: 450, height: 750 }
+  ]
+};
 
 export default function PhotoAssetsPage() {
   const [assets, setAssets] = useState<PhotoAsset[]>([]);
@@ -43,11 +85,14 @@ export default function PhotoAssetsPage() {
     type: "frame",
     is_active: true,
   });
+  
+  // STATE BARU UNTUK KOORDINAT FRAME
+  const [slots, setSlots] = useState<Slot[]>([]);
+  
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch Data Server
   const fetchAssets = async () => {
     setLoading(true);
     setError("");
@@ -71,7 +116,6 @@ export default function PhotoAssetsPage() {
     fetchAssets();
   }, [refreshTrigger]);
 
-  // Logika Filter & Paginasi
   const filteredAssets = assets.filter(a => 
     a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     a.type.toLowerCase().includes(searchTerm.toLowerCase())
@@ -96,9 +140,42 @@ export default function PhotoAssetsPage() {
     }
   };
 
+  // --- LOGIKA KOORDINAT (SLOTS & PRESETS) ---
+  const handleAddSlot = () => {
+    setSlots([...slots, { id: Date.now(), x: 0, y: 0, width: 480, height: 360 }]);
+  };
+
+  const handleRemoveSlot = (indexToRemove: number) => {
+    setSlots(slots.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleSlotChange = (index: number, field: keyof Slot, value: string) => {
+    const updatedSlots = [...slots];
+    updatedSlots[index][field] = Number(value);
+    setSlots(updatedSlots);
+  };
+
+  // Fungsi untuk mengisi otomatis dari template
+  const handleApplyPreset = (presetKey: string) => {
+    if (presetKey === "custom") return;
+    
+    const selectedPreset = LAYOUT_PRESETS[presetKey as keyof typeof LAYOUT_PRESETS];
+    if (selectedPreset) {
+      // Buat ID unik baru agar React merender dengan benar
+      const newSlots = selectedPreset.map((slot, index) => ({
+        ...slot,
+        id: Date.now() + index 
+      }));
+      setSlots(newSlots);
+      toast.success("Template Diterapkan!", { description: "Koordinat telah diisi otomatis." });
+    }
+  };
+  // ------------------------------------------
+
   const openAddModal = () => {
     setIsEditMode(false);
     setFormData({ name: "", type: "frame", is_active: true });
+    setSlots([]); // Kosongkan slots saat tambah baru
     setSelectedFile(null);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -113,8 +190,9 @@ export default function PhotoAssetsPage() {
       type: asset.type,
       is_active: asset.is_active,
     });
+    setSlots(asset.config?.slots || []); // Isi form slots dengan data dari database
     setSelectedFile(null);
-    setPreviewUrl(asset.image_url); // Tampilkan gambar yang sudah ada sebagai pratinjau awal
+    setPreviewUrl(asset.image_url); 
     setIsModalOpen(true);
   };
 
@@ -123,35 +201,37 @@ export default function PhotoAssetsPage() {
     setIsDeleteOpen(true);
   };
 
-  // Submit Tambah & Edit (Menggunakan FormData Multipart)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("admin_token");
       
-      // Menggunakan Form Data karena ada berkas fisik yang diunggah
       const dataToSend = new FormData();
       dataToSend.append("name", formData.name);
       dataToSend.append("type", formData.type);
       dataToSend.append("is_active", formData.is_active ? "1" : "0");
+      
+      // Kirim array koordinat sebagai JSON string
+      if (formData.type === 'frame') {
+        dataToSend.append("config", JSON.stringify({ slots: slots }));
+      }
       
       if (selectedFile) {
         dataToSend.append("image", selectedFile);
       }
 
       let url = "http://127.0.0.1:8000/api/admin/photo-assets";
-      let method = "POST";
+      const method = "POST";
 
-      // Trick Skenario Edit Multipart Laravel
       if (isEditMode) {
         url = `http://127.0.0.1:8000/api/admin/photo-assets/${selectedId}`;
-        dataToSend.append("_method", "PUT"); // Laravel membutuhkan ini agar rute PUT dapat membaca file baru
+        dataToSend.append("_method", "PUT"); 
       }
 
       const res = await fetch(url, {
         method: method,
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
-        body: dataToSend, // Mengirim objek dataToSend langsung tanpa JSON.stringify
+        body: dataToSend, 
       });
 
       const json = await res.json();
@@ -167,7 +247,6 @@ export default function PhotoAssetsPage() {
     }
   };
 
-  // Kirim Hapus ke API
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem("admin_token");
@@ -369,13 +448,13 @@ export default function PhotoAssetsPage() {
 
       {/* ================= MODAL TAMBAH & EDIT ================= */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] max-w-lg">
+        <DialogContent className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-charcoal border-b-[4px] border-retro-charcoal pb-4 mb-2">
               {isEditMode ? "Ubah Komponen Grafis" : "Unggah Komponen Grafis"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-2">
             <div>
               <label className="block text-xs font-black uppercase tracking-widest mb-2">Nama Aset Visual</label>
               <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border-[3px] border-retro-charcoal font-bold uppercase" />
@@ -398,6 +477,54 @@ export default function PhotoAssetsPage() {
               </div>
             </div>
 
+            {/* KOORDINAT SLOTS DENGAN DROPDOWN PRESET */}
+            {formData.type === 'frame' && (
+              <div className="border-[3px] border-retro-charcoal p-4 bg-[#EFE9DB]/30">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                  <label className="block text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                    <LayoutGrid size={16} /> Koordinat Lubang Foto
+                  </label>
+                  
+                  {/* DROPDOWN TEMPLATE CEPAT */}
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <select 
+                      onChange={(e) => handleApplyPreset(e.target.value)}
+                      defaultValue="custom"
+                      className="border-[2px] border-retro-charcoal bg-white px-2 py-1 text-[10px] font-bold uppercase cursor-pointer"
+                    >
+                      <option value="custom">-- Pilih Template Cepat --</option>
+                      <option value="2r_strip_square">Template 2R Strip (Lubang KOTAK)</option>
+                      <option value="2r_strip_3">Template 2R Strip (6 Lubang)</option>
+                      <option value="4r_grid_4">Template 4R Grid (4 Lubang)</option>
+                    </select>
+
+                    <Button type="button" onClick={handleAddSlot} size="sm" className="bg-retro-charcoal text-white hover:bg-black font-bold uppercase text-[10px] tracking-wider border-[2px] border-retro-charcoal">
+                      + Custom Slot
+                    </Button>
+                  </div>
+                </div>
+                
+                {slots.length === 0 ? (
+                  <div className="text-center p-4 text-xs font-bold text-retro-charcoal/60 uppercase">Belum ada lubang foto ditentukan. Pilih Template di atas.</div>
+                ) : (
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    {slots.map((slot, index) => (
+                      <div key={slot.id} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-white p-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                        <div className="font-black bg-retro-charcoal text-white px-2 py-1 text-xs">#{index + 1}</div>
+                        <Input type="number" placeholder="X" value={slot.x} onChange={(e) => handleSlotChange(index, "x", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                        <Input type="number" placeholder="Y" value={slot.y} onChange={(e) => handleSlotChange(index, "y", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                        <Input type="number" placeholder="Lebar" value={slot.width} onChange={(e) => handleSlotChange(index, "width", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                        <Input type="number" placeholder="Tinggi" value={slot.height} onChange={(e) => handleSlotChange(index, "height", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                        <Button type="button" onClick={() => handleRemoveSlot(index)} variant="destructive" size="icon" className="h-8 w-8 shrink-0 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                          <Trash2 size={12} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* AREA INPUT UPLOAD FILE */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest mb-2">
@@ -418,7 +545,7 @@ export default function PhotoAssetsPage() {
             {previewUrl && (
               <div className="border-[3px] border-retro-charcoal p-2 bg-white shadow-[4px_4px_0_0_#262626]">
                 <div className="text-[10px] font-black uppercase tracking-widest text-retro-charcoal/50 mb-1 flex items-center gap-1"><Eye size={12}/> Pratinjau Berkas Terpilih:</div>
-                <div className="h-32 w-full bg-retro-cream border-[2px] border-retro-charcoal p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                <div className="h-40 w-full bg-retro-cream border-[2px] border-retro-charcoal p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
                 </div>

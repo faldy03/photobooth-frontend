@@ -97,8 +97,8 @@ export default function AdminLayout({
         <div className="h-20 flex items-center justify-center border-b-[4px] border-retro-charcoal bg-white overflow-hidden whitespace-nowrap">
           {isSidebarOpen ? (
             <h2 className="text-2xl font-black font-serif uppercase tracking-tighter drop-shadow-sm">
-              STITCHED
-              <span className="text-retro-red tracking-widest">BOOTH.</span>
+              BOOTH
+              <span className="text-retro-red tracking-widest">FLOW.</span>
             </h2>
           ) : (
             <h2 className="text-2xl font-black font-serif uppercase tracking-tighter text-retro-red drop-shadow-sm">

@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Camera, AlertCircle, Image as ImageIcon, Sparkles,CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// 1. TAMBAH STRUKTUR CONFIG DI INTERFACE
 interface PhotoAsset {
   id: number;
   name: string;
   type: string;
   image_url: string;
   is_active: boolean;
+  config?: unknown; // Menampung JSON array koordinat dari database
 }
 
 export default function FrameSelectionPage() {
@@ -25,7 +27,6 @@ export default function FrameSelectionPage() {
   useEffect(() => {
     const fetchFrames = async () => {
       try {
-        // Catatan: Pastikan endpoint ini bisa diakses publik (tanpa token) oleh mesin Kios
         const res = await fetch("http://127.0.0.1:8000/api/kiosk/frames");
         const data = await res.json();
         
@@ -54,9 +55,15 @@ export default function FrameSelectionPage() {
     if (!selectedFrame) return;
     setIsStarting(true);
 
-    // Simpan data frame (URL dan ID) ke localStorage agar dibaca oleh halaman Kamera nanti
+    // Simpan URL dan ID untuk kebutuhan standar
     localStorage.setItem("selected_frame_id", selectedFrame.id.toString());
     localStorage.setItem("selected_frame_url", selectedFrame.image_url);
+
+    // =========================================================================
+    // INI KUNCI UTAMANYA: Simpan seluruh objek frame (termasuk koordinat JSON)
+    // agar bisa dibaca oleh ResultPage untuk memotong foto secara presisi!
+    // =========================================================================
+    localStorage.setItem("selected_frame_data", JSON.stringify(selectedFrame));
 
     // Efek transisi sebelum pindah halaman
     setTimeout(() => {
@@ -172,7 +179,7 @@ export default function FrameSelectionPage() {
 
       </div>
 
-      {/* CSS Tambahan untuk menyembunyikan scrollbar agar terlihat bersih seperti aplikasi Kios */}
+      {/* CSS Tambahan */}
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar {
           display: none;

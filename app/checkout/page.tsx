@@ -197,7 +197,7 @@ export default function CheckoutPage() {
             <CreditCard size={36} className="text-[#FF0000]" /> LOKET KASIR
           </h1>
           <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-2">
-            Stitched Booth • Pembayaran Mandiri
+            Booth Flow • Pembayaran Mandiri
           </p>
         </div>
 

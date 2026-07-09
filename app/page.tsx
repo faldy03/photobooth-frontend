@@ -1,65 +1,76 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Camera, ArrowRight } from "lucide-react";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    // Memicu animasi masuk secara halus setelah halaman dimuat
+    setAnimate(true);
+  }, []);
+
+  const handleStart = () => {
+    setAnimate(false);
+    setTimeout(() => {
+      router.push("/checkout");
+    }, 400);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div 
+      onClick={handleStart}
+      className="h-screen w-screen bg-[#FAF8F5] flex flex-col justify-between items-center p-12 md:p-16 font-sans text-[#1A1A1A] select-none cursor-pointer overflow-hidden transition-colors duration-500 hover:bg-[#F5F2EB]"
+    >
+      {/* ================= TOP SECTION (SUBTLE) ================= */}
+      <div className={`transition-all duration-1000 transform ${animate ? 'translate-y-0 opacity-40' : '-translate-y-4 opacity-0'} text-xs font-bold tracking-[0.4em] uppercase`}>
+        Booth Flow System v2.0
+      </div>
+
+      {/* ================= CENTER SECTION (BRAND MAIN LOGO) ================= */}
+      <div className="flex flex-col items-center max-w-xl w-full">
+        <div 
+          className={`text-center transition-all duration-1000 delay-100 transform ${
+            animate ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          }`}
+        >
+          {/* Tagline Kecil di Atas Brand */}
+          <span className="inline-block text-xs font-black tracking-[0.3em] uppercase text-[#E53E3E] mb-3">
+            Premium Photobooth
+          </span>
+
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none text-[#1A1A1A]">
+            BOOTH
+            <span className="block text-[#E53E3E] tracking-tight">FLOW.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+          {/* Garis Pembatas Minimalis */}
+          <div className="w-16 h-[3px] bg-[#1A1A1A] mx-auto mt-6 opacity-20"></div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* ================= BOTTOM SECTION (CALL TO ACTION) ================= */}
+      <div 
+        className={`flex flex-col items-center gap-3 transition-all duration-1000 delay-300 transform ${
+          animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+        }`}
+      >
+        {/* Tombol Interaktif yang Berkedip Lembut */}
+        <div className="flex items-center gap-3 px-8 py-4 border-2 border-[#1A1A1A] bg-white shadow-[4px_4px_0_0_#1A1A1A] active:translate-y-1 active:shadow-none transition-all duration-150 animate-pulse">
+          <span className="font-bold uppercase tracking-[0.2em] text-sm text-[#1A1A1A]">
+            Sentuh Layar Untuk Memulai
+          </span>
+          <ArrowRight size={16} className="text-[#E53E3E]" />
         </div>
-      </main>
+        
+        {/* Indikator Fitur */}
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#1A1A1A]/40 mt-1">
+          <Camera size={12} /> Format Cetak 2R Double Strip
+        </div>
+      </div>
     </div>
   );
 }
