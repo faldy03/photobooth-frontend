@@ -214,14 +214,17 @@ export default function ResultPage() {
     setTimeout(generatePreview, 800); 
   }, [router]);
 
-  const handlePrint = async () => {
+const handlePrint = async () => {
     if (!mergedImage) return;
     
     setIsPrinting(true);
     setErrorMsg(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/sessions/save-photos", {
+      // ================================================================
+      // 1. SIMPAN KE LARAVEL (Untuk Database & Generate QR Soft File)
+      // ================================================================
+      const responseLaravel = await fetch("http://127.0.0.1:8000/api/sessions/save-photos", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -232,18 +235,50 @@ export default function ResultPage() {
         }),
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        setQrUrl(result.download_link);
-        toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
-      } else {
-        throw new Error(result.message || "Gagal mencetak foto.");
+      // PROTEKSI BARU: Cek apakah Laravel membalas dengan teks/HTML alih-alih JSON
+      const textLaravel = await responseLaravel.text();
+      let resultLaravel;
+      try {
+        resultLaravel = JSON.parse(textLaravel);
+      } catch (parseError) {
+        console.error("Laravel membalas dengan HTML/Error Server:", textLaravel);
+        throw new Error("Server Database (Laravel) gagal merespon dengan benar. Pastikan limit upload php.ini sudah diperbesar.");
       }
+
+      if (!resultLaravel.success) {
+        throw new Error(resultLaravel.message || "Gagal menyimpan data ke server Laravel.");
+      }
+
+      setQrUrl(resultLaravel.download_link);
+
+      // ================================================================
+      // 2. KIRIM KE NODE.JS (Untuk Mencetak Fisik ke Mesin DNP)
+      // ================================================================
+      const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
+
+      try {
+        const responseNode = await fetch("http://127.0.0.1:3001/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // 🚨 PERBAIKAN: Namanya disamakan dengan yang dicari oleh Node.js (final_photo_base64)
+          body: JSON.stringify({ final_photo_base64: pureBase64 }), 
+        });
+
+        if (!responseNode.ok) {
+          throw new Error("Respon Node.js tidak OK");
+        }
+        
+        toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
+        
+      } catch (nodeError) {
+        console.error("Gagal koneksi ke Node.js Printer:", nodeError);
+        toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke mesin printer fisik (Node.js)." });
+      }
+
     } catch (error: unknown) {
       console.error("Upload Error:", error);
       setErrorMsg((error as Error).message);
-      toast.error("Gagal Mencetak", { description: (error as Error).message });
+      toast.error("Gagal Memproses Data", { description: (error as Error).message });
     } finally {
       setIsPrinting(false);
     }

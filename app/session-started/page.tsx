@@ -12,6 +12,7 @@ export default function SessionStartedPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const photosRef = useRef<string[]>([]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [frameSlots, setFrameSlots] = useState<any[]>([]);
   const [requiredSelections, setRequiredSelections] = useState(3); 
   const [frameUrl, setFrameUrl] = useState<string | null>(null);
@@ -70,7 +71,6 @@ export default function SessionStartedPage() {
       } catch (err) {
         console.error("Webcam tidak ditemukan:", err);
         toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
-        // Tetap ready agar tombol jepret DSLR tetap bisa ditekan
         setSessionState('ready');
       }
     };
@@ -94,11 +94,12 @@ export default function SessionStartedPage() {
     // A. Catat nama file foto terakhir sebelum jepret
     let lastFileName = "";
     try {
-      const preRes = await fetch("http://127.0.0.1:8000/api/kiosk/latest-photo?t=" + Date.now());
+      // 🚨 MENGGUNAKAN LOCALHOST BUKAN 127.0.0.1
+      const preRes = await fetch("http://localhost:8000/api/kiosk/latest-photo?t=" + Date.now());
       const preData = await preRes.json();
       if (preData.success) lastFileName = preData.filename;
     } catch (e) {
-      console.log("Cek file awal gagal");
+      console.warn("Server Laravel gagal dicek di awal, pastikan php artisan serve menyala.");
     }
 
     // B. Hitung Mundur
@@ -109,40 +110,47 @@ export default function SessionStartedPage() {
     setCountdown(null);
     setIsFlashing(true);
 
+    // C. SURUH CANON MENJEPRET (BLOK KHUSUS KAMERA)
     try {
-      // C. SURUH CANON MENJEPRET (TIDAK BOLEH PAKAI AUTOFOCUS / HARUS MF)
-      await fetch("http://localhost:5513/?slc=capture", { mode: "no-cors" });
+      await fetch("http://localhost:5513/?slc=capture&param1=0", { mode: "no-cors" });
+    } catch (error) {
+      console.error("Gagal menembak kamera fisik:", error);
+      setIsFlashing(false);
+      toast.error("KAMERA OFFLINE", { description: "Koneksi ke digiCamControl terputus." });
+      return null;
+    }
 
-      let newPhotoUrl = null;
-      let attempts = 0;
-      const maxAttempts = 12; // Sabar menunggu file dikirim lewat kabel (maksimal 6 detik)
+    // D. CARI FILE BARU YANG MASUK (BLOK KHUSUS LARAVEL)
+    let newPhotoUrl = null;
+    let attempts = 0;
+    const maxAttempts = 12; // Sabar menunggu file dikirim lewat kabel (maksimal 6 detik)
 
-      // D. CARI FILE BARU YANG MASUK
+    try {
       while (attempts < maxAttempts) {
         await sleep(500);
-        const res = await fetch("http://127.0.0.1:8000/api/kiosk/latest-photo?t=" + Date.now());
+        // 🚨 MENGGUNAKAN LOCALHOST BUKAN 127.0.0.1
+        const res = await fetch("http://localhost:8000/api/kiosk/latest-photo?t=" + Date.now());
         const data = await res.json();
 
-        // Jika ada foto masuk dan namanya BEDA dengan sebelum kita jepret
         if (data.success && data.filename !== lastFileName) {
           newPhotoUrl = data.url + "?cb=" + Date.now();
           break; 
         }
         attempts++;
       }
-
-      setIsFlashing(false);
-
-      if (newPhotoUrl) {
-        return newPhotoUrl;
-      } else {
-        toast.error("Canon Gagal Menjepret!", { description: "Kamera sibuk. Silakan Retake." });
-        return null;
-      }
     } catch (error) {
-      console.error("Gagal menembak kamera fisik:", error);
+      console.error("Gagal mengecek folder Laravel:", error);
       setIsFlashing(false);
-      toast.error("Error Koneksi ke digiCamControl");
+      toast.error("DATABASE OFFLINE", { description: "Gagal terhubung ke API Laravel." });
+      return null;
+    }
+
+    setIsFlashing(false);
+
+    if (newPhotoUrl) {
+      return newPhotoUrl;
+    } else {
+      toast.error("TIDAK ADA FOTO MASUK", { description: "Kamera menjepret, tapi file tidak masuk ke folder Laravel." });
       return null;
     }
   };
