@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, AlertCircle, Image as ImageIcon, Sparkles,CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getApiUrl } from "@/lib/api";
 
 // 1. TAMBAH STRUKTUR CONFIG DI INTERFACE
 interface PhotoAsset {
@@ -27,7 +28,7 @@ export default function FrameSelectionPage() {
   useEffect(() => {
     const fetchFrames = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/kiosk/frames");
+        const res = await fetch(getApiUrl("/api/kiosk/frames"));
         const data = await res.json();
         
         if (!res.ok) throw new Error("Gagal mengambil data bingkai");

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 interface Slot {
   id: number;
@@ -98,7 +99,7 @@ export default function PhotoAssetsPage() {
     setError("");
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/photo-assets", {
+      const res = await fetch(getApiUrl("/api/admin/photo-assets"), {
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
       });
       const data = await res.json();
@@ -220,11 +221,11 @@ export default function PhotoAssetsPage() {
         dataToSend.append("image", selectedFile);
       }
 
-      let url = "http://127.0.0.1:8000/api/admin/photo-assets";
+      let url = getApiUrl("/api/admin/photo-assets");
       const method = "POST";
 
       if (isEditMode) {
-        url = `http://127.0.0.1:8000/api/admin/photo-assets/${selectedId}`;
+        url = getApiUrl(`/api/admin/photo-assets/${selectedId}`);
         dataToSend.append("_method", "PUT"); 
       }
 
@@ -250,7 +251,7 @@ export default function PhotoAssetsPage() {
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/photo-assets/${selectedId}`, {
+      const res = await fetch(getApiUrl(`/api/admin/photo-assets/${selectedId}`), {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
       });

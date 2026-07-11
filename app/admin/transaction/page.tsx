@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import StatCard from "@/components/StatCard";
+import { getApiUrl } from "@/lib/api";
 
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -46,7 +47,7 @@ export default function AdminTransactionsPage() {
     try {
       const token = localStorage.getItem("admin_token");
       const res = await fetch(
-        "http://127.0.0.1:8000/api/admin/transactions/statistics",
+        getApiUrl("/api/admin/transactions/statistics"),
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -75,7 +76,7 @@ export default function AdminTransactionsPage() {
       });
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/transactions?${queryParams}`,
+        getApiUrl(`/api/admin/transactions?${queryParams}`),
         {
           headers: {
             Accept: "application/json",
@@ -119,7 +120,7 @@ export default function AdminTransactionsPage() {
       });
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/transactions/export?${queryParams}`,
+        getApiUrl(`/api/admin/transactions/export?${queryParams}`),
         {
           headers: { Authorization: `Bearer ${token}` },
         },

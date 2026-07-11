@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 export default function SessionStartedPage() {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function SessionStartedPage() {
     let lastFileName = "";
     try {
       // 🚨 MENGGUNAKAN LOCALHOST BUKAN 127.0.0.1
-      const preRes = await fetch("http://localhost:8000/api/kiosk/latest-photo?t=" + Date.now());
+      const preRes = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
       const preData = await preRes.json();
       if (preData.success) lastFileName = preData.filename;
     } catch (e) {
@@ -129,7 +130,7 @@ export default function SessionStartedPage() {
       while (attempts < maxAttempts) {
         await sleep(500);
         // 🚨 MENGGUNAKAN LOCALHOST BUKAN 127.0.0.1
-        const res = await fetch("http://localhost:8000/api/kiosk/latest-photo?t=" + Date.now());
+        const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
         const data = await res.json();
 
         if (data.success && data.filename !== lastFileName) {

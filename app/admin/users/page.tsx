@@ -26,6 +26,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 interface UserData {
   id: number;
@@ -65,7 +66,7 @@ export default function UsersPage() {
     setError("");
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/users", {
+      const res = await fetch(getApiUrl("/api/admin/users"), {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -140,8 +141,8 @@ export default function UsersPage() {
     try {
       const token = localStorage.getItem("admin_token");
       const url = isEditMode
-        ? `http://127.0.0.1:8000/api/admin/users/${selectedId}`
-        : "http://127.0.0.1:8000/api/admin/users";
+        ? getApiUrl(`/api/admin/users/${selectedId}`)
+        : getApiUrl("/api/admin/users");
       const method = isEditMode ? "PUT" : "POST";
 
       const payload =
@@ -185,7 +186,7 @@ export default function UsersPage() {
     try {
       const token = localStorage.getItem("admin_token");
       const res = await fetch(
-        `http://127.0.0.1:8000/api/admin/users/${selectedId}`,
+        getApiUrl(`/api/admin/users/${selectedId}`),
         {
           method: "DELETE",
           headers: {

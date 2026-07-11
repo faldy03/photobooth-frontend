@@ -5,6 +5,7 @@ import { Settings, Save, AlertCircle, RefreshCw, DollarSign, Timer, Camera, Imag
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ export default function SettingsPage() {
     setError("");
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/kiosk/settings", {
+      const res = await fetch(getApiUrl("/api/kiosk/settings"), {
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
       });
       const json = await res.json();
@@ -58,7 +59,7 @@ export default function SettingsPage() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/system-settings", {
+      const res = await fetch(getApiUrl("/api/admin/system-settings"), {
         method: "PUT",
         headers: { 
           "Authorization": `Bearer ${token}`, 

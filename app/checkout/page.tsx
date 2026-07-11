@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast, Toaster } from "sonner";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/api";
 
 // 🚨 IMPORT REACT-SIMPLE-KEYBOARD
-import Keyboard from "react-simple-keyboard";
+import Keyboard, { SimpleKeyboard } from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 
 export default function CheckoutPage() {
@@ -37,13 +38,13 @@ export default function CheckoutPage() {
 
   // 🚨 STATE & REF UNTUK KEYBOARD VIRTUAL
   const [showKeyboard, setShowKeyboard] = useState(false);
-  const keyboardRef = useRef<typeof Keyboard | null>(null);
+  const keyboardRef = useRef<SimpleKeyboard | null>(null);
 
   // 1. MENGAMBIL HARGA DARI SYSTEM SETTINGS
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/kiosk/settings");
+        const res = await fetch(getApiUrl("/api/kiosk/settings"));
         const json = await res.json();
         if (json.success && json.data) {
           setBasePrice(Number(json.data.price_per_session) || 35000);
@@ -81,7 +82,7 @@ export default function CheckoutPage() {
     if (!invoice || !qrString) return;
     const checkPaymentStatus = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/checkout/status/${invoice}`);
+        const res = await fetch(getApiUrl(`/api/checkout/status/${invoice}`));
         const data = await res.json();
 
         if (data.success && data.payment_status === "success") {
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
     setLoading(true);
     setShowKeyboard(false);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/checkout", {
+      const res = await fetch(getApiUrl("/api/checkout"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

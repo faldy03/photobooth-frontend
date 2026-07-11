@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 interface KioskDevice {
   id: number;
@@ -47,7 +48,7 @@ export default function KiosksPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/kiosk-devices", {
+      const res = await fetch(getApiUrl("/api/admin/kiosk-devices"), {
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
       });
       const data = await res.json();
@@ -106,7 +107,7 @@ export default function KiosksPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch("http://127.0.0.1:8000/api/admin/kiosk-devices", {
+      const res = await fetch(getApiUrl("/api/admin/kiosk-devices"), {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(formData),
@@ -127,7 +128,7 @@ export default function KiosksPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/kiosk-devices/${selectedId}`, {
+      const res = await fetch(getApiUrl(`/api/admin/kiosk-devices/${selectedId}`), {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(formData),
@@ -147,7 +148,7 @@ export default function KiosksPage() {
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem("admin_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/admin/kiosk-devices/${selectedId}`, {
+      const res = await fetch(getApiUrl(`/api/admin/kiosk-devices/${selectedId}`), {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
       });

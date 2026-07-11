@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 export default function ResultPage() {
   const router = useRouter();
@@ -189,7 +190,7 @@ export default function ResultPage() {
         // 2. MENGGAMBAR FRAME OVERLAY
         let frameImg;
         try {
-          const proxyUrl = `http://127.0.0.1:8000/api/proxy-image?url=${encodeURIComponent(frameUrl)}`;
+          const proxyUrl = getApiUrl(`/api/proxy-image?url=${encodeURIComponent(frameUrl)}`);
           frameImg = await loadSafeImage(proxyUrl, "Frame Proxy");
         } catch (e) {
           console.warn("Proxy gagal, mencoba direct frame url...");
@@ -224,7 +225,7 @@ const handlePrint = async () => {
       // ================================================================
       // 1. SIMPAN KE LARAVEL (Untuk Database & Generate QR Soft File)
       // ================================================================
-      const responseLaravel = await fetch("http://127.0.0.1:8000/api/sessions/save-photos", {
+      const responseLaravel = await fetch(getApiUrl("/api/sessions/save-photos"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function AdminLogin() {
 
     try {
       // Pastikan endpoint Laravel ini sudah aktif
-      const res = await fetch("http://127.0.0.1:8000/api/admin/login", {
+      const res = await fetch(getApiUrl("/api/admin/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

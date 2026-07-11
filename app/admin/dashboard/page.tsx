@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { DollarSign, Ticket, ArrowUpRight, Activity, Users } from "lucide-react";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/api";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -34,9 +35,9 @@ export default function AdminDashboard() {
 
         // 🚨 Ambil data Voucher, Users, dan Statistik Transaksi secara BERSAMAAN (Paralel)
         const [vouchersRes, usersRes, statsRes] = await Promise.all([
-          fetch("http://127.0.0.1:8000/api/admin/vouchers", { headers }),
-          fetch("http://127.0.0.1:8000/api/admin/users", { headers }),
-          fetch("http://127.0.0.1:8000/api/admin/transactions/statistics", { headers }) // API Statistik Baru
+          fetch(getApiUrl("/api/admin/vouchers"), { headers }),
+          fetch(getApiUrl("/api/admin/users"), { headers }),
+          fetch(getApiUrl("/api/admin/transactions/statistics"), { headers }) // API Statistik Baru
         ]);
 
         const vouchersData = await vouchersRes.json();
