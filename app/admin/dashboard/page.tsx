@@ -110,7 +110,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* 🚨 KARTU 1: PENDAPATAN (Diperbarui jadi interaktif & bisa diklik) */}
-        <Link href="/admin/transactions" className="block focus:outline-none group">
+        <Link href="/admin/transaction" className="block focus:outline-none group">
           <motion.div 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, x: -4 }}
