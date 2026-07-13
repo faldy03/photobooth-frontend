@@ -113,7 +113,7 @@ export default function SessionStartedPage() {
 
     // C. SURUH CANON MENJEPRET (BLOK KHUSUS KAMERA)
     try {
-      await fetch("http://localhost:5513/?slc=capture&param1=0", { mode: "no-cors" });
+      await fetch("http://localhost:3001/capture");
     } catch (error) {
       console.error("Gagal menembak kamera fisik:", error);
       setIsFlashing(false);
