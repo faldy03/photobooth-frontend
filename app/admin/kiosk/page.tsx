@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { 
   Plus, Edit, Trash2, MonitorSmartphone, Activity, 
-  Wifi, WifiOff, Wrench, AlertCircle, MapPin, Search, ChevronLeft, ChevronRight, RefreshCw
+  Wifi, WifiOff, Wrench, AlertCircle, MapPin, Search, ChevronLeft, ChevronRight, RefreshCw,
+  Camera, CameraOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ interface KioskDevice {
   status: 'active' | 'offline' | 'maintenance';
   last_seen: string | null;
   sessions_count?: number; 
+  is_camera_connected?: boolean;
 }
 
 export default function KiosksPage() {
@@ -163,15 +165,20 @@ export default function KiosksPage() {
   };
 
   // Helper Render Status Badge
-  const renderStatus = (status: string) => {
-    switch (status) {
-      case "active":
-        return <span className="inline-flex items-center gap-1.5 text-green-800 bg-green-100 border-[2px] border-green-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#166534]"><Wifi size={12} strokeWidth={3} /> Active</span>;
-      case "maintenance":
-        return <span className="inline-flex items-center gap-1.5 text-amber-800 bg-amber-100 border-[2px] border-amber-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#92400E]"><Wrench size={12} strokeWidth={3} /> Perawatan</span>;
-      default:
-        return <span className="inline-flex items-center gap-1.5 text-white bg-[#FF0000] border-[2px] border-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#262626]"><WifiOff size={12} strokeWidth={3} /> Offline</span>;
+  const renderStatus = (device: KioskDevice) => {
+    if (device.status === "offline") {
+      return <span className="inline-flex items-center gap-1.5 text-white bg-[#FF0000] border-[2px] border-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#262626]"><WifiOff size={12} strokeWidth={3} /> Offline</span>;
     }
+    
+    if (device.is_camera_connected === false) {
+      return <span className="inline-flex items-center gap-1.5 text-amber-800 bg-amber-100 border-[2px] border-amber-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#92400E]"><Wrench size={12} strokeWidth={3} /> Cam Error</span>;
+    }
+
+    if (device.status === "maintenance") {
+      return <span className="inline-flex items-center gap-1.5 text-amber-800 bg-amber-100 border-[2px] border-amber-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#92400E]"><Wrench size={12} strokeWidth={3} /> Perawatan</span>;
+    }
+
+    return <span className="inline-flex items-center gap-1.5 text-green-800 bg-green-100 border-[2px] border-green-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#166534]"><Wifi size={12} strokeWidth={3} /> Active</span>;
   };
 
   return (
@@ -284,7 +291,20 @@ export default function KiosksPage() {
                     </div>
                   </td>
                   <td className="p-4 text-center">
-                    {renderStatus(device.status)}
+                    <div className="flex flex-col items-center gap-1.5 justify-center">
+                      {renderStatus(device)}
+                      {device.status !== 'offline' && (
+                        device.is_camera_connected ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-green-700 font-bold uppercase tracking-wider">
+                            <Camera size={10} strokeWidth={3} /> DSLR Ready
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-red-600 font-bold uppercase tracking-wider animate-pulse">
+                            <CameraOff size={10} strokeWidth={3} /> DSLR Error
+                          </span>
+                        )
+                      )}
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-center gap-2">

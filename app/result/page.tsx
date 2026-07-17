@@ -225,15 +225,17 @@ const handlePrint = async () => {
       // ================================================================
       // 1. SIMPAN KE LARAVEL (Untuk Database & Generate QR Soft File)
       // ================================================================
+      const payload = {
+        final_photo: mergedImage,
+        raw_photos: rawPhotos,
+        transaction_id: transactionIdNum,
+        kiosk_device_id: 1,
+      };
+
       const responseLaravel = await fetch(getApiUrl("/api/sessions/save-photos"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          final_photo: mergedImage,
-          raw_photos: rawPhotos,
-          transaction_id: transactionIdNum,
-          kiosk_device_id: 1, 
-        }),
+        body: JSON.stringify(payload),
       });
 
       // PROTEKSI BARU: Cek apakah Laravel membalas dengan teks/HTML alih-alih JSON
@@ -261,8 +263,11 @@ const handlePrint = async () => {
         const responseNode = await fetch("http://127.0.0.1:3001/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // 🚨 PERBAIKAN: Namanya disamakan dengan yang dicari oleh Node.js (final_photo_base64)
-          body: JSON.stringify({ final_photo_base64: pureBase64 }), 
+          body: JSON.stringify({
+            final_photo_base64: pureBase64,
+            final_photo_url: resultLaravel.download_link,
+            source: "drive"
+          }),
         });
 
         if (!responseNode.ok) {

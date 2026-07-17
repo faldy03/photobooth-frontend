@@ -28,6 +28,11 @@ export default function SessionStartedPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
+  // Kamera selector
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+
+  // 1. Ambil setting & frame dari localStorage, serta list kamera
   useEffect(() => {
     const savedFrameUrl = localStorage.getItem("selected_frame_url");
     if (!savedFrameUrl) {
@@ -57,34 +62,83 @@ export default function SessionStartedPage() {
       }
     }
 
-    // =====================================================================
-    // 1. MENYALAKAN WEBCAM UNTUK LIVE PREVIEW YANG SUPER MULUS
-    // =====================================================================
+    // List devices
+    const getDevices = async () => {
+      try {
+        // Request permission first
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const deviceList = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = deviceList.filter(device => device.kind === 'videoinput');
+        setDevices(videoDevices);
+        if (videoDevices.length > 0) {
+          const savedCam = localStorage.getItem("selected_kiosk_camera");
+          const defaultCam = videoDevices.find(d => d.deviceId === savedCam) || videoDevices[0];
+          setSelectedDeviceId(defaultCam.deviceId);
+        }
+      } catch (e) {
+        console.error("Gagal mendapatkan daftar kamera:", e);
+      }
+    };
+    getDevices();
+  }, [router]);
+
+  // 2. Efek untuk menyalakan/mengubah kamera preview
+  useEffect(() => {
+    if (!selectedDeviceId) return;
+    localStorage.setItem("selected_kiosk_camera", selectedDeviceId);
+
+    let active = true;
+    let localStream: MediaStream | null = null;
+
     const startWebcamPreview = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
+          video: { 
+            deviceId: { exact: selectedDeviceId },
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 } 
+          } 
         });
+        if (!active) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        localStream = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setSessionState('ready');
         }
       } catch (err) {
-        console.error("Webcam tidak ditemukan:", err);
-        toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
-        setSessionState('ready');
+        console.error("Gagal membuka kamera pilihan:", err);
+        // Fallback jika deviceId exact gagal
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          if (!active) {
+            stream.getTracks().forEach(track => track.stop());
+            return;
+          }
+          localStream = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            setSessionState('ready');
+          }
+        } catch (fallbackErr) {
+          console.error("Webcam tidak ditemukan:", fallbackErr);
+          toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
+          setSessionState('ready');
+        }
       }
     };
 
     startWebcamPreview();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
+      active = false;
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [router]);
+  }, [selectedDeviceId]);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -223,6 +277,23 @@ export default function SessionStartedPage() {
             </h2>
           </div>
         </div>
+
+        {/* Dropdown Pilihan Kamera */}
+        {devices.length > 1 && sessionState !== "capturing" && (
+          <div className="absolute top-4 right-4 z-20">
+            <select
+              value={selectedDeviceId}
+              onChange={(e) => setSelectedDeviceId(e.target.value)}
+              className="bg-white border-[3px] border-retro-charcoal px-3 py-1.5 font-black uppercase text-[10px] tracking-widest shadow-[4px_4px_0_0_#262626] focus:outline-none cursor-pointer text-retro-charcoal"
+            >
+              {devices.map((device, idx) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `Kamera ${idx + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* MENGGUNAKAN VIDEO TAG UNTUK WEBCAM (SANGAT MULUS, BEBAS LAG) */}
         <video 
