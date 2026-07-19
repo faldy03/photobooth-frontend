@@ -86,6 +86,9 @@ app.whenReady().then(() => {
     return false;
   });
 
+  // Jalankan pemantau folder foto otomatis di background
+  startFolderWatcher();
+
   createWindow();
 });
 
