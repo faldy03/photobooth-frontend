@@ -449,109 +449,166 @@ export default function PhotoAssetsPage() {
 
       {/* ================= MODAL TAMBAH & EDIT ================= */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] max-h-[90vh] overflow-y-auto transition-all duration-300 ${formData.type === 'frame' ? 'max-w-4xl' : 'max-w-2xl'}`}>
           <DialogHeader>
             <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-charcoal border-b-[4px] border-retro-charcoal pb-4 mb-2">
               {isEditMode ? "Ubah Komponen Grafis" : "Unggah Komponen Grafis"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6 mt-2">
-            <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2">Nama Aset Visual</label>
-              <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border-[3px] border-retro-charcoal font-bold uppercase" />
-            </div>
+          <form onSubmit={handleSubmit} className="mt-2">
+            <div className={formData.type === 'frame' ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-6"}>
+              
+              {/* SISI KIRI: INPUT FORM (Ambil 2 kolom di layar lebar) */}
+              <div className={formData.type === 'frame' ? "md:col-span-2 space-y-6" : "space-y-6"}>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest mb-2">Nama Aset Visual</label>
+                  <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border-[3px] border-retro-charcoal font-bold uppercase" />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Tipe Komponen</label>
-                <select name="type" value={formData.type} onChange={handleInputChange} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
-                  <option value="frame">Frame Overlay</option>
-                  <option value="filter">Filter Visual</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">Status Distribusi</label>
-                <select name="is_active" value={formData.is_active.toString()} onChange={(e) => setFormData({...formData, is_active: e.target.value === "true"})} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
-                  <option value="true">Aktif di Kios</option>
-                  <option value="false">Simpan di Gudang (Nonaktif)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* KOORDINAT SLOTS DENGAN DROPDOWN PRESET */}
-            {formData.type === 'frame' && (
-              <div className="border-[3px] border-retro-charcoal p-4 bg-[#EFE9DB]/30">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                  <label className="block text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <LayoutGrid size={16} /> Koordinat Lubang Foto
-                  </label>
-                  
-                  {/* DROPDOWN TEMPLATE CEPAT */}
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                    <select 
-                      onChange={(e) => handleApplyPreset(e.target.value)}
-                      defaultValue="custom"
-                      className="border-[2px] border-retro-charcoal bg-white px-2 py-1 text-[10px] font-bold uppercase cursor-pointer"
-                    >
-                      <option value="custom">-- Pilih Template Cepat --</option>
-                      <option value="2r_strip_square">Template 2R Strip (Lubang KOTAK)</option>
-                      <option value="2r_strip_3">Template 2R Strip (6 Lubang)</option>
-                      <option value="4r_grid_4">Template 4R Grid (4 Lubang)</option>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest mb-2">Tipe Komponen</label>
+                    <select name="type" value={formData.type} onChange={handleInputChange} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
+                      <option value="frame">Frame Overlay</option>
+                      <option value="filter">Filter Visual</option>
                     </select>
-
-                    <Button type="button" onClick={handleAddSlot} size="sm" className="bg-retro-charcoal text-white hover:bg-black font-bold uppercase text-[10px] tracking-wider border-[2px] border-retro-charcoal">
-                      + Custom Slot
-                    </Button>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest mb-2">Status Distribusi</label>
+                    <select name="is_active" value={formData.is_active.toString()} onChange={(e) => setFormData({...formData, is_active: e.target.value === "true"})} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
+                      <option value="true">Aktif di Kios</option>
+                      <option value="false">Simpan di Gudang (Nonaktif)</option>
+                    </select>
                   </div>
                 </div>
-                
-                {slots.length === 0 ? (
-                  <div className="text-center p-4 text-xs font-bold text-retro-charcoal/60 uppercase">Belum ada lubang foto ditentukan. Pilih Template di atas.</div>
-                ) : (
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    {slots.map((slot, index) => (
-                      <div key={slot.id} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-white p-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
-                        <div className="font-black bg-retro-charcoal text-white px-2 py-1 text-xs">#{index + 1}</div>
-                        <Input type="number" placeholder="X" value={slot.x} onChange={(e) => handleSlotChange(index, "x", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                        <Input type="number" placeholder="Y" value={slot.y} onChange={(e) => handleSlotChange(index, "y", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                        <Input type="number" placeholder="Lebar" value={slot.width} onChange={(e) => handleSlotChange(index, "width", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                        <Input type="number" placeholder="Tinggi" value={slot.height} onChange={(e) => handleSlotChange(index, "height", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                        <Button type="button" onClick={() => handleRemoveSlot(index)} variant="destructive" size="icon" className="h-8 w-8 shrink-0 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
-                          <Trash2 size={12} />
+
+                {/* KOORDINAT SLOTS DENGAN DROPDOWN PRESET */}
+                {formData.type === 'frame' && (
+                  <div className="border-[3px] border-retro-charcoal p-4 bg-[#EFE9DB]/30">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                      <label className="block text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <LayoutGrid size={16} /> Koordinat Lubang Foto
+                      </label>
+                      
+                      {/* DROPDOWN TEMPLATE CEPAT */}
+                      <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                        <select 
+                          onChange={(e) => handleApplyPreset(e.target.value)}
+                          defaultValue="custom"
+                          className="border-[2px] border-retro-charcoal bg-white px-2 py-1 text-[10px] font-bold uppercase cursor-pointer"
+                        >
+                          <option value="custom">-- Pilih Template Cepat --</option>
+                          <option value="2r_strip_square">Template 2R Strip (Lubang KOTAK)</option>
+                          <option value="2r_strip_3">Template 2R Strip (6 Lubang)</option>
+                          <option value="4r_grid_4">Template 4R Grid (4 Lubang)</option>
+                        </select>
+
+                        <Button type="button" onClick={handleAddSlot} size="sm" className="bg-retro-charcoal text-white hover:bg-black font-bold uppercase text-[10px] tracking-wider border-[2px] border-retro-charcoal">
+                          + Custom Slot
                         </Button>
                       </div>
-                    ))}
+                    </div>
+                    
+                    {slots.length === 0 ? (
+                      <div className="text-center p-4 text-xs font-bold text-retro-charcoal/60 uppercase">Belum ada lubang foto ditentukan. Pilih Template di atas.</div>
+                    ) : (
+                      <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                        {slots.map((slot, index) => (
+                          <div key={slot.id} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-white p-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                            <div className="font-black bg-retro-charcoal text-white px-2 py-1 text-xs">#{index + 1}</div>
+                            <Input type="number" placeholder="X" value={slot.x} onChange={(e) => handleSlotChange(index, "x", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                            <Input type="number" placeholder="Y" value={slot.y} onChange={(e) => handleSlotChange(index, "y", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                            <Input type="number" placeholder="Lebar" value={slot.width} onChange={(e) => handleSlotChange(index, "width", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                            <Input type="number" placeholder="Tinggi" value={slot.height} onChange={(e) => handleSlotChange(index, "height", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
+                            <Button type="button" onClick={() => handleRemoveSlot(index)} variant="destructive" size="icon" className="h-8 w-8 shrink-0 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                              <Trash2 size={12} />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* AREA INPUT UPLOAD FILE */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest mb-2">
+                    Berkas Bingkai PNG {isEditMode && "(Kosongkan jika gambar tidak diganti)"}
+                  </label>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-[3px] border-dashed border-retro-charcoal bg-[#EFE9DB]/10 p-6 text-center cursor-pointer hover:bg-[#EFE9DB]/30 transition-colors flex flex-col items-center justify-center gap-2"
+                  >
+                    <Upload size={24} className="text-retro-charcoal/50" />
+                    <span className="text-xs font-black uppercase tracking-wider">Klik untuk memilih berkas PNG transparan</span>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/jpg" className="hidden" required={!isEditMode} />
+                  </div>
+                </div>
+
+                {/* AREA PREVIEW GAMBAR (Khusus untuk tipe selain Frame) */}
+                {formData.type !== 'frame' && previewUrl && (
+                  <div className="border-[3px] border-retro-charcoal p-2 bg-white shadow-[4px_4px_0_0_#262626]">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-retro-charcoal/50 mb-1 flex items-center gap-1"><Eye size={12}/> Pratinjau Berkas Terpilih:</div>
+                    <div className="h-40 w-full bg-retro-cream border-[2px] border-retro-charcoal p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previewUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
+                    </div>
                   </div>
                 )}
               </div>
-            )}
 
-            {/* AREA INPUT UPLOAD FILE */}
-            <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2">
-                Berkas Bingkai PNG {isEditMode && "(Kosongkan jika gambar tidak diganti)"}
-              </label>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-[3px] border-dashed border-retro-charcoal bg-[#EFE9DB]/10 p-6 text-center cursor-pointer hover:bg-[#EFE9DB]/30 transition-colors flex flex-col items-center justify-center gap-2"
-              >
-                <Upload size={24} className="text-retro-charcoal/50" />
-                <span className="text-xs font-black uppercase tracking-wider">Klik untuk memilih berkas PNG transparan</span>
-                <span className="text-[10px] font-bold text-retro-charcoal/40">Maksimal Ukuran File: 5 MB</span>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/jpg" className="hidden" required={!isEditMode} />
-              </div>
-            </div>
-
-            {/* AREA PREVIEW GAMBAR */}
-            {previewUrl && (
-              <div className="border-[3px] border-retro-charcoal p-2 bg-white shadow-[4px_4px_0_0_#262626]">
-                <div className="text-[10px] font-black uppercase tracking-widest text-retro-charcoal/50 mb-1 flex items-center gap-1"><Eye size={12}/> Pratinjau Berkas Terpilih:</div>
-                <div className="h-40 w-full bg-retro-cream border-[2px] border-retro-charcoal p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
+              {/* SISI KANAN: LIVE PREVIEW LUBANG BINGKAI (Hanya untuk tipe Frame) */}
+              {formData.type === 'frame' && (
+                <div className="space-y-2 flex flex-col items-center border-l-[3px] border-dashed border-retro-charcoal/30 pl-0 md:pl-6">
+                  <label className="block text-xs font-black uppercase tracking-widest self-start flex items-center gap-1">
+                    <Eye size={14} /> Pratinjau Lubang Bingkai (Live)
+                  </label>
+                  
+                  <div className="relative w-full max-w-[260px] aspect-[2/3] bg-retro-cream border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626] overflow-hidden flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                    {previewUrl ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={previewUrl} 
+                          alt="Live Preview Frame" 
+                          className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10" 
+                        />
+                        {/* Render Lubang secara Dinamis sesuai koordinat input (berdasarkan skala 1200 x 1800) */}
+                        {slots.map((slot, index) => {
+                          const leftPct = (slot.x / 1200) * 100;
+                          const topPct = (slot.y / 1800) * 100;
+                          const widthPct = (slot.width / 1200) * 100;
+                          const heightPct = (slot.height / 1800) * 100;
+                          
+                          return (
+                            <div
+                              key={`live-slot-preview-${slot.id}-${index}`}
+                              className="absolute border-[2px] border-[#FF0000] bg-[#FF0000]/15 flex flex-col items-center justify-center text-[#FF0000] font-black text-[9px] uppercase z-20 pointer-events-none"
+                              style={{
+                                left: `${leftPct}%`,
+                                top: `${topPct}%`,
+                                width: `${widthPct}%`,
+                                height: `${heightPct}%`,
+                              }}
+                            >
+                              <span>S{index + 1}</span>
+                              <span className="text-[7px] font-bold block leading-none">{slot.width}x{slot.height}</span>
+                            </div>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      <div className="text-center p-6 text-xs font-bold text-retro-charcoal/40 uppercase">Belum ada gambar bingkai dipilih</div>
+                    )}
+                  </div>
+                  
+                  <div className="text-[10px] font-bold text-retro-charcoal/50 leading-relaxed mt-2 text-center uppercase tracking-wide bg-white p-2 border-2 border-retro-charcoal/25 w-full">
+                    Keterangan:<br/>
+                    Skala Kanvas Bingkai Standar adalah <strong className="text-[#FF0000]">1200 x 1800</strong> piksel.
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <DialogFooter className="mt-6 border-t-[3px] border-dashed border-retro-charcoal pt-4">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest">Batal</Button>

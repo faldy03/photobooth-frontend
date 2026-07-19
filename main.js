@@ -92,6 +92,103 @@ app.whenReady().then(() => {
   createWindow();
 });
 
+// =========================================================================
+// FITUR SINKRONISASI OTOMATIS: DETEKSI FOTO LOKAL -> UPLOAD KE CLOUD
+// =========================================================================
+const watchedFiles = new Set();
+
+function startFolderWatcher() {
+  const paths = [
+    'C:\\PhotoboothPhotos',
+    'C:\\laragon\\www\\photobooth-backend\\public\\raw_photos',
+    'C:\\xampp\\htdocs\\photobooth\\photobooth-backend\\public\\raw_photos'
+  ];
+
+  // Pastikan folder universal C:\PhotoboothPhotos selalu dibuat jika belum ada
+  paths.forEach(dir => {
+    try {
+      if (!fs.existsSync(dir) && dir === 'C:\\PhotoboothPhotos') {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log('[WATCHER] Folder universal berhasil dibuat:', dir);
+      }
+    } catch (e) {
+      console.error('[WATCHER] Gagal membuat folder:', dir, e.message);
+    }
+  });
+
+  // Daftarkan file yang sudah ada agar tidak di-upload ulang pada saat startup
+  paths.forEach(dir => {
+    try {
+      if (fs.existsSync(dir)) {
+        fs.readdirSync(dir).forEach(file => {
+          watchedFiles.add(path.join(dir, file));
+        });
+      }
+    } catch (e) {
+      console.error('[WATCHER] Gagal menginisialisasi folder:', dir, e.message);
+    }
+  });
+
+  console.log('[WATCHER] Memulai pemantauan folder foto DSLR lokal...');
+
+  setInterval(() => {
+    paths.forEach(dir => {
+      try {
+        if (!fs.existsSync(dir)) return;
+
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+          // Hanya proses file gambar JPG/JPEG
+          if (!file.toLowerCase().endsWith('.jpg') && !file.toLowerCase().endsWith('.jpeg')) return;
+          
+          // Abaikan berkas master bawaan seeder
+          if (file === 'photo_1784298780_XFWUa.jpg' || file === 'photo_1784298962_T7EhQ.jpg') return;
+
+          const fullPath = path.join(dir, file);
+          if (!watchedFiles.has(fullPath)) {
+            watchedFiles.add(fullPath);
+            console.log('[WATCHER] Mendeteksi foto DSLR baru:', file);
+            
+            // Tunggu 500ms agar digiCamControl selesai menulis file secara utuh sebelum dibaca
+            setTimeout(() => {
+              uploadPhotoToCloud(fullPath, file);
+            }, 500);
+          }
+        });
+      } catch (err) {
+        // Abaikan error pembacaan sementara
+      }
+    });
+  }, 1000); // Polling setiap 1 detik
+}
+
+async function uploadPhotoToCloud(filePath, filename) {
+  try {
+    const fileBuffer = fs.readFileSync(filePath);
+    
+    // Gunakan FormData bawaan Node.js
+    const formData = new FormData();
+    const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
+    formData.append('photo', blob, filename);
+
+    console.log('[WATCHER] Mengunggah foto ke cloud server:', filename);
+
+    const response = await fetch('https://boothflow.site/api/kiosk/receive-dslr-photo', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log('[WATCHER SUCCESS] Foto berhasil disimpan di cloud database:', data.filename);
+    } else {
+      console.error('[WATCHER ERROR] Server menolak upload:', data.message);
+    }
+  } catch (err) {
+    console.error('[WATCHER ERROR] Gagal mengirim file ke cloud:', err.message);
+  }
+}
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
