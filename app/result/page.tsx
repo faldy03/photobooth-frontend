@@ -255,30 +255,42 @@ const handlePrint = async () => {
       setQrUrl(resultLaravel.download_link);
 
       // ================================================================
-      // 2. KIRIM KE NODE.JS (Untuk Mencetak Fisik ke Mesin DNP)
+      // 2. KIRIM UNTUK DI-PRINT (Fisik ke Mesin DNP)
       // ================================================================
       const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
 
-      try {
-        const responseNode = await fetch("http://127.0.0.1:3001/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            final_photo_base64: pureBase64,
-            final_photo_url: resultLaravel.download_link,
-            source: "drive"
-          }),
-        });
-
-        if (!responseNode.ok) {
-          throw new Error("Respon Node.js tidak OK");
+      // Cek apakah berjalan di dalam aplikasi Electron (Desktop App)
+      if (typeof window !== 'undefined' && (window as any).electron) {
+        try {
+          (window as any).electron.printPhoto(mergedImage);
+          toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
+        } catch (elecError) {
+          console.error("Gagal cetak melalui Electron IPC:", elecError);
+          toast.error("Gagal Mencetak", { description: "Gagal terhubung ke modul cetak Electron." });
         }
-        
-        toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
-        
-      } catch (nodeError) {
-        console.error("Gagal koneksi ke Node.js Printer:", nodeError);
-        toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke mesin printer fisik (Node.js)." });
+      } else {
+        // Fallback: Kirim ke Node.js local agent port 3001 jika dijalankan di browser biasa
+        try {
+          const responseNode = await fetch("http://127.0.0.1:3001/print", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              final_photo_base64: pureBase64,
+              final_photo_url: resultLaravel.download_link,
+              source: "drive"
+            }),
+          });
+
+          if (!responseNode.ok) {
+            throw new Error("Respon Node.js tidak OK");
+          }
+          
+          toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
+          
+        } catch (nodeError) {
+          console.error("Gagal koneksi ke Node.js Printer:", nodeError);
+          toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke mesin printer fisik (Node.js)." });
+        }
       }
 
     } catch (error: unknown) {

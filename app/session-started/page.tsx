@@ -9,34 +9,29 @@ import { getApiUrl } from "@/lib/api";
 
 export default function SessionStartedPage() {
   const router = useRouter();
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const photosRef = useRef<string[]>([]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [frameSlots, setFrameSlots] = useState<any[]>([]);
-  const [requiredSelections, setRequiredSelections] = useState(3); 
+  const [requiredSelections, setRequiredSelections] = useState(3);
   const [frameUrl, setFrameUrl] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     countdown_duration_seconds: 5,
-    max_photos_taken: 6, 
+    max_photos_taken: 6,
   });
-  
+
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [sessionState, setSessionState] = useState<'initializing' | 'ready' | 'capturing' | 'review' | 'done'>('initializing');
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
-  // Kamera selector
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
-
-  // 1. Ambil setting & frame dari localStorage, serta list kamera
   useEffect(() => {
     const savedFrameUrl = localStorage.getItem("selected_frame_url");
     if (!savedFrameUrl) {
-      router.push("/frame-selection"); 
+      router.push("/frame-selection");
       return;
     }
     setFrameUrl(savedFrameUrl);
@@ -62,83 +57,34 @@ export default function SessionStartedPage() {
       }
     }
 
-    // List devices
-    const getDevices = async () => {
-      try {
-        // Request permission first
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        const deviceList = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = deviceList.filter(device => device.kind === 'videoinput');
-        setDevices(videoDevices);
-        if (videoDevices.length > 0) {
-          const savedCam = localStorage.getItem("selected_kiosk_camera");
-          const defaultCam = videoDevices.find(d => d.deviceId === savedCam) || videoDevices[0];
-          setSelectedDeviceId(defaultCam.deviceId);
-        }
-      } catch (e) {
-        console.error("Gagal mendapatkan daftar kamera:", e);
-      }
-    };
-    getDevices();
-  }, [router]);
-
-  // 2. Efek untuk menyalakan/mengubah kamera preview
-  useEffect(() => {
-    if (!selectedDeviceId) return;
-    localStorage.setItem("selected_kiosk_camera", selectedDeviceId);
-
-    let active = true;
-    let localStream: MediaStream | null = null;
-
+    // =====================================================================
+    // 1. MENYALAKAN WEBCAM UNTUK LIVE PREVIEW YANG SUPER MULUS
+    // =====================================================================
     const startWebcamPreview = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            deviceId: { exact: selectedDeviceId },
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 } 
-          } 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
         });
-        if (!active) {
-          stream.getTracks().forEach(track => track.stop());
-          return;
-        }
-        localStream = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setSessionState('ready');
         }
       } catch (err) {
-        console.error("Gagal membuka kamera pilihan:", err);
-        // Fallback jika deviceId exact gagal
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          if (!active) {
-            stream.getTracks().forEach(track => track.stop());
-            return;
-          }
-          localStream = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            setSessionState('ready');
-          }
-        } catch (fallbackErr) {
-          console.error("Webcam tidak ditemukan:", fallbackErr);
-          toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
-          setSessionState('ready');
-        }
+        console.error("Webcam tidak ditemukan:", err);
+        toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
+        setSessionState('ready');
       }
     };
 
     startWebcamPreview();
 
     return () => {
-      active = false;
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
       }
     };
-  }, [selectedDeviceId]);
+  }, [router]);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -189,7 +135,7 @@ export default function SessionStartedPage() {
 
         if (data.success && data.filename !== lastFileName) {
           newPhotoUrl = data.url + "?cb=" + Date.now();
-          break; 
+          break;
         }
         attempts++;
       }
@@ -278,30 +224,13 @@ export default function SessionStartedPage() {
           </div>
         </div>
 
-        {/* Dropdown Pilihan Kamera */}
-        {devices.length > 1 && sessionState !== "capturing" && (
-          <div className="absolute top-4 right-4 z-20">
-            <select
-              value={selectedDeviceId}
-              onChange={(e) => setSelectedDeviceId(e.target.value)}
-              className="bg-white border-[3px] border-retro-charcoal px-3 py-1.5 font-black uppercase text-[10px] tracking-widest shadow-[4px_4px_0_0_#262626] focus:outline-none cursor-pointer text-retro-charcoal"
-            >
-              {devices.map((device, idx) => (
-                <option key={device.deviceId} value={device.deviceId}>
-                  {device.label || `Kamera ${idx + 1}`}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {/* MENGGUNAKAN VIDEO TAG UNTUK WEBCAM (SANGAT MULUS, BEBAS LAG) */}
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          muted 
-          className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" 
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
         />
 
         <div className={`absolute inset-0 bg-white z-40 transition-opacity duration-100 ${isFlashing ? "opacity-100" : "opacity-0 pointer-events-none"}`}></div>
@@ -345,28 +274,28 @@ export default function SessionStartedPage() {
             <div className="relative w-full max-w-[320px] aspect-[2/3] border-[4px] border-retro-charcoal shadow-[6px_6px_0_0_#262626] bg-white overflow-hidden">
               {frameSlots.length > 0
                 ? frameSlots.map((slot, i) => {
-                    const photoIndexToUse = i % requiredSelections;
-                    const selectedPhotoIndex = selectedIndices[photoIndexToUse];
-                    const photoData = selectedPhotoIndex !== undefined ? photos[selectedPhotoIndex] : null;
+                  const photoIndexToUse = i % requiredSelections;
+                  const selectedPhotoIndex = selectedIndices[photoIndexToUse];
+                  const photoData = selectedPhotoIndex !== undefined ? photos[selectedPhotoIndex] : null;
 
-                    const dynamicStyle = {
-                      left: `${(slot.x / 1200) * 100}%`,
-                      top: `${(slot.y / 1800) * 100}%`,
-                      width: `${(slot.width / 1200) * 100}%`,
-                      height: `${(slot.height / 1800) * 100}%`,
-                    };
+                  const dynamicStyle = {
+                    left: `${(slot.x / 1200) * 100}%`,
+                    top: `${(slot.y / 1800) * 100}%`,
+                    width: `${(slot.width / 1200) * 100}%`,
+                    height: `${(slot.height / 1800) * 100}%`,
+                  };
 
-                    return (
-                      <div key={`slot-dinamis-${i}`} className="absolute bg-gray-200 overflow-hidden" style={dynamicStyle}>
-                        {photoData ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={photoData} className="w-full h-full object-cover scale-x-[-1] animate-in zoom-in-95 duration-300" alt={`L-${i}`} />
-                        ) : (
-                          <span className="absolute inset-0 flex items-center justify-center text-gray-400 font-black text-[8px] uppercase">SLOT {i + 1}</span>
-                        )}
-                      </div>
-                    );
-                  })
+                  return (
+                    <div key={`slot-dinamis-${i}`} className="absolute bg-gray-200 overflow-hidden" style={dynamicStyle}>
+                      {photoData ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photoData} className="w-full h-full object-cover scale-x-[-1] animate-in zoom-in-95 duration-300" alt={`L-${i}`} />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-gray-400 font-black text-[8px] uppercase">SLOT {i + 1}</span>
+                      )}
+                    </div>
+                  );
+                })
                 : null}
               {frameUrl && (
                 // eslint-disable-next-line @next/next/no-img-element

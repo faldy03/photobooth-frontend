@@ -2,11 +2,14 @@
   "name": "photobooth-frontend",
   "version": "0.1.0",
   "private": true,
+  "main": "main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "desktop": "electron .",
+    "dist": "electron-builder"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -30,9 +33,24 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "electron-is-dev": "^3.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.boothflow.kiosk",
+    "productName": "BoothFlow",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ]
   }
 }
