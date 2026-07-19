@@ -28,6 +28,11 @@ export default function SessionStartedPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
+  // States untuk Webcam Selector
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+
+  // 1. Load data frame dari localStorage pada saat load awal
   useEffect(() => {
     const savedFrameUrl = localStorage.getItem("selected_frame_url");
     if (!savedFrameUrl) {
@@ -56,35 +61,73 @@ export default function SessionStartedPage() {
         console.error("Gagal mengekstrak koordinat frame:", err);
       }
     }
+  }, [router]);
 
-    // =====================================================================
-    // 1. MENYALAKAN WEBCAM UNTUK LIVE PREVIEW YANG SUPER MULUS
-    // =====================================================================
+  // 2. Minta izin akses kamera dan daftarkan semua list videoinput
+  useEffect(() => {
+    const listWebcams = async () => {
+      try {
+        // Minta akses kamera agar label perangkat terisi lengkap
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        // Enumerate semua media input
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+        setDevices(videoDevices);
+
+        // Hentikan stream sementara
+        tempStream.getTracks().forEach(track => track.stop());
+
+        if (videoDevices.length > 0) {
+          const saved = localStorage.getItem("selected_webcam_id");
+          const exists = videoDevices.some(d => d.deviceId === saved);
+          setSelectedDeviceId(exists && saved ? saved : videoDevices[0].deviceId);
+        }
+      } catch (err) {
+        console.error("Gagal mendeteksi webcam di laptop:", err);
+        toast.error("Webcam Tidak Ditemukan", { description: "Hubungkan webcam/kamera lalu refresh halaman." });
+      }
+    };
+
+    listWebcams();
+  }, []);
+
+  // 3. Muat Live Stream setiap kali kamera yang dipilih (selectedDeviceId) berubah
+  useEffect(() => {
+    if (!selectedDeviceId) return;
+
+    let active = true;
+    let localStream: MediaStream | null = null;
+
     const startWebcamPreview = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
+          video: { 
+            deviceId: { exact: selectedDeviceId }, 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 } 
+          }
         });
-        if (videoRef.current) {
+        if (active && videoRef.current) {
           videoRef.current.srcObject = stream;
+          localStream = stream;
           setSessionState('ready');
         }
       } catch (err) {
-        console.error("Webcam tidak ditemukan:", err);
-        toast.error("Webcam Preview Gagal", { description: "Pastikan webcam laptop menyala untuk preview." });
-        setSessionState('ready');
+        console.error("Gagal memulai stream webcam terpilih:", err);
+        toast.error("Webcam Preview Gagal", { description: "Gagal memuat pratinjau webcam terpilih." });
       }
     };
 
     startWebcamPreview();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
+      active = false;
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [router]);
+  }, [selectedDeviceId]);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -223,6 +266,29 @@ export default function SessionStartedPage() {
             </h2>
           </div>
         </div>
+
+        {/* SELECTOR KAMERA (Hanya muncul jika ada perangkat webcam yang terdeteksi) */}
+        {devices.length > 0 && (
+          <div className="absolute top-4 right-4 z-20">
+            <div className="bg-white border-[3px] border-retro-charcoal px-2 py-2 shadow-[4px_4px_0_0_#262626] flex items-center gap-2">
+              <select
+                value={selectedDeviceId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedDeviceId(id);
+                  localStorage.setItem("selected_webcam_id", id);
+                }}
+                className="bg-transparent font-black uppercase text-xs focus:outline-none cursor-pointer"
+              >
+                {devices.map((device) => (
+                  <option key={device.deviceId} value={device.deviceId} className="bg-white text-retro-charcoal font-bold">
+                    {device.label || `Kamera ${device.deviceId.substring(0, 5)}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* MENGGUNAKAN VIDEO TAG UNTUK WEBCAM (SANGAT MULUS, BEBAS LAG) */}
         <video

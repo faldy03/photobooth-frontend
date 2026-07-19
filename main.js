@@ -68,7 +68,26 @@ ipcMain.on('print-photo', (event, base64Data) => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  // Autorisasi otomatis untuk akses webcam/kamera di dalam Electron
+  const { session } = require('electron');
+  
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media') {
+      return callback(true); // Izinkan akses kamera/webcam
+    }
+    callback(false);
+  });
+
+  session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
+    if (permission === 'media') {
+      return true; // Izinkan pemeriksaan status kamera
+    }
+    return false;
+  });
+
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
