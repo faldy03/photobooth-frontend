@@ -32,6 +32,25 @@ export default function SessionStartedPage() {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
 
+  // 0. Ambil konfigurasi sistem terupdate dari backend
+  useEffect(() => {
+    const fetchKioskSettings = async () => {
+      try {
+        const res = await fetch(getApiUrl("/api/kiosk/settings"));
+        const data = await res.json();
+        if (data.success && data.data) {
+          setSettings({
+            countdown_duration_seconds: Number(data.data.countdown_duration_seconds) || 5,
+            max_photos_taken: Number(data.data.max_photos_taken) || 6,
+          });
+        }
+      } catch (err) {
+        console.error("Gagal memuat konfigurasi kios dari database:", err);
+      }
+    };
+    fetchKioskSettings();
+  }, []);
+
   // 1. Load data frame dari localStorage pada saat load awal
   useEffect(() => {
     const savedFrameUrl = localStorage.getItem("selected_frame_url");
