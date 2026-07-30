@@ -330,29 +330,33 @@ export default function SessionStartedPage() {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#EFE9DB] flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 font-sans text-retro-charcoal overflow-hidden">
+    <div className="h-screen w-screen bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 font-sans text-[#4A4A4A] overflow-hidden">
       <Toaster position="top-center" richColors />
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap" 
+        rel="stylesheet" 
+      />
 
       {/* SISI KIRI: LAYAR PREVIEW (MENGGUNAKAN WEBCAM) */}
-      <div className="flex-1 min-w-0 relative bg-retro-charcoal border-[6px] border-retro-charcoal shadow-[12px_12px_0_0_#262626] flex flex-col overflow-hidden items-center justify-center">
+      <div className="flex-1 min-w-0 relative bg-retro-charcoal border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col overflow-hidden items-center justify-center rounded-xl">
         <div className="absolute top-4 left-4 z-20 flex gap-2">
-          <div className="bg-white border-[3px] border-retro-charcoal px-4 py-2 shadow-[4px_4px_0_0_#262626]">
-            <h2 className="font-black uppercase tracking-widest text-[#FF0000] text-xs md:text-sm flex items-center gap-2">
+          <div className="bg-white/85 backdrop-blur border border-[#4A4A4A]/15 px-4 py-1.5 rounded-full shadow-sm">
+            <h2 className="font-bold uppercase tracking-widest text-[#4A4A4A] text-xs md:text-sm flex items-center gap-2">
               📸 {sessionState === "review" ? "KAMERA RETAKE" : "LIVE PREVIEW"}
             </h2>
           </div>
           {sessionTimeLeft && (
-            <div className="bg-white border-[3px] border-retro-charcoal px-4 py-2 shadow-[4px_4px_0_0_#262626] flex items-center gap-1.5 z-20">
-              <Clock size={14} className="text-[#FF0000] animate-pulse" />
-              <span className="font-black text-xs md:text-sm text-retro-charcoal">{sessionTimeLeft}</span>
+            <div className="bg-white/85 backdrop-blur border border-[#4A4A4A]/15 px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 z-20">
+              <Clock size={14} className="text-[#4A4A4A] animate-pulse" />
+              <span className="font-bold text-xs md:text-sm text-[#4A4A4A]">{sessionTimeLeft}</span>
             </div>
           )}
         </div>
 
-        {/* SELECTOR KAMERA (Hanya muncul jika ada perangkat webcam yang terdeteksi) */}
+        {/* SELECTOR KAMERA */}
         {devices.length > 0 && (
           <div className="absolute top-4 right-4 z-20">
-            <div className="bg-white border-[3px] border-retro-charcoal px-2 py-2 shadow-[4px_4px_0_0_#262626] flex items-center gap-2">
+            <div className="bg-white/85 backdrop-blur border border-[#4A4A4A]/15 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2">
               <select
                 value={selectedDeviceId}
                 onChange={(e) => {
@@ -360,10 +364,10 @@ export default function SessionStartedPage() {
                   setSelectedDeviceId(id);
                   localStorage.setItem("selected_webcam_id", id);
                 }}
-                className="bg-transparent font-black uppercase text-xs focus:outline-none cursor-pointer"
+                className="bg-transparent font-bold uppercase text-xs focus:outline-none cursor-pointer text-[#4A4A4A]"
               >
                 {devices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId} className="bg-white text-retro-charcoal font-bold">
+                  <option key={device.deviceId} value={device.deviceId} className="bg-white text-[#4A4A4A] font-bold">
                     {device.label || `Kamera ${device.deviceId.substring(0, 5)}`}
                   </option>
                 ))}
@@ -372,7 +376,7 @@ export default function SessionStartedPage() {
           </div>
         )}
 
-        {/* MENGGUNAKAN VIDEO TAG UNTUK WEBCAM (SANGAT MULUS, BEBAS LAG) */}
+        {/* MENGGUNAKAN VIDEO TAG UNTUK WEBCAM */}
         <video
           ref={videoRef}
           autoPlay
@@ -385,16 +389,19 @@ export default function SessionStartedPage() {
 
         {countdown !== null && (
           <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-            <span className="text-[150px] md:text-[300px] font-black text-[#FF0000] drop-shadow-[8px_8px_0_rgba(255,255,255,1)] animate-in zoom-in duration-300">
+            <span 
+              className="text-[120px] md:text-[240px] font-light text-[#4A4A4A] drop-shadow-[0_4px_20px_rgba(255,255,255,0.7)] animate-in zoom-in duration-300"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
               {countdown}
             </span>
           </div>
         )}
 
         {sessionState === "done" && (
-          <div className="absolute inset-0 bg-retro-charcoal/95 z-[60] flex flex-col items-center justify-center text-white animate-in fade-in duration-500">
-            <h1 className="text-5xl font-black text-[#FF0000]">MANTAP!</h1>
-            <p className="font-bold mt-4 tracking-widest uppercase">Memproses Cetakan 2R...</p>
+          <div className="absolute inset-0 bg-white/95 z-[60] flex flex-col items-center justify-center text-[#4A4A4A] backdrop-blur-sm animate-in fade-in duration-500">
+            <h1 className="text-4xl md:text-5xl font-normal uppercase tracking-[0.2em] mb-4" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>MANTAP!</h1>
+            <p className="font-light tracking-[0.3em] uppercase text-xs">Memproses Cetakan 2R...</p>
           </div>
         )}
 
@@ -402,9 +409,9 @@ export default function SessionStartedPage() {
           <div className="absolute bottom-10 left-0 w-full flex justify-center z-20">
             <Button
               onClick={startPhotoSession}
-              className="bg-[#FF0000] hover:bg-[#d9383a] text-white px-10 h-20 text-2xl font-black uppercase border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] animate-bounce active:translate-y-1 active:shadow-none transition-all"
+              className="bg-[#4A4A4A] hover:bg-[#333] text-white px-8 h-14 text-sm tracking-widest font-bold uppercase border-none rounded-lg shadow-md animate-pulse active:translate-y-1 transition-all"
             >
-              <Camera size={36} className="mr-3" /> MULAI BERPOSE
+              <Camera size={18} className="mr-2" /> MULAI BERPOSE
             </Button>
           </div>
         )}
@@ -412,14 +419,17 @@ export default function SessionStartedPage() {
 
       {/* TENGAH: PREVIEW FRAME */}
       {sessionState === "review" && (
-        <div className="hidden md:flex w-[340px] xl:w-[420px] shrink-0 bg-white border-[6px] border-retro-charcoal shadow-[12px_12px_0_0_#262626] flex-col animate-in slide-in-from-bottom-8 duration-500">
-          <div className="bg-retro-charcoal text-white text-center py-4 border-b-[4px] border-retro-charcoal shrink-0">
-            <h3 className="font-black uppercase tracking-widest flex items-center justify-center gap-2">
-              <Sparkles className="text-[#FF0000]" /> Pratinjau Bingkai
+        <div className="hidden md:flex w-[340px] xl:w-[400px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-col animate-in slide-in-from-bottom-8 duration-500 rounded-xl overflow-hidden">
+          <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
+            <h3 
+              className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              <Sparkles size={14} /> Pratinjau Bingkai
             </h3>
           </div>
-          <div className="flex-1 bg-[#EFE9DB] p-4 flex flex-col items-center justify-center overflow-hidden">
-            <div className="relative w-full max-w-[320px] aspect-[2/3] border-[4px] border-retro-charcoal shadow-[6px_6px_0_0_#262626] bg-white overflow-hidden">
+          <div className="flex-1 bg-[#FAF9F6] p-4 flex flex-col items-center justify-center overflow-hidden">
+            <div className="relative w-full max-w-[280px] aspect-[2/3] border border-[#4A4A4A]/15 shadow-sm bg-white overflow-hidden rounded-lg">
               {frameSlots.length > 0
                 ? frameSlots.map((slot, i) => {
                   const photoIndexToUse = i % requiredSelections;
@@ -439,7 +449,7 @@ export default function SessionStartedPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={photoData} className="w-full h-full object-cover scale-x-[-1] animate-in zoom-in-95 duration-300" alt={`L-${i}`} />
                       ) : (
-                        <span className="absolute inset-0 flex items-center justify-center text-gray-400 font-black text-[8px] uppercase">SLOT {i + 1}</span>
+                        <span className="absolute inset-0 flex items-center justify-center text-gray-400 font-bold text-[8px] uppercase">SLOT {i + 1}</span>
                       )}
                     </div>
                   );
@@ -455,20 +465,26 @@ export default function SessionStartedPage() {
       )}
 
       {/* KANAN: GRID FOTO HASIL DSLR */}
-      <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 bg-white border-[6px] border-retro-charcoal shadow-[12px_12px_0_0_#262626] flex flex-col">
-        <div className="bg-retro-charcoal text-white text-center py-4 border-b-[4px] border-retro-charcoal shrink-0">
-          <h3 className="font-black uppercase tracking-widest flex items-center justify-center gap-2">🖼️ Pilihan Jepretan</h3>
+      <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col rounded-xl overflow-hidden">
+        <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
+          <h3 
+            className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            Pilihan Jepretan
+          </h3>
         </div>
-        <div className="flex-1 bg-[#EFE9DB] p-4 flex flex-col min-h-0 overflow-hidden">
-          <div className="text-xs font-black uppercase text-retro-charcoal mb-4 text-center bg-white border-[2px] border-retro-charcoal p-2 shadow-[2px_2px_0_0_#262626] shrink-0">
+        <div className="flex-1 bg-[#FAF9F6] p-4 flex flex-col min-h-0 overflow-hidden">
+          <div className="text-[10px] font-bold uppercase text-[#7A7A7A] mb-4 text-center bg-white border border-[#4A4A4A]/10 p-2 rounded-lg shrink-0">
             {sessionState === "review" ? (
-              <span className="flex items-center justify-center gap-2">
-                <MousePointerClick size={16} className="text-[#FF0000]" /> Pilih {requiredSelections} Foto Terbaik Anda
+              <span className="flex items-center justify-center gap-1">
+                Pilih {requiredSelections} Foto Terbaik Anda
               </span>
             ) : (
               `Menunggu foto diambil... (0/${settings.max_photos_taken})`
             )}
           </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full flex-1 overflow-y-auto pr-2 pb-4 content-start">
             {Array.from({ length: settings.max_photos_taken }).map((_, i) => {
               const photo = photos[i];
@@ -476,43 +492,44 @@ export default function SessionStartedPage() {
               const isSelected = selectionOrder > 0;
 
               return (
-                <div key={i} className={`flex flex-col border-[3px] border-retro-charcoal bg-white p-2 relative h-max transition-all ${isSelected ? "shadow-[6px_6px_0_0_#FF0000] -translate-y-1" : "shadow-[4px_4px_0_0_#262626]"}`}>
-                  <div onClick={() => toggleSelection(i)} className={`w-full overflow-hidden border-[2px] relative flex items-center justify-center cursor-pointer transition-all ${isSelected ? "border-[#FF0000] ring-4 ring-[#FF0000]/20" : "border-retro-charcoal bg-gray-200 hover:opacity-90"}`}>
+                <div key={i} className={`flex flex-col border border-[#4A4A4A]/10 bg-white p-2.5 relative h-max transition-all rounded-lg shadow-sm ${isSelected ? "border-[#4A4A4A] shadow-md -translate-y-1" : ""}`}>
+                  <div onClick={() => toggleSelection(i)} className={`w-full overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/15" : "border-[#4A4A4A]/10 bg-gray-50 hover:opacity-90"}`}>
                     {photo ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={photo} className="w-full h-auto object-contain scale-x-[-1]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
                         {isSelected && (
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center animate-in fade-in duration-200">
-                            <div className="bg-[#FF0000] text-white w-14 h-14 flex items-center justify-center rounded-full border-[3px] border-white shadow-[0_0_20px_rgba(255,0,0,0.8)] animate-in zoom-in-50 spin-in-12 duration-300">
-                              <Check size={32} strokeWidth={4} />
+                          <div className="absolute inset-0 bg-black/10 flex items-center justify-center animate-in fade-in duration-200">
+                            <div className="bg-[#4A4A4A] text-white w-10 h-10 flex items-center justify-center rounded-full border border-white shadow animate-in zoom-in-50 duration-300">
+                              <Check size={20} strokeWidth={4} />
                             </div>
-                            <div className="absolute top-2 right-2 bg-white text-[#FF0000] font-black px-2 py-1 text-[10px] border-2 border-[#FF0000]">URUTAN #{selectionOrder}</div>
+                            <div className="absolute top-2 right-2 bg-[#4A4A4A] text-white font-bold px-2 py-0.5 rounded text-[8px]">URUTAN #{selectionOrder}</div>
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="aspect-[4/3] w-full flex items-center justify-center bg-gray-200">
-                        <ImageIcon className="text-retro-charcoal/20" size={32} />
+                      <div className="aspect-[4/3] w-full flex items-center justify-center bg-gray-150 rounded">
+                        <ImageIcon className="text-[#4A4A4A]/10" size={24} />
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 bg-retro-charcoal text-white font-black px-2 py-0.5 text-[10px] shadow-[2px_2px_0_0_#FF0000] z-10">#{i + 1}</div>
+                    <div className="absolute top-2 left-2 bg-[#4A4A4A]/90 text-white font-bold px-2 py-0.5 text-[8px] rounded z-10 shadow-sm">#{i + 1}</div>
                   </div>
-                  <Button onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }} disabled={sessionState !== "review" || !photo} variant="outline" className="mt-2 h-10 w-full border-[2px] border-retro-charcoal bg-white font-black uppercase text-xs hover:bg-[#FF0000] hover:text-white transition-all shadow-[2px_2px_0_0_#262626] active:translate-y-0.5 active:shadow-none disabled:opacity-50">
-                    <RefreshCw size={14} className="mr-2" strokeWidth={3} /> Retake
+                  <Button onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }} disabled={sessionState !== "review" || !photo} variant="outline" className="mt-2 h-9 w-full border border-[#4A4A4A]/10 bg-white font-bold uppercase text-[10px] hover:bg-[#FAF9F6] text-[#4A4A4A] transition-all rounded-lg disabled:opacity-40">
+                    <RefreshCw size={10} className="mr-1.5" /> Retake
                   </Button>
                 </div>
               );
             })}
           </div>
+          
           {sessionState === "review" && (
-            <div className="mt-2 shrink-0 space-y-3 pt-2 border-t-[3px] border-dashed border-retro-charcoal">
-              <div className="flex justify-between items-center px-2 font-black uppercase text-sm">
+            <div className="mt-2 shrink-0 space-y-3 pt-3 border-t border-[#4A4A4A]/10">
+              <div className="flex justify-between items-center px-1 font-bold uppercase text-xs text-[#7A7A7A]">
                 <span>Total Pilihan:</span>
-                <span className="text-[#FF0000] text-lg bg-white px-2 py-1 border-2 border-retro-charcoal shadow-[2px_2px_0_0_#262626]">{selectedIndices.length} / {requiredSelections}</span>
+                <span className="text-[#4A4A4A] font-bold bg-[#FAF9F6] px-2.5 py-1 border border-[#4A4A4A]/10 rounded-lg">{selectedIndices.length} / {requiredSelections}</span>
               </div>
-              <Button onClick={finishSession} className="w-full h-16 bg-[#FF0000] hover:bg-[#d9383a] text-white border-[4px] border-retro-charcoal shadow-[6px_6px_0_0_#262626] font-black text-lg uppercase active:translate-y-1 active:translate-x-1 active:shadow-none transition-all">
-                CETAK FOTO <CheckCircle2 className="ml-2" size={24} />
+              <Button onClick={finishSession} className="w-full h-14 bg-[#4A4A4A] hover:bg-[#333] text-white font-bold text-sm tracking-widest uppercase rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                CETAK FOTO <CheckCircle2 size={18} />
               </Button>
             </div>
           )}

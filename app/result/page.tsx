@@ -364,24 +364,29 @@ const handlePrint = async () => {
     localStorage.removeItem("selected_frame_data"); 
     localStorage.removeItem("transaction_id");
     router.push("/");
-  };
-
-  return (
-    <div className="min-h-screen bg-[#EFE9DB] flex flex-col items-center justify-center p-6 font-sans text-retro-charcoal relative overflow-hidden">
+  };  return (
+    <div className="min-h-screen bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col items-center justify-center p-6 font-sans text-[#4A4A4A] relative overflow-hidden">
       <Toaster position="top-center" richColors />
       <canvas ref={canvasRef} className="hidden" />
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap" 
+        rel="stylesheet" 
+      />
 
       {/* HEADER */}
-      <div className="absolute top-8 w-full flex justify-center z-20">
+      <div className="absolute top-8 w-full flex justify-center z-20 px-8">
         {sessionTimeLeft && (
-          <div className="absolute top-0 right-8 bg-white border-[4px] border-retro-charcoal px-4 py-2.5 shadow-[6px_6px_0_0_#262626] flex items-center gap-1.5 z-20">
-            <Clock size={16} className="text-[#FF0000] animate-pulse" />
-            <span className="font-black text-xs md:text-sm text-retro-charcoal">{sessionTimeLeft}</span>
+          <div className="absolute top-0 right-8 bg-white border border-[#4A4A4A]/25 px-3 py-1 font-bold text-xs uppercase tracking-widest shadow-sm rounded-full flex items-center gap-1.5 z-50">
+            <Clock size={14} className="text-[#4A4A4A] animate-pulse" />
+            <span className="font-bold text-xs md:text-sm text-[#4A4A4A]">{sessionTimeLeft}</span>
           </div>
         )}
-        <div className="bg-white border-[4px] border-retro-charcoal px-8 py-3 shadow-[6px_6px_0_0_#262626]">
-          <h1 className="text-2xl font-black uppercase tracking-widest text-[#FF0000] flex items-center gap-3">
-            <Printer size={28} strokeWidth={3} /> STUDIO PENCETAKAN
+        <div className="bg-white border border-[#4A4A4A]/10 px-6 py-2 shadow-sm rounded-full">
+          <h1 
+            className="text-base md:text-lg font-normal uppercase tracking-[0.15em] text-[#4A4A4A] flex items-center gap-2"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            <Printer size={20} /> STUDIO PENCETAKAN
           </h1>
         </div>
       </div>
@@ -389,18 +394,21 @@ const handlePrint = async () => {
       <div className="w-full max-w-6xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
         
         {/* SISI KIRI: HASIL FINAL (PREVIEW) */}
-        <div className="w-full max-w-[400px] shrink-0 bg-white border-[6px] border-retro-charcoal shadow-[16px_16px_0_0_#262626] flex flex-col relative animate-in slide-in-from-left-8 duration-700">
-          <div className="bg-retro-charcoal text-white text-center py-3 border-b-[4px] border-retro-charcoal">
-            <h3 className="font-black uppercase text-sm flex items-center justify-center gap-2">
-              <Sparkles size={16} className="text-[#FF0000]" /> Pratinjau Cetakan 2R
+        <div className="w-full max-w-[360px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
+          <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
+            <h3 
+              className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              <Sparkles size={14} /> Pratinjau Cetakan 2R
             </h3>
           </div>
 
-          <div className="p-4 bg-gray-100 flex items-center justify-center min-h-[500px]">
+          <div className="p-4 bg-gray-55 flex items-center justify-center min-h-[460px]">
             {isPreparingPreview ? (
-              <div className="flex flex-col items-center justify-center text-retro-charcoal">
-                <Loader2 size={48} className="animate-spin mb-4 text-[#FF0000]" />
-                <p className="font-black uppercase tracking-widest">
+              <div className="flex flex-col items-center justify-center text-[#4A4A4A]">
+                <Loader2 size={36} className="animate-spin mb-3 text-[#4A4A4A]" />
+                <p className="font-bold uppercase tracking-widest text-[10px]">
                   Melebur Foto...
                 </p>
               </div>
@@ -411,11 +419,11 @@ const handlePrint = async () => {
                   <img
                     src={mergedImage}
                     alt="Final Print"
-                    className="w-full h-auto border-[4px] border-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+                    className="w-full h-auto border border-white/60 shadow-md rounded"
                   />
                 )}
                 {isPrinting && (
-                  <div className="absolute top-0 left-0 w-full h-2 bg-[#FF0000] shadow-[0_0_15px_#FF0000] animate-[scan_3s_ease-in-out_infinite] opacity-50 pointer-events-none"></div>
+                  <div className="absolute top-0 left-0 w-full h-2 bg-[#4A4A4A] shadow-[0_0_15px_#4A4A4A] animate-[scan_3s_ease-in-out_infinite] opacity-50 pointer-events-none"></div>
                 )}
               </div>
             )}
@@ -423,89 +431,89 @@ const handlePrint = async () => {
         </div>
 
         {/* SISI KANAN: STATUS, TOMBOL CETAK & QR */}
-        <div className="flex-1 max-w-[500px] flex flex-col gap-6 animate-in slide-in-from-right-8 duration-700 delay-200">
+        <div className="flex-1 max-w-[460px] flex flex-col gap-6 animate-in slide-in-from-right-8 duration-700 delay-200">
           
-          <div className="bg-white border-[4px] border-retro-charcoal p-8 shadow-[8px_8px_0_0_#262626] text-center">
+          <div className="bg-white border border-[#4A4A4A]/10 p-8 shadow-sm text-center rounded-xl">
             {isPreparingPreview ? (
               <>
-                <ImageIcon size={64} className="mx-auto text-gray-300 mb-4 animate-pulse" strokeWidth={2} />
-                <h2 className="text-3xl font-black uppercase text-retro-charcoal animate-pulse mb-2">
+                <ImageIcon size={48} className="mx-auto text-gray-300 mb-4 animate-pulse" strokeWidth={1.5} />
+                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] animate-pulse mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   Menyiapkan...
                 </h2>
-                <p className="font-bold text-retro-charcoal/60 uppercase tracking-widest text-xs">
+                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-[9px] opacity-80">
                   Sedang menggabungkan foto dengan frame.
                 </p>
               </>
             ) : isPrinting ? (
               <>
-                <Printer size={64} className="mx-auto text-[#FF0000] mb-4 animate-bounce" strokeWidth={2} />
-                <h2 className="text-3xl font-black uppercase text-retro-charcoal animate-pulse mb-2">
+                <Printer size={48} className="mx-auto text-[#4A4A4A] mb-4 animate-bounce" strokeWidth={1.5} />
+                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] animate-pulse mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   Mencetak...
                 </h2>
-                <p className="font-bold text-retro-charcoal/60 uppercase tracking-widest text-xs">
+                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-[9px] opacity-80">
                   Mengirim data ke printer DNP RX1HS.
                 </p>
               </>
             ) : errorMsg && !qrUrl ? (
               <>
-                <AlertTriangle size={64} className="mx-auto text-[#FF0000] mb-4" />
-                <h2 className="text-3xl font-black uppercase text-[#FF0000] mb-2">GAGAL</h2>
-                <p className="font-bold text-retro-charcoal/60 uppercase tracking-widest text-xs">
+                <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
+                <h2 className="text-2xl font-normal uppercase text-red-600 mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>GAGAL</h2>
+                <p className="font-bold text-red-500/80 uppercase tracking-widest text-[9px]">
                   {errorMsg}
                 </p>
               </>
             ) : !qrUrl ? (
               <>
-                <Sparkles size={64} className="mx-auto text-yellow-500 mb-4" strokeWidth={2} />
-                <h2 className="text-3xl font-black uppercase text-retro-charcoal mb-2">
+                <Sparkles size={48} className="mx-auto text-yellow-500 mb-4" strokeWidth={1.5} />
+                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                   HASIL SIAP!
                 </h2>
-                <p className="font-bold text-retro-charcoal/70 uppercase tracking-widest text-sm">
+                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-xs">
                   Cek pratinjau di sebelah kiri sebelum mencetak.
                 </p>
               </>
             ) : (
               <>
-                <CheckCircle2 size={64} className="mx-auto text-[#FF0000] mb-4" strokeWidth={3} />
-                <h2 className="text-3xl font-black uppercase text-retro-charcoal mb-2">SELESAI!</h2>
-                <p className="font-bold text-retro-charcoal/70 uppercase tracking-widest text-sm">
+                <CheckCircle2 size={48} className="mx-auto text-green-600 mb-4" strokeWidth={2} />
+                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>SELESAI!</h2>
+                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-xs">
                   Ambil foto fisik Anda.
                 </p>
               </>
             )}
           </div>
 
-          <div className={`bg-white border-[4px] border-retro-charcoal p-8 shadow-[8px_8px_0_0_#262626] flex flex-col items-center text-center transition-all duration-500 ${(isPreparingPreview || isPrinting) ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
+          <div className={`bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col items-center text-center transition-all duration-500 rounded-xl ${(isPreparingPreview || isPrinting) ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
             
             {!qrUrl ? (
               <div className="w-full flex flex-col gap-4">
-                 <h3 className="text-xl font-black uppercase tracking-widest text-retro-charcoal mb-2">
+                 <h3 className="text-sm font-bold uppercase tracking-widest text-[#7A7A7A] mb-1">
                    Konfirmasi Cetak
                  </h3>
                  <Button
                   onClick={handlePrint}
                   disabled={isPreparingPreview || isPrinting}
-                  className="h-24 w-full bg-[#FF0000] hover:bg-red-700 text-white border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] font-black text-3xl uppercase tracking-widest active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center justify-center gap-4"
+                  className="h-14 w-full bg-[#4A4A4A] hover:bg-[#333] text-white border-none font-bold text-sm uppercase tracking-widest rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
                 >
-                  <Printer size={36} strokeWidth={3} /> CETAK FOTO
+                  <Printer size={18} /> CETAK FOTO
                 </Button>
               </div>
             ) : (
               <>
-                <h3 className="text-xl font-black uppercase tracking-widest border-b-[3px] border-dashed border-retro-charcoal pb-3 w-full mb-6 flex items-center justify-center gap-2">
-                  <QrCode size={24} className="text-[#FF0000]" /> Scan Soft File
+                <h3 className="text-sm font-bold uppercase tracking-[0.1em] border-b border-[#4A4A4A]/10 pb-2.5 w-full mb-4 flex items-center justify-center gap-1.5 text-[#7A7A7A]">
+                  <QrCode size={18} className="text-[#4A4A4A]" /> Scan Soft File
                 </h3>
 
-                <div className="bg-white border-[4px] border-retro-charcoal p-3 mb-4 inline-block shadow-[4px_4px_0_0_#262626]">
-                  <QRCodeSVG value={qrUrl} size={200} level={"H"} includeMargin={false} />
+                <div className="bg-white border border-[#4A4A4A]/10 p-3 mb-3 inline-block rounded-lg shadow-sm">
+                  <QRCodeSVG value={qrUrl} size={180} level={"H"} includeMargin={false} />
                 </div>
 
-                <p className="text-xs font-bold text-[#FF0000] uppercase mb-4 animate-pulse">
+                <p className="text-[10px] font-bold text-yellow-600 uppercase mb-3 animate-pulse">
                   ⚠️ Tersedia hanya selama 60 menit!
                 </p>
 
-                <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-3 block">
-                  <Button type="button" className="w-full h-12 border-[3px] border-dashed border-retro-charcoal bg-yellow-200 hover:bg-yellow-300 text-retro-charcoal font-black uppercase tracking-widest shadow-[4px_4px_0_0_#262626]">
+                <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-2 block">
+                  <Button type="button" className="w-full h-10 border border-[#4A4A4A]/10 bg-[#FAF9F6] hover:bg-white text-[#4A4A4A] font-bold uppercase tracking-widest text-[10px] rounded-lg">
                     🧪 Buka Link di Tab Baru
                   </Button>
                 </a>
@@ -516,9 +524,9 @@ const handlePrint = async () => {
           <Button
             onClick={handleFinish}
             disabled={isPreparingPreview || isPrinting}
-            className="h-20 w-full bg-retro-charcoal hover:bg-black text-white border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#FF0000] font-black text-xl uppercase tracking-widest active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center justify-center gap-3"
+            className="h-12 w-full bg-white hover:bg-[#FAF9F6] border border-[#4A4A4A]/20 text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2"
           >
-            KEMBALI KE BERANDA <Home size={28} strokeWidth={3} />
+            KEMBALI KE BERANDA <Home size={16} />
           </Button>
         </div>
       </div>
