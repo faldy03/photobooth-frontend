@@ -110,15 +110,6 @@ export default function CheckoutPage() {
   const handleCheckout = async () => {
     setLoading(true);
     setShowKeyboard(false); // Tutup keyboard saat loading
-    if (voucherCode !== "SOFTOPENING") { 
-      toast.error("PEMBAYARAN OTOMATIS OFFLINE", { 
-        description: "Silakan scan QRIS di meja dan panggil Admin untuk melanjutkan." 
-      });
-      return; // Hentikan proses, jangan tembak API DOKU
-    }
-
-    setLoading(true);
-    setShowKeyboard(false);
     try {
       const res = await fetch(getApiUrl("/api/checkout"), {
         method: "POST",
