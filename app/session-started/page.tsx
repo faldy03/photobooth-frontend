@@ -70,8 +70,10 @@ export default function SessionStartedPage() {
 
         if (configObj && Array.isArray(configObj.slots)) {
           setFrameSlots(configObj.slots);
-          if (configObj.slots.length === 6) {
-            setRequiredSelections(3);
+          if (configObj.slots.length === 8) {
+            setRequiredSelections(4); // 2R strip dengan 4 foto unik di kiri (diduplikat ke kanan)
+          } else if (configObj.slots.length === 6) {
+            setRequiredSelections(3); // 2R strip dengan 3 foto unik di kiri (diduplikat ke kanan)
           } else if (configObj.slots.length > 0) {
             setRequiredSelections(configObj.slots.length);
           }
