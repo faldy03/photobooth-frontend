@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles } from "lucide-react";
+import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
@@ -31,6 +31,61 @@ export default function SessionStartedPage() {
   // States untuk Webcam Selector
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+
+  // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
+  useEffect(() => {
+    let timerId: NodeJS.Timeout;
+    
+    const startSessionTimeout = async () => {
+      let durationMinutes = 5;
+      try {
+        const res = await fetch(getApiUrl("/api/kiosk/settings"));
+        const json = await res.json();
+        if (json.success && json.data && json.data.session_duration_minutes) {
+          durationMinutes = Number(json.data.session_duration_minutes);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil session_duration_minutes:", err);
+      }
+
+      let startTimeStr = localStorage.getItem("session_start_time");
+      if (!startTimeStr) {
+        startTimeStr = String(Date.now());
+        localStorage.setItem("session_start_time", startTimeStr);
+      }
+      const startTime = Number(startTimeStr);
+      const totalSecondsAllowed = durationMinutes * 60;
+
+      const updateTimer = () => {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = totalSecondsAllowed - elapsedSeconds;
+
+        if (remaining <= 0) {
+          clearInterval(timerId);
+          localStorage.removeItem("captured_photos");
+          localStorage.removeItem("selected_frame_url");
+          localStorage.removeItem("selected_frame_data"); 
+          localStorage.removeItem("transaction_id");
+          localStorage.removeItem("session_start_time");
+          router.push("/");
+        } else {
+          const m = Math.floor(remaining / 60);
+          const s = remaining % 60;
+          setSessionTimeLeft(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      timerId = setInterval(updateTimer, 1000);
+    };
+
+    startSessionTimeout();
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [router]);
 
   // 0. Ambil konfigurasi sistem terupdate dari backend
   useEffect(() => {
@@ -286,6 +341,12 @@ export default function SessionStartedPage() {
               📸 {sessionState === "review" ? "KAMERA RETAKE" : "LIVE PREVIEW"}
             </h2>
           </div>
+          {sessionTimeLeft && (
+            <div className="bg-white border-[3px] border-retro-charcoal px-4 py-2 shadow-[4px_4px_0_0_#262626] flex items-center gap-1.5 z-20">
+              <Clock size={14} className="text-[#FF0000] animate-pulse" />
+              <span className="font-black text-xs md:text-sm text-retro-charcoal">{sessionTimeLeft}</span>
+            </div>
+          )}
         </div>
 
         {/* SELECTOR KAMERA (Hanya muncul jika ada perangkat webcam yang terdeteksi) */}

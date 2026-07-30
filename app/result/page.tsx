@@ -11,7 +11,8 @@ import {
   QrCode,
   AlertTriangle,
   CheckCircle2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
@@ -30,6 +31,61 @@ export default function ResultPage() {
   
   const [rawPhotos, setRawPhotos] = useState<string[]>([]);
   const [transactionIdNum, setTransactionIdNum] = useState<number>(NaN);
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+
+  // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
+  useEffect(() => {
+    let timerId: NodeJS.Timeout;
+    
+    const startSessionTimeout = async () => {
+      let durationMinutes = 5;
+      try {
+        const res = await fetch(getApiUrl("/api/kiosk/settings"));
+        const json = await res.json();
+        if (json.success && json.data && json.data.session_duration_minutes) {
+          durationMinutes = Number(json.data.session_duration_minutes);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil session_duration_minutes:", err);
+      }
+
+      let startTimeStr = localStorage.getItem("session_start_time");
+      if (!startTimeStr) {
+        startTimeStr = String(Date.now());
+        localStorage.setItem("session_start_time", startTimeStr);
+      }
+      const startTime = Number(startTimeStr);
+      const totalSecondsAllowed = durationMinutes * 60;
+
+      const updateTimer = () => {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = totalSecondsAllowed - elapsedSeconds;
+
+        if (remaining <= 0) {
+          clearInterval(timerId);
+          localStorage.removeItem("captured_photos");
+          localStorage.removeItem("selected_frame_url");
+          localStorage.removeItem("selected_frame_data"); 
+          localStorage.removeItem("transaction_id");
+          localStorage.removeItem("session_start_time");
+          router.push("/");
+        } else {
+          const m = Math.floor(remaining / 60);
+          const s = remaining % 60;
+          setSessionTimeLeft(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      timerId = setInterval(updateTimer, 1000);
+    };
+
+    startSessionTimeout();
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [router]);
 
   // =====================================================================
   // FUNGSI BARU: SMART CROP ANTI-PENYOK
@@ -317,6 +373,12 @@ const handlePrint = async () => {
 
       {/* HEADER */}
       <div className="absolute top-8 w-full flex justify-center z-20">
+        {sessionTimeLeft && (
+          <div className="absolute top-0 right-8 bg-white border-[4px] border-retro-charcoal px-4 py-2.5 shadow-[6px_6px_0_0_#262626] flex items-center gap-1.5 z-20">
+            <Clock size={16} className="text-[#FF0000] animate-pulse" />
+            <span className="font-black text-xs md:text-sm text-retro-charcoal">{sessionTimeLeft}</span>
+          </div>
+        )}
         <div className="bg-white border-[4px] border-retro-charcoal px-8 py-3 shadow-[6px_6px_0_0_#262626]">
           <h1 className="text-2xl font-black uppercase tracking-widest text-[#FF0000] flex items-center gap-3">
             <Printer size={28} strokeWidth={3} /> STUDIO PENCETAKAN

@@ -89,6 +89,7 @@ export default function CheckoutPage() {
           if (transactionDbId !== null) {
             localStorage.setItem("transaction_id", String(transactionDbId));
           }
+          localStorage.setItem("session_start_time", String(Date.now()));
 
           toast.success("PEMBAYARAN BERHASIL!", {
             description: "Mengarahkan ke pemilihan bingkai...",
@@ -137,6 +138,7 @@ export default function CheckoutPage() {
         toast.success("SIAP PINDAI!", { description: "Silakan bayar menggunakan M-Banking/E-Wallet Anda." });
       } else {
         localStorage.setItem("transaction_id", String(data.data.id));
+        localStorage.setItem("session_start_time", String(Date.now()));
         toast.success("GRATIS!", { description: "Kupon 100% aktif!" });
         setTimeout(() => router.push("/frame-selection"), 2000);
       }

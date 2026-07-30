@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, AlertCircle, Image as ImageIcon, Sparkles,CheckCircle2 } from "lucide-react";
+import { Camera, AlertCircle, Image as ImageIcon, Sparkles, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getApiUrl } from "@/lib/api";
 
@@ -23,6 +23,60 @@ export default function FrameSelectionPage() {
   const [loading, setLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    let timerId: NodeJS.Timeout;
+    
+    const startSessionTimeout = async () => {
+      let durationMinutes = 5;
+      try {
+        const res = await fetch(getApiUrl("/api/kiosk/settings"));
+        const json = await res.json();
+        if (json.success && json.data && json.data.session_duration_minutes) {
+          durationMinutes = Number(json.data.session_duration_minutes);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil session_duration_minutes:", err);
+      }
+
+      let startTimeStr = localStorage.getItem("session_start_time");
+      if (!startTimeStr) {
+        startTimeStr = String(Date.now());
+        localStorage.setItem("session_start_time", startTimeStr);
+      }
+      const startTime = Number(startTimeStr);
+      const totalSecondsAllowed = durationMinutes * 60;
+
+      const updateTimer = () => {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = totalSecondsAllowed - elapsedSeconds;
+
+        if (remaining <= 0) {
+          clearInterval(timerId);
+          localStorage.removeItem("captured_photos");
+          localStorage.removeItem("selected_frame_url");
+          localStorage.removeItem("selected_frame_data"); 
+          localStorage.removeItem("transaction_id");
+          localStorage.removeItem("session_start_time");
+          router.push("/");
+        } else {
+          const m = Math.floor(remaining / 60);
+          const s = remaining % 60;
+          setSessionTimeLeft(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      timerId = setInterval(updateTimer, 1000);
+    };
+
+    startSessionTimeout();
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [router]);
 
   // Mengambil daftar frame aktif dari database
   useEffect(() => {
@@ -77,6 +131,11 @@ export default function FrameSelectionPage() {
       
       {/* 1. HEADER AREA */}
       <div className="text-center pt-8 pb-4 shrink-0 z-10 relative">
+        {sessionTimeLeft && (
+          <div className="absolute top-4 right-4 bg-white border-[3px] border-retro-charcoal px-3 py-1 font-black text-xs uppercase tracking-widest shadow-[4px_4px_0_0_#262626] flex items-center gap-1.5 z-50">
+            <Clock size={14} className="text-[#FF0000] animate-pulse" /> {sessionTimeLeft}
+          </div>
+        )}
         <h1 className="text-4xl md:text-5xl font-black font-serif uppercase tracking-tighter drop-shadow-sm">
           PILIH BINGKAI FOTO
         </h1>
