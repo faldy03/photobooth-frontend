@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Camera, ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -21,55 +20,44 @@ export default function HomePage() {
   };
 
   return (
-    <div 
+    <div
       onClick={handleStart}
-      className="h-screen w-screen bg-[#FAF8F5] flex flex-col justify-between items-center p-12 md:p-16 font-sans text-[#1A1A1A] select-none cursor-pointer overflow-hidden transition-colors duration-500 hover:bg-[#F5F2EB]"
+      className="h-screen w-screen bg-[#FAF9F6] flex flex-col justify-center items-center font-sans text-[#4A4A4A] select-none cursor-pointer overflow-hidden transition-all duration-700 bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)]"
     >
-      {/* ================= TOP SECTION (SUBTLE) ================= */}
-      <div className={`transition-all duration-1000 transform ${animate ? 'translate-y-0 opacity-40' : '-translate-y-4 opacity-0'} text-xs font-bold tracking-[0.4em] uppercase`}>
-        Booth Flow System v2.0
-      </div>
+      {/* Mengimpor Font Premium Cormorant Garamond */}
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap" 
+        rel="stylesheet" 
+      />
 
-      {/* ================= CENTER SECTION (BRAND MAIN LOGO) ================= */}
-      <div className="flex flex-col items-center max-w-xl w-full">
-        <div 
-          className={`text-center transition-all duration-1000 delay-100 transform ${
-            animate ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-          }`}
-        >
-          {/* Tagline Kecil di Atas Brand */}
-          <span className="inline-block text-xs font-black tracking-[0.3em] uppercase text-[#E53E3E] mb-3">
-            Premium Photobooth
-          </span>
-
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none text-[#1A1A1A]">
-            BOOTH
-            <span className="block text-[#E53E3E] tracking-tight">FLOW.</span>
-          </h1>
-
-          {/* Garis Pembatas Minimalis */}
-          <div className="w-16 h-[3px] bg-[#1A1A1A] mx-auto mt-6 opacity-20"></div>
-        </div>
-      </div>
-
-      {/* ================= BOTTOM SECTION (CALL TO ACTION) ================= */}
+      {/* ================= CENTER SECTION (BRAND LOGO) ================= */}
       <div 
-        className={`flex flex-col items-center gap-3 transition-all duration-1000 delay-300 transform ${
-          animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+        className={`text-center space-y-3 transition-all duration-1000 transform ${
+          animate ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
       >
-        {/* Tombol Interaktif yang Berkedip Lembut */}
-        <div className="flex items-center gap-3 px-8 py-4 border-2 border-[#1A1A1A] bg-white shadow-[4px_4px_0_0_#1A1A1A] active:translate-y-1 active:shadow-none transition-all duration-150 animate-pulse">
-          <span className="font-bold uppercase tracking-[0.2em] text-sm text-[#1A1A1A]">
-            Sentuh Layar Untuk Memulai
-          </span>
-          <ArrowRight size={16} className="text-[#E53E3E]" />
-        </div>
+        <h1 
+          className="text-5xl md:text-7xl font-normal tracking-[0.25em] uppercase text-[#4A4A4A] select-none"
+          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+        >
+          HELLO.PICTA
+        </h1>
         
-        {/* Indikator Fitur */}
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#1A1A1A]/40 mt-1">
-          <Camera size={12} /> Format Cetak 2R Double Strip
-        </div>
+        <p 
+          className="text-[10px] md:text-xs font-light tracking-[0.6em] uppercase text-[#7A7A7A] select-none pl-[0.6em] opacity-80"
+          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+        >
+          PHOTOBOOTH
+        </p>
+      </div>
+
+      {/* ================= BOTTOM SECTION (SUBTLE INDICATOR) ================= */}
+      <div 
+        className={`absolute bottom-16 text-[9px] font-bold tracking-[0.3em] uppercase text-[#4A4A4A]/30 transition-all duration-1000 delay-500 transform ${
+          animate ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+        }`}
+      >
+        TAP ANYWHERE TO START
       </div>
     </div>
   );
