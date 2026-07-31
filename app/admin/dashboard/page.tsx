@@ -27,6 +27,9 @@ export default function AdminDashboard() {
     totalUsers: 0, 
   });
   const [kiosks, setKiosks] = useState<KioskDevice[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<any[]>([]);
+  const [chartTab, setChartTab] = useState<"daily" | "cumulative">("daily");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -74,10 +77,12 @@ export default function AdminDashboard() {
           }
         }
 
-        // 3. Ambil Total Pendapatan
+        // 3. Ambil Total Pendapatan & Pendapatan Harian
         let totalRevenue = 0;
+        let dailyRev = [];
         if (statsRes.ok && statsData.success) {
           totalRevenue = statsData.data.total_revenue || 0;
+          dailyRev = statsData.data.daily_revenue || [];
         }
 
         // Memperbarui state dengan data dari database
@@ -86,6 +91,7 @@ export default function AdminDashboard() {
           activeVouchers: activeCount,
           totalUsers: userCount, 
         });
+        setDailyRevenue(dailyRev);
 
         if (kiosksRes.ok) {
           setKiosks(kiosksData.data || []);
@@ -218,6 +224,239 @@ export default function AdminDashboard() {
         </Link>
         
       </div>
+
+      {/* SECTION GRAFIK PENDAPATAN */}
+      {(() => {
+        // Menghitung data akumulasi untuk grafik garis
+        let sum = 0;
+        const cumulativeData = dailyRevenue.map((item) => {
+          sum += item.revenue;
+          return {
+            ...item,
+            cumulative: sum,
+          };
+        });
+
+        return (
+          <div className="mt-8 bg-white border-[4px] border-retro-charcoal p-6 shadow-[6px_6px_0_0_#262626]">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-[4px] border-retro-charcoal pb-4 mb-6 gap-4">
+              <div>
+                <h2 className="text-2xl font-black font-serif uppercase tracking-tight">
+                  Analisis Pendapatan Kios
+                </h2>
+                <p className="text-xs font-bold uppercase tracking-wider text-retro-charcoal/60 mt-1">
+                  Data grafik pendapatan 7 hari terakhir
+                </p>
+              </div>
+              <div className="flex border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] rounded overflow-hidden">
+                <button
+                  onClick={() => setChartTab("daily")}
+                  className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-colors cursor-pointer ${
+                    chartTab === "daily"
+                      ? "bg-retro-charcoal text-white"
+                      : "hover:bg-[#EFE9DB]/40 text-retro-charcoal"
+                  }`}
+                >
+                  Harian
+                </button>
+                <button
+                  onClick={() => setChartTab("cumulative")}
+                  className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-colors cursor-pointer ${
+                    chartTab === "cumulative"
+                      ? "bg-retro-charcoal text-white"
+                      : "hover:bg-[#EFE9DB]/40 text-retro-charcoal"
+                  }`}
+                >
+                  Total Akumulasi
+                </button>
+              </div>
+            </div>
+
+            {/* AREA GRAFIK SVG */}
+            {dailyRevenue.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-sm font-bold uppercase tracking-widest text-retro-charcoal/40">
+                Belum ada data pendapatan 7 hari terakhir.
+              </div>
+            ) : (
+              <div className="relative">
+                {chartTab === "daily" ? (
+                  // 📊 GRAFIK BATANG HARIAN
+                  <div className="w-full">
+                    <div className="h-64 w-full relative flex items-end">
+                      {/* Grid Y-Axis Lines & Labels */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-black uppercase tracking-wider text-retro-charcoal/40 pr-2">
+                        <div className="border-b-2 border-dashed border-retro-charcoal/10 pb-1">
+                          Rp {Number(Math.max(...dailyRevenue.map((d) => d.revenue), 100000)).toLocaleString("id-ID")}
+                        </div>
+                        <div className="border-b-2 border-dashed border-retro-charcoal/10 pb-1">
+                          Rp {Number(Math.max(...dailyRevenue.map((d) => d.revenue), 100000) / 2).toLocaleString("id-ID")}
+                        </div>
+                        <div className="border-b-2 border-retro-charcoal/20 pb-1">
+                          Rp 0
+                        </div>
+                      </div>
+
+                      {/* Bars Container */}
+                      <div className="w-full h-[80%] flex justify-around items-end z-10 px-4">
+                        {dailyRevenue.map((item, idx) => {
+                          const maxVal = Math.max(...dailyRevenue.map((d) => d.revenue), 100000);
+                          const percent = (item.revenue / maxVal) * 100;
+
+                          return (
+                            <div
+                              key={`bar-${idx}`}
+                              className="flex flex-col items-center flex-1 group/bar relative"
+                              onMouseEnter={() => setHoveredIndex(idx)}
+                              onMouseLeave={() => setHoveredIndex(null)}
+                            >
+                              {/* Tooltip */}
+                              {hoveredIndex === idx && (
+                                <div className="absolute -top-12 z-20 bg-retro-charcoal text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#FF0000] rounded-sm whitespace-nowrap animate-in zoom-in-95 duration-100">
+                                  Rp {Number(item.revenue).toLocaleString("id-ID")}
+                                </div>
+                              )}
+
+                              {/* Bar */}
+                              <div
+                                className={`w-12 md:w-16 border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all duration-300 relative cursor-pointer ${
+                                  item.revenue > 0 
+                                    ? "bg-[#FF0000] hover:bg-red-700" 
+                                    : "bg-retro-cream hover:bg-[#FAF9F6]"
+                                }`}
+                                style={{ height: `${Math.max(percent, 4)}%` }}
+                              >
+                                {/* Stripes decoration for positive values */}
+                                {item.revenue > 0 && (
+                                  <div className="absolute inset-0 opacity-15 bg-[repeating-linear-gradient(45deg,#000,#000_10px,transparent_10px,transparent_20px)]" />
+                                )}
+                              </div>
+
+                              {/* Label Hari */}
+                              <span className="text-[10px] md:text-xs font-black uppercase tracking-widest mt-3 text-retro-charcoal">
+                                {item.day}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // 📈 GRAFIK GARIS AKUMULASI
+                  <div className="w-full">
+                    <div className="h-64 w-full relative flex items-end">
+                      {/* Grid Y-Axis Lines & Labels */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-black uppercase tracking-wider text-retro-charcoal/40 pr-2">
+                        <div className="border-b-2 border-dashed border-retro-charcoal/10 pb-1">
+                          Rp {Number(Math.max(...cumulativeData.map((d) => d.cumulative), 100000)).toLocaleString("id-ID")}
+                        </div>
+                        <div className="border-b-2 border-dashed border-retro-charcoal/10 pb-1">
+                          Rp {Number(Math.max(...cumulativeData.map((d) => d.cumulative), 100000) / 2).toLocaleString("id-ID")}
+                        </div>
+                        <div className="border-b-2 border-retro-charcoal/20 pb-1">
+                          Rp 0
+                        </div>
+                      </div>
+
+                      {/* SVG Line / Area chart */}
+                      <div className="w-full h-[80%] z-10 relative">
+                        <svg className="w-full h-full" viewBox="0 0 700 200" preserveAspectRatio="none">
+                          {/* Define gradients */}
+                          <defs>
+                            <linearGradient id="chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#FF0000" stopOpacity="0.15" />
+                              <stop offset="100%" stopColor="#FF0000" stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Area Path */}
+                          {(() => {
+                            const maxVal = Math.max(...cumulativeData.map((d) => d.cumulative), 100000);
+                            const points = cumulativeData.map((item, idx) => {
+                              const x = (idx / 6) * 700;
+                              const y = 200 - (item.cumulative / maxVal) * 180;
+                              return { x, y };
+                            });
+
+                            if (points.length === 0) return null;
+
+                            const pathD = `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') + ` L ${points[points.length - 1].x} 200 L ${points[0].x} 200 Z`;
+
+                            return (
+                              <path
+                                d={pathD}
+                                fill="url(#chart-area-grad)"
+                              />
+                            );
+                          })()}
+
+                          {/* Line Path */}
+                          {(() => {
+                            const maxVal = Math.max(...cumulativeData.map((d) => d.cumulative), 100000);
+                            const points = cumulativeData.map((item, idx) => {
+                              const x = (idx / 6) * 700;
+                              const y = 200 - (item.cumulative / maxVal) * 180;
+                              return `${x},${y}`;
+                            });
+
+                            return (
+                              <polyline
+                                fill="none"
+                                stroke="#262626"
+                                strokeWidth="4"
+                                points={points.join(' ')}
+                              />
+                            );
+                          })()}
+                        </svg>
+
+                        {/* Interactive dots overlay */}
+                        <div className="absolute inset-0 flex justify-between px-0 z-20">
+                          {cumulativeData.map((item, idx) => {
+                            const maxVal = Math.max(...cumulativeData.map((d) => d.cumulative), 100000);
+                            const percentY = (item.cumulative / maxVal) * 180; // max 180px out of 200px
+
+                            return (
+                              <div
+                                key={`dot-${idx}`}
+                                className="flex flex-col items-center relative flex-1"
+                                style={{ height: '100%' }}
+                                onMouseEnter={() => setHoveredIndex(idx)}
+                                onMouseLeave={() => setHoveredIndex(null)}
+                              >
+                                {/* Point Dot */}
+                                <div
+                                  className="absolute w-4 h-4 rounded-full border-[3px] border-retro-charcoal bg-retro-red shadow-[1px_1px_0_0_#262626] cursor-pointer hover:scale-125 transition-transform"
+                                  style={{ bottom: `${percentY - 8}px` }} // -8px to center the dot
+                                />
+
+                                {/* Tooltip */}
+                                {hoveredIndex === idx && (
+                                  <div
+                                    className="absolute z-20 bg-retro-charcoal text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#FF0000] rounded-sm whitespace-nowrap animate-in zoom-in-95 duration-100"
+                                    style={{ bottom: `${percentY + 16}px` }}
+                                  >
+                                    Rp {Number(item.cumulative).toLocaleString("id-ID")}
+                                  </div>
+                                )}
+
+                                {/* Label Hari */}
+                                <span className="absolute bottom-0 text-[10px] md:text-xs font-black uppercase tracking-widest text-retro-charcoal">
+                                  {item.day}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* MONITORING KIOS QUICK-VIEW */}
       <div className="mt-10">
