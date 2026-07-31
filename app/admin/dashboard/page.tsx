@@ -227,13 +227,17 @@ export default function AdminDashboard() {
 
       {/* SECTION GRAFIK PENDAPATAN */}
       {(() => {
-        // Menghitung data akumulasi untuk grafik garis
-        let sum = 0;
+        // Menghitung data akumulasi semua pendapatan (all-time cumulative) s.d. hari ini
+        const totalAllTime = stats.revenue;
+        const totalLast7Days = dailyRevenue.reduce((acc, curr) => acc + curr.revenue, 0);
+        const baseline = Math.max(0, totalAllTime - totalLast7Days);
+
+        let runningSum = baseline;
         const cumulativeData = dailyRevenue.map((item) => {
-          sum += item.revenue;
+          runningSum += item.revenue;
           return {
             ...item,
-            cumulative: sum,
+            cumulative: runningSum,
           };
         });
 
