@@ -348,9 +348,13 @@ export default function SessionStartedPage() {
             </h2>
           </div>
           {sessionTimeLeft && (
-            <div className="bg-white/85 backdrop-blur border border-[#4A4A4A]/15 px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 z-20">
-              <Clock size={14} className="text-[#4A4A4A] animate-pulse" />
-              <span className="font-bold text-xs md:text-sm text-[#4A4A4A]">{sessionTimeLeft}</span>
+            <div className="bg-[#4A4A4A] text-[#FAF9F6] border border-[#4A4A4A] px-4 py-1.5 rounded-full shadow-md flex items-center gap-2 z-20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+              <Clock size={14} className="text-[#FAF9F6] animate-pulse" />
+              <span className="font-bold text-xs md:text-sm">{sessionTimeLeft}</span>
             </div>
           )}
         </div>

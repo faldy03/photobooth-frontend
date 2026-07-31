@@ -137,8 +137,13 @@ export default function FrameSelectionPage() {
       {/* 1. HEADER AREA */}
       <div className="text-center pt-8 pb-4 shrink-0 z-10 relative">
         {sessionTimeLeft && (
-          <div className="absolute top-4 right-6 bg-white border border-[#4A4A4A]/25 px-3 py-1 font-bold text-xs uppercase tracking-widest shadow-sm rounded-full flex items-center gap-1.5 z-50">
-            <Clock size={14} className="text-[#4A4A4A] animate-pulse" /> {sessionTimeLeft}
+          <div className="absolute top-4 right-6 bg-[#4A4A4A] text-[#FAF9F6] border border-[#4A4A4A] px-3.5 py-1.5 font-bold text-xs uppercase tracking-widest shadow-md rounded-full flex items-center gap-2 z-50">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+            <Clock size={14} className="text-[#FAF9F6] animate-pulse" />
+            <span>{sessionTimeLeft}</span>
           </div>
         )}
         <h1 

@@ -376,9 +376,13 @@ const handlePrint = async () => {
       {/* HEADER */}
       <div className="absolute top-8 w-full flex justify-center z-20 px-8">
         {sessionTimeLeft && (
-          <div className="absolute top-0 right-8 bg-white border border-[#4A4A4A]/25 px-3 py-1 font-bold text-xs uppercase tracking-widest shadow-sm rounded-full flex items-center gap-1.5 z-50">
-            <Clock size={14} className="text-[#4A4A4A] animate-pulse" />
-            <span className="font-bold text-xs md:text-sm text-[#4A4A4A]">{sessionTimeLeft}</span>
+          <div className="absolute top-0 right-8 bg-[#4A4A4A] text-[#FAF9F6] border border-[#4A4A4A] px-3.5 py-1.5 font-bold text-xs uppercase tracking-widest shadow-md rounded-full flex items-center gap-2 z-50">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+            <Clock size={14} className="text-[#FAF9F6] animate-pulse" />
+            <span className="font-bold text-xs md:text-sm">{sessionTimeLeft}</span>
           </div>
         )}
         <div className="bg-white border border-[#4A4A4A]/10 px-6 py-2 shadow-sm rounded-full">
