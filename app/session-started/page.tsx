@@ -302,9 +302,12 @@ export default function SessionStartedPage() {
     }
     setSessionState("review");
   };
-
   const toggleSelection = (index: number) => {
     if (sessionState !== "review") return;
+    if (!photos[index]) {
+      toast.error("FOTO KOSONG", { description: "Silakan tekan tombol Retake terlebih dahulu untuk mengisi foto ini." });
+      return;
+    }
     if (selectedIndices.includes(index)) {
       setSelectedIndices(selectedIndices.filter((i) => i !== index));
     } else {
@@ -315,7 +318,6 @@ export default function SessionStartedPage() {
       setSelectedIndices([...selectedIndices, index]);
     }
   };
-
   const finishSession = () => {
     if (selectedIndices.length < requiredSelections) {
       toast.error("BELUM LENGKAP");
@@ -514,7 +516,7 @@ export default function SessionStartedPage() {
                     )}
                     <div className="absolute top-2 left-2 bg-[#4A4A4A]/90 text-white font-bold px-2 py-0.5 text-[8px] rounded z-10 shadow-sm">#{i + 1}</div>
                   </div>
-                  <Button onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }} disabled={sessionState !== "review" || !photo} variant="outline" className="mt-2 h-9 w-full border border-[#4A4A4A]/10 bg-white font-bold uppercase text-[10px] hover:bg-[#FAF9F6] text-[#4A4A4A] transition-all rounded-lg disabled:opacity-40">
+                  <Button onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }} disabled={sessionState !== "review"} variant="outline" className="mt-2 h-9 w-full border border-[#4A4A4A]/10 bg-white font-bold uppercase text-[10px] hover:bg-[#FAF9F6] text-[#4A4A4A] transition-all rounded-lg disabled:opacity-40">
                     <RefreshCw size={10} className="mr-1.5" /> Retake
                   </Button>
                 </div>
