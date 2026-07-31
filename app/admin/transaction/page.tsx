@@ -13,6 +13,7 @@ import {
   Calendar,
   Wallet,
   Clock as ClockIcon,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Filter & Pagination State (Dikirim ke Backend)
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,12 +138,66 @@ export default function AdminTransactionsPage() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       toast.success("BERHASIL!", { description: "Laporan CSV mulai diunduh." });
     } catch (err: unknown) {
       toast.error("EXPORT GAGAL", { description: (err as Error).message });
     } finally {
       setExporting(false);
+    }
+  };
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [transactions]);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
+
+    try {
+      const token = localStorage.getItem("admin_token");
+      const res = await fetch(getApiUrl(`/api/admin/transactions/${id}`), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Gagal menghapus transaksi.");
+
+      toast.success("BERHASIL", { description: "Transaksi telah dihapus." });
+      fetchTransactions();
+      fetchStatistics();
+    } catch (err: any) {
+      toast.error("GAGAL MENGHAPUS", { description: err.message });
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih?`)) return;
+
+    try {
+      const token = localStorage.getItem("admin_token");
+      const res = await fetch(getApiUrl("/api/admin/transactions/batch-delete"), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Gagal menghapus transaksi terpilih.");
+
+      toast.success("BERHASIL", { description: `${selectedIds.length} transaksi telah dihapus.` });
+      setSelectedIds([]);
+      fetchTransactions();
+      fetchStatistics();
+    } catch (err: any) {
+      toast.error("GAGAL MENGHAPUS BATCH", { description: err.message });
     }
   };
 
@@ -163,7 +219,17 @@ export default function AdminTransactionsPage() {
           </p>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+          {selectedIds.length > 0 && (
+            <Button
+              onClick={handleBatchDelete}
+              className="flex-1 md:flex-none border-[3px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white shadow-[3px_3px_0_0_#262626] h-12 px-4 transition-transform active:translate-y-1 active:shadow-none font-black uppercase tracking-widest flex items-center justify-center animate-in zoom-in-95 duration-200"
+            >
+              <Trash2 className="mr-2" size={18} />
+              HAPUS TERPILIH ({selectedIds.length})
+            </Button>
+          )}
+
           <Button
             onClick={handleExport}
             disabled={exporting}
@@ -261,18 +327,33 @@ export default function AdminTransactionsPage() {
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-retro-charcoal text-white uppercase text-xs font-black tracking-widest border-b-[4px] border-retro-charcoal">
+              <th className="p-4 w-12 text-center">
+                <input
+                  type="checkbox"
+                  checked={transactions.length > 0 && selectedIds.length === transactions.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(transactions.map((tx) => tx.id));
+                    } else {
+                      setSelectedIds([]);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-white/30 text-retro-charcoal focus:ring-retro-charcoal cursor-pointer bg-transparent"
+                />
+              </th>
               <th className="p-4">Tanggal & Waktu</th>
               <th className="p-4">Nomor Invoice</th>
               <th className="p-4">Harga Kotor</th>
               <th className="p-4">Total Bayar</th>
               <th className="p-4 text-center">Status</th>
+              <th className="p-4 text-center w-24">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y-[3px] divide-retro-charcoal font-bold text-sm">
             {loading ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest"
                 >
                   <RefreshCw className="animate-spin inline mr-2" size={18} />{" "}
@@ -282,7 +363,7 @@ export default function AdminTransactionsPage() {
             ) : transactions.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest"
                 >
                   Tidak ada riwayat transaksi ditemukan.
@@ -292,8 +373,22 @@ export default function AdminTransactionsPage() {
               transactions.map((tx) => (
                 <tr
                   key={tx.id}
-                  className="hover:bg-[#EFE9DB]/30 transition-colors"
+                  className={`hover:bg-[#EFE9DB]/30 transition-colors ${selectedIds.includes(tx.id) ? "bg-[#EFE9DB]/20 animate-in fade-in-50 duration-200" : ""}`}
                 >
+                  <td className="p-4 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(tx.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds([...selectedIds, tx.id]);
+                        } else {
+                          setSelectedIds(selectedIds.filter((id) => id !== tx.id));
+                        }
+                      }}
+                      className="w-4 h-4 rounded border-retro-charcoal text-retro-charcoal focus:ring-retro-charcoal cursor-pointer"
+                    />
+                  </td>
                   <td className="p-4 text-retro-charcoal/70">
                     {new Date(tx.created_at).toLocaleString("id-ID")}
                   </td>
@@ -317,6 +412,16 @@ export default function AdminTransactionsPage() {
                           <Clock size={14} /> PENDING
                         </span>
                       )}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => handleDelete(tx.id)}
+                        className="border-[2px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white p-2 h-8 w-8 flex items-center justify-center rounded shadow-[1px_1px_0_0_#262626] transition-transform active:translate-y-[1px] active:shadow-none"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
                     </div>
                   </td>
                 </tr>
