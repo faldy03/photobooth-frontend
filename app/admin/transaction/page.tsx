@@ -20,12 +20,22 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import StatCard from "@/components/StatCard";
 import { getApiUrl } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"single" | "batch">("single");
 
   // Filter & Pagination State (Dikirim ke Backend)
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,9 +160,7 @@ export default function AdminTransactionsPage() {
     setSelectedIds([]);
   }, [transactions]);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
-
+  const executeSingleDelete = async (id: number) => {
     try {
       const token = localStorage.getItem("admin_token");
       const res = await fetch(getApiUrl(`/api/admin/transactions/${id}`), {
@@ -174,9 +182,7 @@ export default function AdminTransactionsPage() {
     }
   };
 
-  const handleBatchDelete = async () => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih?`)) return;
-
+  const executeBatchDelete = async () => {
     try {
       const token = localStorage.getItem("admin_token");
       const res = await fetch(getApiUrl("/api/admin/transactions/batch-delete"), {
@@ -201,6 +207,16 @@ export default function AdminTransactionsPage() {
     }
   };
 
+  const handleDeleteConfirm = async () => {
+    setIsDeleteOpen(false);
+    if (deleteMode === "single" && deleteTargetId !== null) {
+      await executeSingleDelete(deleteTargetId);
+      setDeleteTargetId(null);
+    } else if (deleteMode === "batch") {
+      await executeBatchDelete();
+    }
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -222,7 +238,10 @@ export default function AdminTransactionsPage() {
         <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
           {selectedIds.length > 0 && (
             <Button
-              onClick={handleBatchDelete}
+              onClick={() => {
+                setDeleteMode("batch");
+                setIsDeleteOpen(true);
+              }}
               className="flex-1 md:flex-none border-[3px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white shadow-[3px_3px_0_0_#262626] h-12 px-4 transition-transform active:translate-y-1 active:shadow-none font-black uppercase tracking-widest flex items-center justify-center animate-in zoom-in-95 duration-200"
             >
               <Trash2 className="mr-2" size={18} />
@@ -417,7 +436,11 @@ export default function AdminTransactionsPage() {
                   <td className="p-4">
                     <div className="flex justify-center">
                       <Button
-                        onClick={() => handleDelete(tx.id)}
+                        onClick={() => {
+                          setDeleteTargetId(tx.id);
+                          setDeleteMode("single");
+                          setIsDeleteOpen(true);
+                        }}
                         className="border-[2px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white p-2 h-8 w-8 flex items-center justify-center rounded shadow-[1px_1px_0_0_#262626] transition-transform active:translate-y-[1px] active:shadow-none"
                       >
                         <Trash2 size={14} />
@@ -467,6 +490,36 @@ export default function AdminTransactionsPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL KONFIRMASI HAPUS */}
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent className="sm:max-w-md border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-[#FF0000] border-b-[4px] border-retro-charcoal pb-4 mb-2">Peringatan Penghapusan</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
+            {deleteMode === "single" 
+              ? "Apakah Anda yakin ingin menghapus transaksi ini secara permanen dari database? Tindakan ini tidak dapat dibatalkan."
+              : `Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih secara permanen dari database? Tindakan ini tidak dapat dibatalkan.`}
+          </div>
+          <DialogFooter className="flex gap-2 border-t-[3px] border-dashed border-retro-charcoal pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteOpen(false)} 
+              className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+            >
+              Batal
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConfirm} 
+              className="bg-[#FF0000] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+            >
+              Ya, Hapus!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
