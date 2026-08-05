@@ -23,6 +23,7 @@ export default function CheckoutPage() {
   const [qrString, setQrString] = useState("");
   const [invoice, setInvoice] = useState("");
   const [transactionDbId, setTransactionDbId] = useState<number | null>(null);
+  const [isSuccessRedirecting, setIsSuccessRedirecting] = useState(false);
   
   // Loading States
   const [loading, setLoading] = useState(false);
@@ -79,15 +80,18 @@ export default function CheckoutPage() {
 
   // 3. POLLING CEK STATUS PEMBAYARAN
   useEffect(() => {
-    if (!invoice || !qrString) return;
+    if (!invoice || !qrString || isSuccessRedirecting) return;
     const checkPaymentStatus = async () => {
       try {
         const res = await fetch(getApiUrl(`/api/checkout/status/${invoice}`));
         const data = await res.json();
 
         if (data.success && data.payment_status === "success") {
-          if (transactionDbId !== null) {
-            localStorage.setItem("transaction_id", String(transactionDbId));
+          setIsSuccessRedirecting(true);
+          
+          const finalTxId = data.id || transactionDbId;
+          if (finalTxId !== null) {
+            localStorage.setItem("transaction_id", String(finalTxId));
           }
           localStorage.setItem("session_start_time", String(Date.now()));
 
@@ -105,7 +109,7 @@ export default function CheckoutPage() {
     };
     const intervalId = setInterval(checkPaymentStatus, 3000);
     return () => clearInterval(intervalId);
-  }, [invoice, qrString, router, transactionDbId]);
+  }, [invoice, qrString, router, transactionDbId, isSuccessRedirecting]);
 
   // 4. PROSES CHECKOUT & REQUEST QRIS
   const handleCheckout = async () => {
@@ -158,6 +162,7 @@ export default function CheckoutPage() {
     setQrString(""); setVoucherCode(""); setInvoice("");
     setExpiryTime(null); setTimeLeft("");
     setTransactionDbId(null);
+    setIsSuccessRedirecting(false);
     localStorage.removeItem("transaction_id");
     // Reset keyboard internal state
     if (keyboardRef.current) {
