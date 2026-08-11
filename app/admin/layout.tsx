@@ -31,6 +31,7 @@ export default function AdminLayout({
   // State untuk mengontrol Sidebar (default: terbuka)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isChecking, setIsChecking] = useState(true);
+  
   useEffect(() => {
     if (pathname === "/admin/login") {
       setIsChecking(false);
@@ -51,8 +52,8 @@ export default function AdminLayout({
   // Pengecualian Halaman Login (agar tidak ikut render sidebar)
   if (isChecking && pathname !== "/admin/login") {
     return (
-      <div className="min-h-screen bg-[#EFE9DB] flex flex-col items-center justify-center font-sans">
-        <div className="font-black uppercase tracking-widest text-retro-charcoal animate-pulse text-xl">
+      <div className="min-h-screen bg-[#F4F3EE] flex flex-col items-center justify-center font-sans">
+        <div className="font-black uppercase tracking-widest text-gray-700 animate-pulse text-lg">
           Memverifikasi Otoritas...
         </div>
       </div>
@@ -62,7 +63,7 @@ export default function AdminLayout({
   // Pengecualian Halaman Login (agar tidak ikut render sidebar)
   if (pathname === "/admin/login") {
     return (
-      <div className="min-h-screen bg-[#EFE9DB] font-sans">{children}</div>
+      <div className="min-h-screen bg-[#F4F3EE] font-sans">{children}</div>
     );
   }
 
@@ -77,7 +78,6 @@ export default function AdminLayout({
     });
 
     // 3. Beri jeda 800 milidetik (0.8 detik) agar notifikasi terbaca
-    // sebelum melempar pengguna kembali ke halaman login
     setTimeout(() => {
       router.push("/admin/login");
     }, 800);
@@ -85,40 +85,41 @@ export default function AdminLayout({
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#EFE9DB] font-sans text-retro-charcoal">
+    <div className="flex h-screen overflow-hidden bg-[#FAF9F6] font-sans text-gray-800">
       <Toaster position="top-right" richColors />
-     {/* --- BAGIAN A: SIDEBAR KIRI --- */}
+      
+      {/* --- SIDEBAR KIRI --- */}
       <aside
-        className={`bg-retro-cream border-r-[4px] border-retro-charcoal hidden md:flex flex-col z-20 transition-all duration-300 ease-in-out ${
+        className={`bg-[#141416] text-white flex flex-col z-20 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? "w-64" : "w-20"
         }`}
       >
         {/* Logo Area */}
-        <div className="h-20 flex items-center justify-center border-b-[4px] border-retro-charcoal bg-white overflow-hidden whitespace-nowrap">
+        <div className="h-20 flex items-center justify-center border-b border-white/5 overflow-hidden whitespace-nowrap px-4">
           {isSidebarOpen ? (
-            <h2 className="text-2xl font-black font-serif uppercase tracking-tighter drop-shadow-sm">
+            <h2 className="text-xl font-black uppercase tracking-tighter text-white">
               BOOTH
-              <span className="text-retro-red tracking-widest">FLOW.</span>
+              <span className="text-[#FF0000]">FLOW.</span>
             </h2>
           ) : (
-            <h2 className="text-2xl font-black font-serif uppercase tracking-tighter text-retro-red drop-shadow-sm">
-              SB.
+            <h2 className="text-xl font-black uppercase tracking-tighter text-[#FF0000]">
+              BF.
             </h2>
           )}
         </div>
 
         {/* Navigasi Menu */}
-        <nav className="flex-1 py-6 px-3 space-y-4 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden">
           <Link
             href="/admin/dashboard"
             title="Dashboard"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/dashboard")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <LayoutDashboard size={18} strokeWidth={2.5} className="shrink-0" />
+            <LayoutDashboard size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Dashboard</span>
             )}
@@ -127,13 +128,13 @@ export default function AdminLayout({
           <Link
             href="/admin/voucher"
             title="Voucher"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/voucher")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <Ticket size={18} strokeWidth={2.5} className="shrink-0" />
+            <Ticket size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Voucher</span>
             )}
@@ -142,13 +143,13 @@ export default function AdminLayout({
           <Link
             href="/admin/users"
             title="Users"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/users")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <User size={18} strokeWidth={2.5} className="shrink-0" />
+            <User size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Users</span>
             )}
@@ -156,14 +157,14 @@ export default function AdminLayout({
 
           <Link
             href="/admin/transaction"
-            title="transaction"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            title="Transactions"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/transaction")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <ReceiptText size={18} strokeWidth={2.5} className="shrink-0" />
+            <ReceiptText size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Transactions</span>
             )}
@@ -171,14 +172,14 @@ export default function AdminLayout({
 
           <Link
             href="/admin/kiosk"
-            title="kiosk"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            title="Devices"
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/kiosk")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <MonitorSmartphone size={18} strokeWidth={2.5} className="shrink-0" />
+            <MonitorSmartphone size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Device</span>
             )}
@@ -187,13 +188,13 @@ export default function AdminLayout({
           <Link
             href="/admin/photo-assets"
             title="Photo Assets"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/photo-assets")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <ImageIcon size={18} strokeWidth={2.5} className="shrink-0" />
+            <ImageIcon size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">Photo Assets</span>
             )}
@@ -202,69 +203,69 @@ export default function AdminLayout({
           <Link
             href="/admin/settings"
             title="System Settings"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3 font-black uppercase tracking-widest text-xs border-[3px] border-retro-charcoal transition-all active:translate-y-1 ${
+            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
               isActive("/admin/settings")
-                ? "bg-retro-red text-white shadow-[4px_4px_0_0_#262626]"
-                : "bg-white text-retro-charcoal hover:bg-retro-cream shadow-[4px_4px_0_0_#262626]"
+                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <Settings size={18} strokeWidth={2.5} className="shrink-0" />
+            <Settings size={18} className="shrink-0" />
             {isSidebarOpen && (
               <span className="whitespace-nowrap">System Settings</span>
             )}
           </Link>
-          
         </nav>
       </aside>
 
-      {/* --- BAGIAN B: AREA KANAN --- */}
+      {/* --- AREA KANAN --- */}
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
         {/* HEADER ATAS */}
-        <header className="h-20 bg-retro-cream border-b-[4px] border-retro-charcoal flex items-center justify-between px-6 sticky top-0 z-10">
+        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
           <div className="flex items-center gap-4">
-            {/* Tombol Toggle Sidebar Desktop */}
+            {/* Toggle Sidebar Button */}
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="hidden md:flex"
+              className="hidden md:flex text-gray-500 hover:text-gray-900 rounded-xl hover:bg-gray-50 cursor-pointer"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
               {isSidebarOpen ? (
-                <PanelLeftClose size={20} strokeWidth={3} />
+                <PanelLeftClose size={20} />
               ) : (
-                <PanelLeftOpen size={20} strokeWidth={3} />
+                <PanelLeftOpen size={20} />
               )}
             </Button>
 
             {/* Tombol Menu Mobile */}
-            <Button variant="outline" size="icon" className="md:hidden">
-              <Menu size={20} strokeWidth={3} />
+            <Button variant="ghost" size="icon" className="md:hidden text-gray-500 rounded-xl">
+              <Menu size={20} />
             </Button>
           </div>
 
           <div className="ml-auto flex items-center gap-6">
             <div className="flex items-center gap-3 hidden sm:flex">
               <div className="flex flex-col text-right">
-                <span className="text-xs font-black uppercase tracking-widest">
+                <span className="text-xs font-black text-gray-900 uppercase tracking-wider">
                   Admin Utama
                 </span>
-                <span className="text-[10px] font-bold text-retro-charcoal/60 uppercase">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
                   Manajemen Sistem
                 </span>
               </div>
-              <div className="w-11 h-11 bg-[#FF0000] border-[3px] border-retro-charcoal rounded-none shadow-[3px_3px_0_0_#262626] flex items-end justify-center overflow-hidden">
-                <div className="w-7 h-5 bg-white border-t-[3px] border-x-[3px] border-retro-charcoal rounded-t-sm flex justify-center">
-                  <div className="w-0.5 h-full bg-retro-charcoal/30"></div>
-                </div>
+              
+              {/* Clean Initials Avatar */}
+              <div className="w-10 h-10 bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full flex items-center justify-center overflow-hidden">
+                <span className="text-xs font-black text-[#FF0000] tracking-tighter">AU</span>
               </div>
             </div>
 
+            {/* Clean Logout Button */}
             <Button
-              variant="destructive"
+              variant="outline"
               onClick={handleLogout}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
             >
-              <LogOut size={16} strokeWidth={3} />
+              <LogOut size={14} className="text-gray-500" />
               <span>Keluar</span>
             </Button>
           </div>
