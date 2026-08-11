@@ -353,9 +353,21 @@ export default function CheckoutPage() {
                     <QRCodeSVG value={qrString} size={200} level={"H"} includeMargin={false} />
                   </div>
                   
-                  <Button onClick={handleCopyQR} variant="outline" className="w-full h-12 font-bold uppercase tracking-widest border border-[#4A4A4A]/20 hover:bg-[#FAF9F6] transition-all rounded-lg">
-                    <Copy size={16} className="mr-2" /> Salin Kode DOKU
-                  </Button>
+                  <div className="w-full mt-2 text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A7A7A] mb-3">
+                      Dapat dibayar dengan E-Wallet & M-Banking apa saja:
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <span className="px-2 py-1 bg-red-50 text-[#FF0000] border border-red-100 rounded text-[9px] font-extrabold tracking-wider uppercase">QRIS</span>
+                      <span className="px-2 py-1 bg-[#00AED6]/10 text-[#00AED6] border border-[#00AED6]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">GOPAY</span>
+                      <span className="px-2 py-1 bg-[#4C2A86]/10 text-[#4C2A86] border border-[#4C2A86]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">OVO</span>
+                      <span className="px-2 py-1 bg-[#108EE9]/10 text-[#108EE9] border border-[#108EE9]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">DANA</span>
+                      <span className="px-2 py-1 bg-[#EE4D2D]/10 text-[#EE4D2D] border border-[#EE4D2D]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">SHOPEEPAY</span>
+                      <span className="px-2 py-1 bg-[#0066AE]/10 text-[#0066AE] border border-[#0066AE]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">BCA</span>
+                      <span className="px-2 py-1 bg-[#FFBE00]/10 text-[#FFBE00] border border-[#FFBE00]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">MANDIRI</span>
+                      <span className="px-2 py-1 bg-[#005E5D]/10 text-[#005E5D] border border-[#005E5D]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">M-BANKING</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full bg-[#FAF9F6] border border-[#4A4A4A]/10 p-5 text-xs font-bold tracking-wide relative rounded-lg">
