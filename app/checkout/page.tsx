@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   // Loading States
   const [loading, setLoading] = useState(false);
   const [isFetchingSettings, setIsFetchingSettings] = useState(true);
+  const [isReprint, setIsReprint] = useState(false);
   
   // State Harga Dinamis
   const [basePrice, setBasePrice] = useState(0);
@@ -48,7 +49,15 @@ export default function CheckoutPage() {
         const res = await fetch(getApiUrl("/api/kiosk/settings"));
         const json = await res.json();
         if (json.success && json.data) {
-          setBasePrice(Number(json.data.price_per_session) || 35000);
+          const params = new URLSearchParams(window.location.search);
+          const isRep = params.get("type") === "reprint";
+          setIsReprint(isRep);
+          
+          if (isRep) {
+            setBasePrice(Number(json.data.price_per_reprint) || 15000);
+          } else {
+            setBasePrice(Number(json.data.price_per_session) || 35000);
+          }
         }
       } catch (error) {
         console.error("Gagal memuat konfigurasi harga:", error);
@@ -89,19 +98,32 @@ export default function CheckoutPage() {
         if (data.success && data.payment_status === "success") {
           setIsSuccessRedirecting(true);
           
-          const finalTxId = data.id || transactionDbId;
-          if (finalTxId !== null) {
-            localStorage.setItem("transaction_id", String(finalTxId));
-          }
-          localStorage.setItem("session_start_time", String(Date.now()));
+          const params = new URLSearchParams(window.location.search);
+          const isRep = params.get("type") === "reprint";
 
-          toast.success("PEMBAYARAN BERHASIL!", {
-            description: "Mengarahkan ke pemilihan bingkai...",
-            duration: 2000,
-          });
-          setTimeout(() => {
-             router.push("/frame-selection"); 
-          }, 2000); 
+          if (isRep) {
+            toast.success("PEMBAYARAN REPRINT BERHASIL!", {
+              description: "Mencetak ulang foto Anda...",
+              duration: 2000,
+            });
+            setTimeout(() => {
+              router.push("/result?reprint_success=true");
+            }, 2000);
+          } else {
+            const finalTxId = data.id || transactionDbId;
+            if (finalTxId !== null) {
+              localStorage.setItem("transaction_id", String(finalTxId));
+            }
+            localStorage.setItem("session_start_time", String(Date.now()));
+
+            toast.success("PEMBAYARAN BERHASIL!", {
+              description: "Mengarahkan ke pemilihan bingkai...",
+              duration: 2000,
+            });
+            setTimeout(() => {
+               router.push("/frame-selection"); 
+            }, 2000); 
+          }
         }
       } catch (error) {
         console.error("Gagal mengecek status:", error);

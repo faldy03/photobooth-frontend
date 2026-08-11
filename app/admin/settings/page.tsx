@@ -14,6 +14,7 @@ export default function SettingsPage() {
 
   const [formData, setFormData] = useState({
     price_per_session: "",
+    price_per_reprint: "",
     session_duration_minutes: "",
     countdown_duration_seconds: "",
     max_photos_taken: "",
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       if (json.data) {
         setFormData({
           price_per_session: json.data.price_per_session || "35000",
+          price_per_reprint: json.data.price_per_reprint || "15000",
           session_duration_minutes: json.data.session_duration_minutes || "5",
           countdown_duration_seconds: json.data.countdown_duration_seconds || "5",
           max_photos_taken: json.data.max_photos_taken || "6",
@@ -133,6 +135,22 @@ export default function SettingsPage() {
               <div className="w-full md:w-56 relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
                 <Input required type="number" min="0" name="price_per_session" value={formData.price_per_session} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
+              </div>
+            </div>
+
+            {/* CONFIG 1B: HARGA REPRINT */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
+              <div className="max-w-md">
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <DollarSign size={16} className="text-[#FF0000]" /> Tarif Cetak Ulang (Reprint)
+                </h3>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
+                  Nominal tarif cetak tambahan per lembar bagi pelanggan yang ingin melakukan reprint dari halaman hasil cetak.
+                </p>
+              </div>
+              <div className="w-full md:w-56 relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
+                <Input required type="number" min="0" name="price_per_reprint" value={formData.price_per_reprint} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
               </div>
             </div>
 

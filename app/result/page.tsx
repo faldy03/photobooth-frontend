@@ -45,9 +45,18 @@ export default function ResultPage() {
   const [transactionIdNum, setTransactionIdNum] = useState<number>(NaN);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
   
-  // Alur Langkah baru
+  // Alur Langkah & Filter
   const [currentStep, setCurrentStep] = useState<"filter" | "print">("filter");
-  const [selectedFilter, setSelectedFilter] = useState<string>("none");
+  const [selectedFilter, setSelectedFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("selected_filter") || "none";
+    }
+    return "none";
+  });
+
+  // Fitur Reprint (Cetak Ulang / Cetak Tambahan)
+  const [reprintPriceText, setReprintPriceText] = useState("Rp 15.000");
+  const [shouldAutoPrint, setShouldAutoPrint] = useState(false);
 
   // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
   useEffect(() => {
@@ -58,8 +67,12 @@ export default function ResultPage() {
       try {
         const res = await fetch(getApiUrl("/api/kiosk/settings"));
         const json = await res.json();
-        if (json.success && json.data && json.data.session_duration_minutes) {
-          durationMinutes = Number(json.data.session_duration_minutes);
+        if (json.success && json.data) {
+          durationMinutes = Number(json.data.session_duration_minutes) || 5;
+          if (json.data.price_per_reprint) {
+            const price = Number(json.data.price_per_reprint);
+            setReprintPriceText(`Rp ${price.toLocaleString("id-ID")}`);
+          }
         }
       } catch (err) {
         console.error("Gagal mengambil session_duration_minutes:", err);
@@ -82,6 +95,7 @@ export default function ResultPage() {
           localStorage.removeItem("captured_photos");
           localStorage.removeItem("selected_frame_url");
           localStorage.removeItem("selected_frame_data"); 
+          localStorage.removeItem("selected_filter");
           localStorage.removeItem("transaction_id");
           localStorage.removeItem("session_start_time");
           router.push("/");
@@ -163,6 +177,18 @@ export default function ResultPage() {
     const photos: string[] = JSON.parse(photosData);
     setRawPhotos(photos);
     setFrameUrl(frameUrlData);
+
+    // Cek callback reprint pembayaran sukses
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reprint_success") === "true") {
+        // Hapus query params di url agar tidak re-trigger cetak saat reload halaman
+        window.history.replaceState({}, '', '/result');
+        setShouldAutoPrint(true);
+        setCurrentStep("print");
+        toast.success("PEMBAYARAN TAMBAHAN BERHASIL!", { description: "Mengirim ulang cetakan ke mesin printer..." });
+      }
+    }
   }, [router]);
 
   // D. Efek Redraw Canvas Setiap Kali Filter Berubah
@@ -296,6 +322,19 @@ export default function ResultPage() {
     generatePreview();
   }, [frameUrl, rawPhotos, selectedFilter]);
 
+  // E. Pemicu Cetak Otomatis (Jika Kembali dari Reprint Sukses)
+  useEffect(() => {
+    if (mergedImage && shouldAutoPrint) {
+      setShouldAutoPrint(false);
+      handlePrint();
+    }
+  }, [mergedImage, shouldAutoPrint]);
+
+  const handleSelectFilter = (filterVal: string) => {
+    setSelectedFilter(filterVal);
+    localStorage.setItem("selected_filter", filterVal);
+  };
+
   const handlePrint = async () => {
     if (!mergedImage) return;
     
@@ -303,7 +342,7 @@ export default function ResultPage() {
     setErrorMsg(null);
 
     try {
-      // 1. Simpan ke Database & Request QR Download Link
+      // 1. Simpan ke Database & Request QR Download Link (Selalu simpan / update)
       const payload = {
         final_photo: mergedImage,
         raw_photos: rawPhotos,
@@ -373,10 +412,15 @@ export default function ResultPage() {
     }
   };
 
+  const handleReprintRedirect = () => {
+    router.push("/checkout?type=reprint");
+  };
+
   const handleFinish = () => {
     localStorage.removeItem("captured_photos");
     localStorage.removeItem("selected_frame_url");
     localStorage.removeItem("selected_frame_data"); 
+    localStorage.removeItem("selected_filter");
     localStorage.removeItem("transaction_id");
     router.push("/");
   };
@@ -470,7 +514,7 @@ export default function ResultPage() {
                   return (
                     <button
                       key={f.id}
-                      onClick={() => setSelectedFilter(f.value)}
+                      onClick={() => handleSelectFilter(f.value)}
                       className={`p-4 border rounded-xl text-center transition-all font-bold uppercase text-[10px] tracking-wider cursor-pointer ${
                         isActive
                           ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-sm text-[#4A4A4A]"
@@ -546,11 +590,22 @@ export default function ResultPage() {
                       ⚠️ Tersedia hanya selama 60 menit!
                     </p>
 
-                    <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-2 block">
+                    <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-2 block font-bold">
                       <Button type="button" className="w-full h-10 border border-[#4A4A4A]/10 bg-[#FAF9F6] hover:bg-white text-[#4A4A4A] font-bold uppercase tracking-widest text-[9px] rounded-lg cursor-pointer">
                         🧪 Buka Link di Tab Baru
                       </Button>
                     </a>
+
+                    {/* FITUR PRINT TAMBAHAN / REPRINT */}
+                    <div className="w-full border-t border-dashed border-[#4A4A4A]/15 mt-5 pt-5">
+                      <Button
+                        onClick={handleReprintRedirect}
+                        disabled={isPrinting}
+                        className="w-full h-12 bg-[#FF0000] hover:bg-[#d9383a] text-white border-none font-bold text-[10px] uppercase tracking-widest rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Printer size={14} /> Cetak Lembar Tambahan ({reprintPriceText})
+                      </Button>
+                    </div>
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-6 text-gray-400">
