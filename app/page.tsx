@@ -172,37 +172,37 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* CARD 2: FOTO */}
+            {/* CARD 2: BINGKAI */}
             <div className="bg-white border border-[#4A4A4A]/10 rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.04)] group">
-              <div className="w-16 h-16 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] mb-4 animate-float-2 relative group-hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] mb-4 animate-float-2 group-hover:scale-105 transition-transform duration-300">
+                <LayoutTemplate size={28} />
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">2. Pilih Bingkai (Frame)</h3>
+              <p className="text-[11px] text-[#7A7A7A] leading-relaxed font-semibold">
+                Pilih bingkai hello.picta favorit Anda sebelum mulai pemotretan untuk mencocokkan gaya foto.
+              </p>
+            </div>
+
+            {/* CARD 3: FOTO */}
+            <div className="bg-white border border-[#4A4A4A]/10 rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.04)] group">
+              <div className="w-16 h-16 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] mb-4 animate-float-3 relative group-hover:scale-105 transition-transform duration-300">
                 <Camera size={28} />
                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
               </div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">2. Sesi Pemotretan</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">3. Sesi Pemotretan</h3>
               <p className="text-[11px] text-[#7A7A7A] leading-relaxed font-semibold">
-                Kamera DSLR profesional kami akan membidik senyum terbaik Anda secara otomatis dalam beberapa jepretan.
+                Kamera DSLR profesional siap membidik senyum terbaik Anda secara otomatis. Anda juga dapat mengulang (retake) foto jika diperlukan.
               </p>
             </div>
 
-            {/* CARD 3: TEMPLATE */}
-            <div className="bg-white border border-[#4A4A4A]/10 rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.04)] group">
-              <div className="w-16 h-16 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] mb-4 animate-float-3 group-hover:scale-105 transition-transform duration-300">
-                <LayoutTemplate size={28} />
-              </div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">3. Frame & Filter</h3>
-              <p className="text-[11px] text-[#7A7A7A] leading-relaxed font-semibold">
-                Pilih bingkai hello.picta favorit Anda dan terapkan filter visual retro untuk hasil yang estetik.
-              </p>
-            </div>
-
-            {/* CARD 4: DOWNLOAD */}
+            {/* CARD 4: FILTER & CETAK */}
             <div className="bg-white border border-[#4A4A4A]/10 rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.04)] group">
               <div className="w-16 h-16 rounded-full bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] mb-4 animate-float-4 group-hover:scale-105 transition-transform duration-300">
                 <Printer size={28} />
               </div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">4. Cetak & Unduh</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4A4A4A] mb-2">4. Filter & Cetak</h3>
               <p className="text-[11px] text-[#7A7A7A] leading-relaxed font-semibold">
-                Ambil hasil foto fisik yang dicetak langsung, dan scan QR code di layar untuk mengunduh versi digital.
+                Terapkan filter visual retro, cetak foto fisik instan di printer, dan scan QR code untuk mengunduh soft file foto.
               </p>
             </div>
 
