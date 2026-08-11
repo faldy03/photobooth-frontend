@@ -353,19 +353,27 @@ export default function CheckoutPage() {
                     <QRCodeSVG value={qrString} size={200} level={"H"} includeMargin={false} />
                   </div>
                   
-                  <div className="w-full mt-2 text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A7A7A] mb-3">
+                  <div className="w-full mt-4 text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A7A7A] mb-4">
                       Dapat dibayar dengan E-Wallet & M-Banking apa saja:
                     </p>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="px-2 py-1 bg-red-50 text-[#FF0000] border border-red-100 rounded text-[9px] font-extrabold tracking-wider uppercase">QRIS</span>
-                      <span className="px-2 py-1 bg-[#00AED6]/10 text-[#00AED6] border border-[#00AED6]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">GOPAY</span>
-                      <span className="px-2 py-1 bg-[#4C2A86]/10 text-[#4C2A86] border border-[#4C2A86]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">OVO</span>
-                      <span className="px-2 py-1 bg-[#108EE9]/10 text-[#108EE9] border border-[#108EE9]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">DANA</span>
-                      <span className="px-2 py-1 bg-[#EE4D2D]/10 text-[#EE4D2D] border border-[#EE4D2D]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">SHOPEEPAY</span>
-                      <span className="px-2 py-1 bg-[#0066AE]/10 text-[#0066AE] border border-[#0066AE]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">BCA</span>
-                      <span className="px-2 py-1 bg-[#FFBE00]/10 text-[#FFBE00] border border-[#FFBE00]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">MANDIRI</span>
-                      <span className="px-2 py-1 bg-[#005E5D]/10 text-[#005E5D] border border-[#005E5D]/25 rounded text-[9px] font-extrabold uppercase tracking-wider">M-BANKING</span>
+                    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 px-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/qris.svg" alt="QRIS" style={{ height: '24px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/gopay.svg" alt="GoPay" style={{ height: '14px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/ovo.svg" alt="OVO" style={{ height: '16px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/dana.svg" alt="DANA" style={{ height: '16px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/shopee-pay.svg" alt="ShopeePay" style={{ height: '16px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/linkaja.svg" alt="LinkAja" style={{ height: '18px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/bca.svg" alt="BCA" style={{ height: '14px' }} className="w-auto object-contain" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/mandiri.svg" alt="Mandiri" style={{ height: '12px' }} className="w-auto object-contain" />
                     </div>
                   </div>
                 </div>
