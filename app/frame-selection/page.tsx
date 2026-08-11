@@ -13,7 +13,8 @@ interface PhotoAsset {
   image_url: string;
   is_active: boolean;
   event_name?: string;
-  config?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config?: any;
 }
 
 export default function FrameSelectionPage() {
@@ -63,7 +64,6 @@ export default function FrameSelectionPage() {
           localStorage.removeItem("captured_photos");
           localStorage.removeItem("selected_frame_url");
           localStorage.removeItem("selected_frame_data"); 
-          localStorage.removeItem("transaction_id");
           localStorage.removeItem("session_start_time");
           router.push("/");
         } else {
@@ -135,6 +135,27 @@ export default function FrameSelectionPage() {
     }, 1500);
   };
 
+  // Helper untuk membaca slot koordinat frame
+  const getFrameSlots = (frame: PhotoAsset) => {
+    let slots: any[] = [];
+    if (frame.config) {
+      try {
+        let configObj = frame.config;
+        if (typeof configObj === "string") {
+          configObj = JSON.parse(configObj);
+        }
+        if (configObj && Array.isArray(configObj.slots)) {
+          slots = configObj.slots;
+        }
+      } catch (e) {
+        console.error("Gagal parse slot koordinat", e);
+      }
+    }
+    return slots;
+  };
+
+  const previewSlots = selectedFrame ? getFrameSlots(selectedFrame) : [];
+
   return (
     <div className="h-screen w-full bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col font-sans text-[#4A4A4A] overflow-hidden relative p-6">
       
@@ -184,13 +205,13 @@ export default function FrameSelectionPage() {
 
           {/* Folder Tabs (Tampil jika activeEvent bukan Global) */}
           {activeEvent !== "Global" && (
-            <div className="flex gap-2 mb-4 bg-gray-50 p-1.5 rounded-xl border border-gray-150 shrink-0">
+            <div className="flex gap-2 mb-4 bg-gray-55 p-1.5 rounded-xl border border-gray-150 shrink-0">
               <button
                 onClick={() => setCurrentTab("all")}
                 className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                   currentTab === "all"
-                    ? "bg-[#4A4A4A] text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-[#4A4A4A] text-white shadow-sm font-bold"
+                    : "text-gray-400 hover:text-gray-600 font-semibold"
                 }`}
               >
                 Semua
@@ -199,8 +220,8 @@ export default function FrameSelectionPage() {
                 onClick={() => setCurrentTab("global")}
                 className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                   currentTab === "global"
-                    ? "bg-[#4A4A4A] text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-[#4A4A4A] text-white shadow-sm font-bold"
+                    : "text-gray-400 hover:text-gray-600 font-semibold"
                 }`}
               >
                 Global (Umum)
@@ -209,8 +230,8 @@ export default function FrameSelectionPage() {
                 onClick={() => setCurrentTab("event")}
                 className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                   currentTab === "event"
-                    ? "bg-[#4A4A4A] text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-[#4A4A4A] text-white shadow-sm font-bold"
+                    : "text-gray-400 hover:text-gray-600 font-semibold"
                 }`}
               >
                 Event: {activeEvent}
@@ -239,6 +260,7 @@ export default function FrameSelectionPage() {
               <div className="grid grid-cols-3 gap-4 content-start">
                 {filteredFrames.map((frame) => {
                   const isSelected = selectedFrame?.id === frame.id;
+                  const itemSlots = getFrameSlots(frame);
                   
                   return (
                     <button
@@ -246,26 +268,52 @@ export default function FrameSelectionPage() {
                       onClick={() => setSelectedFrame(frame)}
                       className={`
                         relative transition-all duration-200 aspect-[2/3]
-                        border rounded-lg flex flex-col items-center justify-center p-1.5 cursor-pointer
+                        border rounded-xl flex flex-col items-center justify-center p-1.5 cursor-pointer
                         ${isSelected 
                           ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-md -translate-y-0.5" 
                           : "border-[#4A4A4A]/10 bg-white hover:bg-gray-50 hover:-translate-y-0.5"
                         }
                       `}
                     >
-                      {/* Thumbnail Gambar */}
-                      <div className={`w-full h-full border ${isSelected ? 'border-[#4A4A4A]/25' : 'border-[#4A4A4A]/10'} bg-white overflow-hidden p-1 flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjY2NjIi8+Cjwvc3ZnPg==')] rounded`}>
+                      {/* Mini Thumbnail */}
+                      <div className={`relative w-full h-full border ${isSelected ? 'border-[#4A4A4A]/25' : 'border-[#4A4A4A]/10'} bg-gray-50/50 overflow-hidden rounded`}>
+                        {/* Render Mini Slots di Thumbnail Grid */}
+                        {itemSlots.map((slot, idx) => {
+                          const leftPct = (slot.x / 1200) * 100;
+                          const topPct = (slot.y / 1800) * 100;
+                          const widthPct = (slot.width / 1200) * 100;
+                          const heightPct = (slot.height / 1800) * 100;
+                          
+                          const isEven = idx % 2 === 0;
+                          const bgColor = isEven ? "bg-[#EF4444]" : "bg-[#84CC16]";
+                          
+                          return (
+                            <div
+                              key={`mini-slot-${frame.id}-${slot.id}`}
+                              className={`absolute ${bgColor} text-white flex items-center justify-center font-black text-[5px] rounded-[1px] select-none pointer-events-none`}
+                              style={{
+                                left: `${leftPct}%`,
+                                top: `${topPct}%`,
+                                width: `${widthPct}%`,
+                                height: `${heightPct}%`,
+                              }}
+                            >
+                              {idx + 1}
+                            </div>
+                          );
+                        })}
+                        
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src={frame.image_url} 
                           alt={frame.name}
-                          className="max-h-full max-w-full object-contain"
+                          className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10"
                         />
                       </div>
 
                       {/* Indikator Terpilih */}
                       {isSelected && (
-                        <div className="absolute -top-2 -right-2 bg-[#4A4A4A] text-white rounded-full p-1 shadow border border-white">
+                        <div className="absolute -top-2 -right-2 bg-[#4A4A4A] text-white rounded-full p-1 shadow border border-white z-20">
                           <CheckCircle2 size={10} strokeWidth={4} />
                         </div>
                       )}
@@ -283,13 +331,40 @@ export default function FrameSelectionPage() {
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             {selectedFrame ? (
               <div className="relative h-full w-full max-w-xs flex flex-col items-center justify-center py-4">
-                {/* Tampilan Frame Transparan */}
-                <div className="relative w-full aspect-[2/3] max-h-[48vh] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjY2NjIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] border border-[#4A4A4A]/15 shadow-md bg-white overflow-hidden rounded-lg">
+                {/* Tampilan Frame Pratinjau (Solid clean bg dengan slot bernomor merah/hijau) */}
+                <div className="relative w-full aspect-[2/3] max-h-[48vh] border border-gray-150 shadow-md bg-gray-50 overflow-hidden rounded-lg">
+                  
+                  {/* RENDER SLOT FOTO BERWARNA DENGAN ANGKA URUTAN */}
+                  {previewSlots.map((slot, idx) => {
+                    const leftPct = (slot.x / 1200) * 100;
+                    const topPct = (slot.y / 1800) * 100;
+                    const widthPct = (slot.width / 1200) * 100;
+                    const heightPct = (slot.height / 1800) * 100;
+                    
+                    const isEven = idx % 2 === 0;
+                    const bgColor = isEven ? "bg-[#EF4444]" : "bg-[#84CC16]";
+                    
+                    return (
+                      <div
+                        key={`preview-slot-${selectedFrame.id}-${slot.id}`}
+                        className={`absolute ${bgColor} text-white flex items-center justify-center font-bold text-xl md:text-2xl select-none pointer-events-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border border-white/20`}
+                        style={{
+                          left: `${leftPct}%`,
+                          top: `${topPct}%`,
+                          width: `${widthPct}%`,
+                          height: `${heightPct}%`,
+                        }}
+                      >
+                        {idx + 1}
+                      </div>
+                    );
+                  })}
+                  
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
                     src={selectedFrame.image_url} 
                     alt={selectedFrame.name}
-                    className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-lg"
+                    className="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-md z-15"
                   />
                 </div>
                 
