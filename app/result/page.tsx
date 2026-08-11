@@ -12,11 +12,22 @@ import {
   AlertTriangle,
   CheckCircle2,
   Image as ImageIcon,
-  Clock
+  Clock,
+  ArrowRight,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
+
+const FILTERS = [
+  { id: "original", name: "Original", value: "none" },
+  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)" },
+  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)" },
+  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)" },
+  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)" },
+  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)" }
+];
 
 export default function ResultPage() {
   const router = useRouter();
@@ -29,9 +40,14 @@ export default function ResultPage() {
   const [qrUrl, setQrUrl] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
+  const [frameUrl, setFrameUrl] = useState<string | null>(null);
   const [rawPhotos, setRawPhotos] = useState<string[]>([]);
   const [transactionIdNum, setTransactionIdNum] = useState<number>(NaN);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+  
+  // Alur Langkah baru
+  const [currentStep, setCurrentStep] = useState<"filter" | "print">("filter");
+  const [selectedFilter, setSelectedFilter] = useState<string>("none");
 
   // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
   useEffect(() => {
@@ -87,9 +103,7 @@ export default function ResultPage() {
     };
   }, [router]);
 
-  // =====================================================================
-  // FUNGSI BARU: SMART CROP ANTI-PENYOK
-  // =====================================================================
+  // B. SMART CROP ANTI-PENYOK
   const drawImageProp = (
     ctx: CanvasRenderingContext2D,
     img: HTMLImageElement,
@@ -99,41 +113,37 @@ export default function ResultPage() {
     h: number,
   ) => {
     ctx.save();
-    // 1. Buat topeng (masking) seukuran kotak lubang frame
     ctx.beginPath();
     ctx.rect(x, y, w, h);
-    ctx.clip(); // Potong segala sesuatu yang keluar dari kotak ini
+    ctx.clip(); 
     
-    // 2. Hitung rasio asli foto kamera vs rasio lubang
     const imgRatio = img.width / img.height;
     const boxRatio = w / h;
     let renderW, renderH, renderX, renderY;
 
     if (imgRatio > boxRatio) {
-      // Jika foto lebih lebar -> Crop presisi kiri & kanan
       renderH = h;
       renderW = img.width * (h / img.height);
-      renderX = x - (renderW - w) / 2; // Posisikan persis di tengah
+      renderX = x - (renderW - w) / 2; 
       renderY = y;
     } else {
-      // Jika foto lebih tinggi -> Crop presisi atas & bawah
       renderW = w;
       renderH = img.height * (w / img.width);
       renderX = x;
-      renderY = y - (renderH - h) / 2; // Posisikan persis di tengah
+      renderY = y - (renderH - h) / 2; 
     }
     
-    // 3. Gambar fotonya (bagian yang berlebih otomatis tidak akan tergambar karena ctx.clip)
     ctx.drawImage(img, renderX, renderY, renderW, renderH);
     ctx.restore();
   };
 
+  // C. Inisialisasi Data awal dari localStorage
   useEffect(() => {
-    const frameUrl = localStorage.getItem("selected_frame_url");
+    const frameUrlData = localStorage.getItem("selected_frame_url");
     const photosData = localStorage.getItem("captured_photos");
     const transactionId = localStorage.getItem("transaction_id");
 
-    if (!frameUrl || !photosData) {
+    if (!frameUrlData || !photosData) {
       toast.error("Data Sesi Hilang!");
       router.push("/");
       return;
@@ -152,8 +162,15 @@ export default function ResultPage() {
 
     const photos: string[] = JSON.parse(photosData);
     setRawPhotos(photos);
+    setFrameUrl(frameUrlData);
+  }, [router]);
+
+  // D. Efek Redraw Canvas Setiap Kali Filter Berubah
+  useEffect(() => {
+    if (!frameUrl || rawPhotos.length === 0) return;
 
     const generatePreview = async () => {
+      setIsPreparingPreview(true);
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -213,22 +230,26 @@ export default function ResultPage() {
           }
         }
 
-        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP)
+        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP & CANVAS FILTER)
         if (slots.length > 0) {
           for (let i = 0; i < slots.length; i++) {
             const slot = slots[i];
-            const photoIndex = i % photos.length; 
-            const img = await loadSafeImage(photos[photoIndex], `Foto #${photoIndex + 1}`);
+            const photoIndex = i % rawPhotos.length; 
+            const img = await loadSafeImage(rawPhotos[photoIndex], `Foto #${photoIndex + 1}`);
 
             ctx.save();
             ctx.translate(slot.x + slot.width, slot.y);
             ctx.scale(-1, 1); 
+            
+            // Terapkan Filter Visual ke Kanvas (Hanya bagian Foto)
+            ctx.filter = selectedFilter;
+            
             drawImageProp(ctx, img, 0, 0, slot.width, slot.height);
             ctx.restore();
           }
         } else {
-          for (let i = 0; i < photos.length; i++) {
-            const img = await loadSafeImage(photos[i], `Foto #${i + 1}`);
+          for (let i = 0; i < rawPhotos.length; i++) {
+            const img = await loadSafeImage(rawPhotos[i], `Foto #${i + 1}`);
             const w = 480, h = 360;
             const yPositions = [320, 720, 1120];
             const y = yPositions[i];
@@ -237,13 +258,17 @@ export default function ResultPage() {
               ctx.save();
               ctx.translate(x + w, y);
               ctx.scale(-1, 1);
+              
+              // Terapkan Filter Visual ke Kanvas
+              ctx.filter = selectedFilter;
+              
               drawImageProp(ctx, img, 0, 0, w, h);
               ctx.restore();
             });
           }
         }
 
-        // 2. MENGGAMBAR FRAME OVERLAY
+        // 2. MENGGAMBAR FRAME OVERLAY (Tanpa filter agar frame tetap tajam)
         let frameImg;
         try {
           const proxyUrl = getApiUrl(`/api/proxy-image?url=${encodeURIComponent(frameUrl)}`);
@@ -268,19 +293,17 @@ export default function ResultPage() {
       }
     };
 
-    setTimeout(generatePreview, 800); 
-  }, [router]);
+    generatePreview();
+  }, [frameUrl, rawPhotos, selectedFilter]);
 
-const handlePrint = async () => {
+  const handlePrint = async () => {
     if (!mergedImage) return;
     
     setIsPrinting(true);
     setErrorMsg(null);
 
     try {
-      // ================================================================
-      // 1. SIMPAN KE LARAVEL (Untuk Database & Generate QR Soft File)
-      // ================================================================
+      // 1. Simpan ke Database & Request QR Download Link
       const payload = {
         final_photo: mergedImage,
         raw_photos: rawPhotos,
@@ -294,28 +317,24 @@ const handlePrint = async () => {
         body: JSON.stringify(payload),
       });
 
-      // PROTEKSI BARU: Cek apakah Laravel membalas dengan teks/HTML alih-alih JSON
       const textLaravel = await responseLaravel.text();
       let resultLaravel;
       try {
         resultLaravel = JSON.parse(textLaravel);
       } catch (parseError) {
         console.error("Laravel membalas dengan HTML/Error Server:", textLaravel);
-        throw new Error("Server Database (Laravel) gagal merespon dengan benar. Pastikan limit upload php.ini sudah diperbesar.");
+        throw new Error("Server Database Laravel gagal merespon dengan benar.");
       }
 
       if (!resultLaravel.success) {
-        throw new Error(resultLaravel.message || "Gagal menyimpan data ke server Laravel.");
+        throw new Error(resultLaravel.message || "Gagal menyimpan data.");
       }
 
       setQrUrl(resultLaravel.download_link);
 
-      // ================================================================
-      // 2. KIRIM UNTUK DI-PRINT (Fisik ke Mesin DNP)
-      // ================================================================
+      // 2. Kirim perintah cetak ke mesin printer
       const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
 
-      // Cek apakah berjalan di dalam aplikasi Electron (Desktop App)
       if (typeof window !== 'undefined' && (window as any).electron) {
         try {
           (window as any).electron.printPhoto(mergedImage);
@@ -325,7 +344,6 @@ const handlePrint = async () => {
           toast.error("Gagal Mencetak", { description: "Gagal terhubung ke modul cetak Electron." });
         }
       } else {
-        // Fallback: Kirim ke Node.js local agent port 3001 jika dijalankan di browser biasa
         try {
           const responseNode = await fetch("http://127.0.0.1:3001/print", {
             method: "POST",
@@ -337,15 +355,12 @@ const handlePrint = async () => {
             }),
           });
 
-          if (!responseNode.ok) {
-            throw new Error("Respon Node.js tidak OK");
-          }
+          if (!responseNode.ok) throw new Error("Respon Node.js tidak OK");
           
           toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
-          
         } catch (nodeError) {
           console.error("Gagal koneksi ke Node.js Printer:", nodeError);
-          toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke mesin printer fisik (Node.js)." });
+          toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke printer fisik." });
         }
       }
 
@@ -364,7 +379,9 @@ const handlePrint = async () => {
     localStorage.removeItem("selected_frame_data"); 
     localStorage.removeItem("transaction_id");
     router.push("/");
-  };  return (
+  };
+
+  return (
     <div className="min-h-screen bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col items-center justify-center p-6 font-sans text-[#4A4A4A] relative overflow-hidden">
       <Toaster position="top-center" richColors />
       <canvas ref={canvasRef} className="hidden" />
@@ -390,21 +407,21 @@ const handlePrint = async () => {
             className="text-base md:text-lg font-normal uppercase tracking-[0.15em] text-[#4A4A4A] flex items-center gap-2"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
-            <Printer size={20} /> STUDIO PENCETAKAN
+            <Printer size={20} /> {currentStep === "filter" ? "PILIHAN FILTER FOTO" : "STUDIO PENCETAKAN"}
           </h1>
         </div>
       </div>
 
-      <div className="w-full max-w-6xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
+      <div className="w-full max-w-5xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
         
-        {/* SISI KIRI: HASIL FINAL (PREVIEW) */}
-        <div className="w-full max-w-[360px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
+        {/* SISI KIRI: PRATINJAU CETAKAN (CANVAS PREVIEW) */}
+        <div className="w-full max-w-[340px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
           <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
             <h3 
               className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
               style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
             >
-              <Sparkles size={14} /> Pratinjau Cetakan 2R
+              <Sparkles size={14} /> Pratinjau Hasil
             </h3>
           </div>
 
@@ -413,7 +430,7 @@ const handlePrint = async () => {
               <div className="flex flex-col items-center justify-center text-[#4A4A4A]">
                 <Loader2 size={36} className="animate-spin mb-3 text-[#4A4A4A]" />
                 <p className="font-bold uppercase tracking-widest text-[10px]">
-                  Melebur Foto...
+                  Memproses Filter...
                 </p>
               </div>
             ) : (
@@ -422,7 +439,7 @@ const handlePrint = async () => {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={mergedImage}
-                    alt="Final Print"
+                    alt="Final Print Preview"
                     className="w-full h-auto border border-white/60 shadow-md rounded"
                   />
                 )}
@@ -434,104 +451,137 @@ const handlePrint = async () => {
           </div>
         </div>
 
-        {/* SISI KANAN: STATUS, TOMBOL CETAK & QR */}
+        {/* SISI KANAN: LANGKAH FILTER ATAU PRINT */}
         <div className="flex-1 max-w-[460px] flex flex-col gap-6 animate-in slide-in-from-right-8 duration-700 delay-200">
           
-          <div className="bg-white border border-[#4A4A4A]/10 p-8 shadow-sm text-center rounded-xl">
-            {isPreparingPreview ? (
-              <>
-                <ImageIcon size={48} className="mx-auto text-gray-300 mb-4 animate-pulse" strokeWidth={1.5} />
-                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] animate-pulse mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  Menyiapkan...
-                </h2>
-                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-[9px] opacity-80">
-                  Sedang menggabungkan foto dengan frame.
-                </p>
-              </>
-            ) : isPrinting ? (
-              <>
-                <Printer size={48} className="mx-auto text-[#4A4A4A] mb-4 animate-bounce" strokeWidth={1.5} />
-                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] animate-pulse mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  Mencetak...
-                </h2>
-                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-[9px] opacity-80">
-                  Mengirim data ke printer DNP RX1HS.
-                </p>
-              </>
-            ) : errorMsg && !qrUrl ? (
-              <>
-                <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
-                <h2 className="text-2xl font-normal uppercase text-red-600 mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>GAGAL</h2>
-                <p className="font-bold text-red-500/80 uppercase tracking-widest text-[9px]">
-                  {errorMsg}
-                </p>
-              </>
-            ) : !qrUrl ? (
-              <>
-                <Sparkles size={48} className="mx-auto text-yellow-500 mb-4" strokeWidth={1.5} />
-                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                  HASIL SIAP!
-                </h2>
-                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-xs">
-                  Cek pratinjau di sebelah kiri sebelum mencetak.
-                </p>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={48} className="mx-auto text-green-600 mb-4" strokeWidth={2} />
-                <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>SELESAI!</h2>
-                <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-xs">
-                  Ambil foto fisik Anda.
-                </p>
-              </>
-            )}
-          </div>
+          {currentStep === "filter" ? (
+            /* ================= LANGKAH 1: PILIH FILTER ================= */
+            <div className="bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col gap-4 rounded-xl w-full">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4A4A] mb-1">
+                  Pilih Efek Filter
+                </h3>
+                <p className="text-[10px] text-[#7A7A7A] uppercase tracking-wider font-semibold">Terapkan filter visual favorit Anda ke foto</p>
+              </div>
 
-          <div className={`bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col items-center text-center transition-all duration-500 rounded-xl ${(isPreparingPreview || isPrinting) ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
-            
-            {!qrUrl ? (
-              <div className="w-full flex flex-col gap-4">
-                 <h3 className="text-sm font-bold uppercase tracking-widest text-[#7A7A7A] mb-1">
-                   Konfirmasi Cetak
-                 </h3>
-                 <Button
-                  onClick={handlePrint}
-                  disabled={isPreparingPreview || isPrinting}
-                  className="h-14 w-full bg-[#4A4A4A] hover:bg-[#333] text-white border-none font-bold text-sm uppercase tracking-widest rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {FILTERS.map((f) => {
+                  const isActive = selectedFilter === f.value;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setSelectedFilter(f.value)}
+                      className={`p-4 border rounded-xl text-center transition-all font-bold uppercase text-[10px] tracking-wider cursor-pointer ${
+                        isActive
+                          ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-sm text-[#4A4A4A]"
+                          : "border-[#4A4A4A]/10 bg-white hover:bg-[#FAF9F6] text-[#7A7A7A]"
+                      }`}
+                    >
+                      {f.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                onClick={() => {
+                  setCurrentStep("print");
+                  handlePrint(); // Panggil fungsi cetak & generate QR otomatis ketika klik lanjut
+                }}
+                disabled={isPreparingPreview}
+                className="h-14 w-full bg-[#4A4A4A] hover:bg-[#333] text-white border-none font-bold text-xs uppercase tracking-widest rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
+              >
+                <span>Lanjut ke Cetakan</span>
+                <ArrowRight size={16} />
+              </Button>
+            </div>
+          ) : (
+            /* ================= LANGKAH 2: HASIL CETAKAN & QR ================= */
+            <div className="flex flex-col gap-6 w-full">
+              
+              {/* Status Box */}
+              <div className="bg-white border border-[#4A4A4A]/10 p-8 shadow-sm text-center rounded-xl">
+                {isPrinting ? (
+                  <>
+                    <Printer size={48} className="mx-auto text-[#4A4A4A] mb-4 animate-bounce" strokeWidth={1.5} />
+                    <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] animate-pulse mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                      Mencetak...
+                    </h2>
+                    <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-[9px] opacity-80">
+                      Mengirim data ke printer DNP RX1HS.
+                    </p>
+                  </>
+                ) : errorMsg && !qrUrl ? (
+                  <>
+                    <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
+                    <h2 className="text-2xl font-normal uppercase text-red-600 mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>GAGAL</h2>
+                    <p className="font-bold text-red-500/80 uppercase tracking-widest text-[9px]">
+                      {errorMsg}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={48} className="mx-auto text-green-600 mb-4" strokeWidth={2} />
+                    <h2 className="text-2xl font-normal uppercase text-[#4A4A4A] mb-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>SELESAI!</h2>
+                    <p className="font-bold text-[#7A7A7A] uppercase tracking-widest text-xs">
+                      Foto fisik Anda sedang dicetak otomatis.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* QR Code Soft File Box */}
+              <div className={`bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col items-center text-center transition-all duration-500 rounded-xl ${isPrinting ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
+                {qrUrl ? (
+                  <>
+                    <h3 className="text-xs font-bold uppercase tracking-[0.1em] border-b border-[#4A4A4A]/10 pb-2.5 w-full mb-4 flex items-center justify-center gap-1.5 text-[#7A7A7A]">
+                      <QrCode size={16} className="text-[#4A4A4A]" /> Scan Soft File
+                    </h3>
+
+                    <div className="bg-white border border-[#4A4A4A]/10 p-3 mb-3 inline-block rounded-lg shadow-sm">
+                      <QRCodeSVG value={qrUrl} size={160} level={"H"} includeMargin={false} />
+                    </div>
+
+                    <p className="text-[10px] font-bold text-yellow-600 uppercase mb-3 animate-pulse">
+                      ⚠️ Tersedia hanya selama 60 menit!
+                    </p>
+
+                    <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-2 block">
+                      <Button type="button" className="w-full h-10 border border-[#4A4A4A]/10 bg-[#FAF9F6] hover:bg-white text-[#4A4A4A] font-bold uppercase tracking-widest text-[9px] rounded-lg cursor-pointer">
+                        🧪 Buka Link di Tab Baru
+                      </Button>
+                    </a>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-gray-400">
+                    <Loader2 size={24} className="animate-spin mb-2" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Menghasilkan QR Code...</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setCurrentStep("filter")}
+                  disabled={isPrinting}
+                  variant="outline"
+                  className="h-12 flex-1 border border-[#4A4A4A]/20 bg-white text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Printer size={18} /> CETAK FOTO
+                  <ArrowLeft size={16} /> Ganti Filter
+                </Button>
+
+                <Button
+                  onClick={handleFinish}
+                  disabled={isPrinting}
+                  className="h-12 flex-1 bg-white hover:bg-[#FAF9F6] border border-[#4A4A4A]/20 text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Beranda <Home size={16} />
                 </Button>
               </div>
-            ) : (
-              <>
-                <h3 className="text-sm font-bold uppercase tracking-[0.1em] border-b border-[#4A4A4A]/10 pb-2.5 w-full mb-4 flex items-center justify-center gap-1.5 text-[#7A7A7A]">
-                  <QrCode size={18} className="text-[#4A4A4A]" /> Scan Soft File
-                </h3>
 
-                <div className="bg-white border border-[#4A4A4A]/10 p-3 mb-3 inline-block rounded-lg shadow-sm">
-                  <QRCodeSVG value={qrUrl} size={180} level={"H"} includeMargin={false} />
-                </div>
+            </div>
+          )}
 
-                <p className="text-[10px] font-bold text-yellow-600 uppercase mb-3 animate-pulse">
-                  ⚠️ Tersedia hanya selama 60 menit!
-                </p>
-
-                <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="w-full mt-2 block">
-                  <Button type="button" className="w-full h-10 border border-[#4A4A4A]/10 bg-[#FAF9F6] hover:bg-white text-[#4A4A4A] font-bold uppercase tracking-widest text-[10px] rounded-lg">
-                    🧪 Buka Link di Tab Baru
-                  </Button>
-                </a>
-              </>
-            )}
-          </div>
-
-          <Button
-            onClick={handleFinish}
-            disabled={isPreparingPreview || isPrinting}
-            className="h-12 w-full bg-white hover:bg-[#FAF9F6] border border-[#4A4A4A]/20 text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2"
-          >
-            KEMBALI KE BERANDA <Home size={16} />
-          </Button>
         </div>
       </div>
 
