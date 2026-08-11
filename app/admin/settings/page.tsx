@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Save, AlertCircle, RefreshCw, DollarSign, Timer, Camera, Image } from "lucide-react";
+import { Settings, Save, AlertCircle, RefreshCw, DollarSign, Timer, Camera, Image, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export default function SettingsPage() {
     session_duration_minutes: "",
     countdown_duration_seconds: "",
     max_photos_taken: "",
+    active_event_name: "",
   });
 
   // Fetch data setting dari server
@@ -37,6 +38,7 @@ export default function SettingsPage() {
           session_duration_minutes: json.data.session_duration_minutes || "5",
           countdown_duration_seconds: json.data.countdown_duration_seconds || "5",
           max_photos_taken: json.data.max_photos_taken || "6",
+          active_event_name: json.data.active_event_name || "Global",
         });
       }
     } catch (err: unknown) {
@@ -81,104 +83,119 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 text-retro-charcoal max-w-3xl mx-auto font-sans pb-10">
+    <div className="p-6 space-y-6 max-w-3xl mx-auto font-sans pb-10">
       
       {/* HEADER */}
-      <div className="flex justify-between items-center border-b-[4px] border-retro-charcoal pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
             <Settings size={32} className="text-[#FF0000]" />
             Konfigurasi Global Sistem
           </h1>
-          <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-1">
-            Pengendalian Parameter Operasional Mesin Photobooth
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">
+            Pengendalian Parameter Operasional Mesin Kios
           </p>
         </div>
         <Button
           onClick={fetchSettings}
           disabled={loading}
-          className="border-[3px] border-retro-charcoal bg-white hover:bg-[#EFE9DB] text-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none h-12 px-4"
+          className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-11 px-4 cursor-pointer"
         >
           <RefreshCw className={`${loading ? "animate-spin" : ""}`} size={18} />
         </Button>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-100 border-[3px] border-retro-charcoal text-retro-charcoal font-bold flex items-center gap-3 shadow-[4px_4px_0_0_#262626]">
-          <AlertCircle size={24} className="text-[#FF0000]" />
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 font-semibold flex items-center gap-3 rounded-xl">
+          <AlertCircle size={24} className="text-[#FF0000] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-20 uppercase font-black tracking-widest animate-pulse text-retro-charcoal/50">
+        <div className="text-center py-20 uppercase font-bold tracking-widest animate-pulse text-gray-400 text-xs">
           Sinkronisasi Parameter Sistem...
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] p-6 space-y-6">
+          <div className="bg-white border border-gray-100/50 rounded-2xl shadow-sm p-6 space-y-6">
             
             {/* CONFIG 1: HARGA SESI */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-[2px] border-dashed border-retro-charcoal/30 pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
               <div className="max-w-md">
-                <h3 className="font-black text-lg uppercase tracking-wide flex items-center gap-2">
-                  <DollarSign size={18} className="text-[#FF0000]" strokeWidth={3} /> Tarif Per Sesi Foto
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <DollarSign size={16} className="text-[#FF0000]" /> Tarif Per Sesi Foto
                 </h3>
-                <p className="text-xs text-retro-charcoal/60 font-bold uppercase mt-1">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
                   Nominal tarif dasar paket yang akan di-generate menjadi kode QRIS DOKU pada layar mesin kios.
                 </p>
               </div>
-              <div className="w-full md:w-48 relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 font-black text-sm text-retro-charcoal/50">Rp</span>
-                <Input required type="number" min="0" name="price_per_session" value={formData.price_per_session} onChange={handleInputChange} className="pl-9 h-12 border-[2px] border-retro-charcoal font-black text-base" />
+              <div className="w-full md:w-56 relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
+                <Input required type="number" min="0" name="price_per_session" value={formData.price_per_session} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
               </div>
             </div>
 
-            {/* CONFIG 2: DURASI TOTAL SESI */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-[2px] border-dashed border-retro-charcoal/30 pb-6">
+            {/* CONFIG 2: NAMA EVENT AKTIF (NEW) */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
               <div className="max-w-md">
-                <h3 className="font-black text-lg uppercase tracking-wide flex items-center gap-2">
-                  <Timer size={18} className="text-[#FF0000]" strokeWidth={3} /> Batas Durasi Sesi Bilik
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <CalendarRange size={16} className="text-[#FF0000]" /> Folder / Event Aktif
                 </h3>
-                <p className="text-xs text-retro-charcoal/60 font-bold uppercase mt-1">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
+                  Nama event saat ini (contoh: LUSTRUM). Mesin kios akan otomatis menampilkan bingkai &apos;Global&apos; DAN bingkai khusus event tersebut.
+                </p>
+              </div>
+              <div className="w-full md:w-56 relative">
+                <Input required type="text" name="active_event_name" value={formData.active_event_name} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 uppercase" placeholder="Global" />
+              </div>
+            </div>
+
+            {/* CONFIG 3: DURASI TOTAL SESI */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
+              <div className="max-w-md">
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <Timer size={16} className="text-[#FF0000]" /> Batas Durasi Sesi Bilik
+                </h3>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
                   Alokasi waktu maksimal dalam satuan menit bagi pengguna di dalam bilik sebelum sesi berakhir otomatis.
                 </p>
               </div>
-              <div className="w-full md:w-48 relative">
-                <Input required type="number" min="1" name="session_duration_minutes" value={formData.session_duration_minutes} onChange={handleInputChange} className="h-12 border-[2px] border-retro-charcoal font-black text-base pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3 font-black text-xs uppercase text-retro-charcoal/50">Menit</span>
+              <div className="w-full md:w-56 relative">
+                <Input required type="number" min="1" name="session_duration_minutes" value={formData.session_duration_minutes} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Menit</span>
               </div>
             </div>
 
-            {/* CONFIG 3: TIMER HITUNG MUNDUR KAMERA */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-[2px] border-dashed border-retro-charcoal/30 pb-6">
+            {/* CONFIG 4: TIMER HITUNG MUNDUR KAMERA */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
               <div className="max-w-md">
-                <h3 className="font-black text-lg uppercase tracking-wide flex items-center gap-2">
-                  <Camera size={18} className="text-[#FF0000]" strokeWidth={3} /> Waktu Hitung Mundur Potret
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <Camera size={16} className="text-[#FF0000]" /> Waktu Hitung Mundur Potret
                 </h3>
-                <p className="text-xs text-retro-charcoal/60 font-bold uppercase mt-1">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
                   Jeda waktu (detik) untuk hitung mundur otomatis di layar kios sebelum kamera melakukan pengambilan jepretan.
                 </p>
               </div>
-              <div className="w-full md:w-48 relative">
-                <Input required type="number" min="1" name="countdown_duration_seconds" value={formData.countdown_duration_seconds} onChange={handleInputChange} className="h-12 border-[2px] border-retro-charcoal font-black text-base pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3 font-black text-xs uppercase text-retro-charcoal/50">Detik</span>
+              <div className="w-full md:w-56 relative">
+                <Input required type="number" min="1" name="countdown_duration_seconds" value={formData.countdown_duration_seconds} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Detik</span>
               </div>
             </div>
 
-            {/* CONFIG 4: JUMLAH MAKSIMAL JEPRETAN */}
+            {/* CONFIG 5: JUMLAH MAKSIMAL JEPRETAN */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
               <div className="max-w-md">
-                <h3 className="font-black text-lg uppercase tracking-wide flex items-center gap-2">
-                  <Image size={18} className="text-[#FF0000]" strokeWidth={3} /> Kuota Jepretan Per Sesi
+                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
+                  <Image size={16} className="text-[#FF0000]" /> Kuota Jepretan Per Sesi
                 </h3>
-                <p className="text-xs text-retro-charcoal/60 font-bold uppercase mt-1">
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
                   Jumlah batas pengambilan gambar yang diberikan kepada pelanggan untuk kemudian dipilih ke dalam layout bingkai.
                 </p>
               </div>
-              <div className="w-full md:w-48 relative">
-                <Input required type="number" min="1" name="max_photos_taken" value={formData.max_photos_taken} onChange={handleInputChange} className="h-12 border-[2px] border-retro-charcoal font-black text-base pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3 font-black text-xs uppercase text-retro-charcoal/50">Foto</span>
+              <div className="w-full md:w-56 relative">
+                <Input required type="number" min="1" name="max_photos_taken" value={formData.max_photos_taken} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Foto</span>
               </div>
             </div>
 
@@ -189,10 +206,10 @@ export default function SettingsPage() {
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest h-14 px-8 text-base"
+              className="w-full md:w-auto bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl h-12 px-6 font-bold uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none flex items-center gap-2"
             >
-              <Save size={20} strokeWidth={3} />
-              <span>{submitting ? "MENYIMPAN..." : "SIMPAN KONFIGURASI GLOBAL"}</span>
+              <Save size={18} />
+              <span>{submitting ? "MENYIMPAN..." : "SIMPAN PARAMETER"}</span>
             </Button>
           </div>
         </form>

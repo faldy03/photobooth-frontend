@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, AlertCircle, Image as ImageIcon, Sparkles, CheckCircle2, Clock } from "lucide-react";
+import { Camera, AlertCircle, Image as ImageIcon, Sparkles, CheckCircle2, Clock, FolderClosed, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getApiUrl } from "@/lib/api";
 
-// 1. TAMBAH STRUKTUR CONFIG DI INTERFACE
 interface PhotoAsset {
   id: number;
   name: string;
   type: string;
   image_url: string;
   is_active: boolean;
-  config?: unknown; // Menampung JSON array koordinat dari database
+  event_name?: string;
+  config?: unknown;
 }
 
 export default function FrameSelectionPage() {
@@ -24,7 +24,12 @@ export default function FrameSelectionPage() {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState("");
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+  
+  // Event & Folder States
+  const [activeEvent, setActiveEvent] = useState<string>("Global");
+  const [currentTab, setCurrentTab] = useState<"all" | "global" | "event">("all");
 
+  // Timer Sesi
   useEffect(() => {
     let timerId: NodeJS.Timeout;
     
@@ -33,11 +38,12 @@ export default function FrameSelectionPage() {
       try {
         const res = await fetch(getApiUrl("/api/kiosk/settings"));
         const json = await res.json();
-        if (json.success && json.data && json.data.session_duration_minutes) {
-          durationMinutes = Number(json.data.session_duration_minutes);
+        if (json.success && json.data) {
+          durationMinutes = Number(json.data.session_duration_minutes) || 5;
+          setActiveEvent(json.data.active_event_name || "Global");
         }
       } catch (err) {
-        console.error("Gagal mengambil session_duration_minutes:", err);
+        console.error("Gagal mengambil konfigurasi settings:", err);
       }
 
       let startTimeStr = localStorage.getItem("session_start_time");
@@ -92,7 +98,6 @@ export default function FrameSelectionPage() {
         
         setFrames(activeFrames);
         
-        // Pilih frame pertama secara otomatis sebagai default
         if (activeFrames.length > 0) {
           setSelectedFrame(activeFrames[0]);
         }
@@ -106,28 +111,33 @@ export default function FrameSelectionPage() {
     fetchFrames();
   }, []);
 
+  // Filter frame berdasarkan Tab
+  const filteredFrames = frames.filter((frame) => {
+    if (currentTab === "global") {
+      return !frame.event_name || frame.event_name.toLowerCase() === "global" || frame.event_name.toLowerCase() === "none";
+    }
+    if (currentTab === "event") {
+      return frame.event_name && frame.event_name.toLowerCase() === activeEvent.toLowerCase();
+    }
+    return true; // "all"
+  });
+
   const handleStartSession = () => {
     if (!selectedFrame) return;
     setIsStarting(true);
 
-    // Simpan URL dan ID untuk kebutuhan standar
     localStorage.setItem("selected_frame_id", selectedFrame.id.toString());
     localStorage.setItem("selected_frame_url", selectedFrame.image_url);
-
-    // =========================================================================
-    // INI KUNCI UTAMANYA: Simpan seluruh objek frame (termasuk koordinat JSON)
-    // agar bisa dibaca oleh ResultPage untuk memotong foto secara presisi!
-    // =========================================================================
     localStorage.setItem("selected_frame_data", JSON.stringify(selectedFrame));
 
-    // Efek transisi sebelum pindah halaman
     setTimeout(() => {
-      router.push("/session-started"); // Sesuaikan dengan rute halaman kamera Anda
+      router.push("/session-started"); 
     }, 1500);
   };
 
   return (
-    <div className="h-screen w-full bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col font-sans text-[#4A4A4A] overflow-hidden relative">
+    <div className="h-screen w-full bg-[#FAF9F6] bg-[radial-gradient(#FAF9F6_60%,#F5F2EC_100%)] flex flex-col font-sans text-[#4A4A4A] overflow-hidden relative p-6">
+      
       {/* Mengimpor Font Premium Cormorant Garamond */}
       <link 
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap" 
@@ -135,9 +145,9 @@ export default function FrameSelectionPage() {
       />
 
       {/* 1. HEADER AREA */}
-      <div className="text-center pt-8 pb-4 shrink-0 z-10 relative">
+      <div className="text-center pb-4 shrink-0 z-10 relative">
         {sessionTimeLeft && (
-          <div className="absolute top-4 right-6 bg-[#4A4A4A] text-[#FAF9F6] border border-[#4A4A4A] px-3.5 py-1.5 font-bold text-xs uppercase tracking-widest shadow-md rounded-full flex items-center gap-2 z-50">
+          <div className="absolute top-0 right-2 bg-[#4A4A4A] text-[#FAF9F6] border border-[#4A4A4A] px-3.5 py-1.5 font-bold text-xs uppercase tracking-widest shadow-md rounded-full flex items-center gap-2 z-50">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -156,115 +166,162 @@ export default function FrameSelectionPage() {
           className="text-[10px] md:text-xs font-light tracking-[0.3em] text-[#7A7A7A] mt-2 uppercase opacity-80"
           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
         >
-          Geser daftar di bawah untuk memilih gaya fotomu
+          Pilih tema bingkai fotomu di sebelah kiri
         </p>
       </div>
 
-      {/* 2. AREA PRATINJAU (PREVIEW) TENGAH */}
-      <div className="flex-1 min-h-0 flex items-center justify-center p-6 relative z-0">
-        {loading ? (
-          <div className="animate-pulse flex flex-col items-center gap-4 text-[#4A4A4A]/50">
-            <ImageIcon size={64} strokeWidth={1.5} />
-            <span className="font-bold uppercase tracking-widest text-xs">Memuat Koleksi...</span>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 p-6 flex flex-col items-center rounded-lg shadow-sm">
-            <AlertCircle size={40} className="text-red-500 mb-3" />
-            <span className="font-bold uppercase text-center text-xs text-red-600">{error}</span>
-          </div>
-        ) : frames.length === 0 ? (
-          <div className="bg-white border border-[#4A4A4A]/10 p-6 flex flex-col items-center rounded-lg shadow-sm">
-            <ImageIcon size={40} className="text-[#4A4A4A]/30 mb-3" />
-            <span className="font-bold uppercase text-center text-xs text-[#7A7A7A]">Belum ada bingkai yang aktif</span>
-          </div>
-        ) : selectedFrame ? (
-          <div className="relative h-full w-full max-w-sm flex items-center justify-center transition-all duration-300">
-            {/* Tampilan Frame Transparan (Efek Papan Catur di belakangnya) */}
-            <div className="relative h-full w-full max-h-[55vh] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjY2NjIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] border border-[#4A4A4A]/15 shadow-[0_8px_30px_rgb(0,0,0,0.05)] bg-white overflow-hidden rounded-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={selectedFrame.image_url} 
-                alt={selectedFrame.name}
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-lg"
-              />
-            </div>
-            
-            {/* Label Nama Frame Terapung */}
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#4A4A4A] text-white px-5 py-1.5 rounded-full font-bold uppercase tracking-widest text-[10px] whitespace-nowrap flex items-center gap-1.5 shadow-sm">
-              <Sparkles size={12} /> {selectedFrame.name}
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      {/* 3. AREA SELEKSI BAWAH (SCROLL HORIZONTAL) */}
-      <div className="shrink-0 w-full bg-white/70 backdrop-blur-md border-t border-[#4A4A4A]/10 pb-8 pt-6 relative z-20">
+      {/* 2. DUA KARTU UTAMA (SIDE-BY-SIDE GRID) */}
+      <div className="flex-1 min-h-0 w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch py-4">
         
-        {/* Kontainer Scroll Horisontal */}
-        {frames.length > 0 && (
-          <div className="w-full overflow-x-auto pb-6 px-6 snap-x flex gap-4 hide-scrollbar">
-            {frames.map((frame) => {
-              const isSelected = selectedFrame?.id === frame.id;
-              
-              return (
-                <button
-                  key={frame.id}
-                  onClick={() => setSelectedFrame(frame)}
-                  className={`
-                    shrink-0 w-24 h-32 md:w-28 md:h-38 snap-center relative transition-all duration-200 
-                    border rounded-lg flex flex-col items-center justify-center p-2
-                    ${isSelected 
-                      ? "border-[#4A4A4A] bg-[#FAF9F6] -translate-y-2 shadow-sm" 
-                      : "border-[#4A4A4A]/10 bg-white hover:bg-[#FAF9F6] hover:-translate-y-1"
-                    }
-                  `}
-                >
-                  {/* Thumbnail Gambar */}
-                  <div className={`w-full h-full border ${isSelected ? 'border-[#4A4A4A]/25' : 'border-[#4A4A4A]/10'} bg-white overflow-hidden p-1 flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjY2NjIi8+Cjwvc3ZnPg==')] rounded`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={frame.image_url} 
-                      alt={frame.name}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-
-                  {/* Indikator Terpilih */}
-                  {isSelected && (
-                    <div className="absolute -top-2.5 -right-2.5 bg-[#4A4A4A] text-white rounded-full p-1 shadow-sm border border-white">
-                      <CheckCircle2 size={12} strokeWidth={4} />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+        {/* KARTU KIRI: SELEKTOR EVENT & GRID FRAME */}
+        <div className="bg-white border border-[#4A4A4A]/10 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col h-full overflow-hidden animate-in slide-in-from-left-8 duration-700">
+          
+          {/* Judul & Folder Info */}
+          <div className="flex items-center gap-2 border-b border-[#4A4A4A]/10 pb-4 mb-4 shrink-0">
+            <FolderClosed className="text-[#4A4A4A]" size={18} />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#7A7A7A]">Koleksi Folder Bingkai</h3>
           </div>
-        )}
 
-        {/* TOMBOL LANJUTKAN */}
-        <div className="px-6 max-w-md mx-auto">
-          <Button
-            onClick={handleStartSession}
-            disabled={!selectedFrame || isStarting}
-            className="w-full h-14 text-sm bg-[#4A4A4A] hover:bg-[#333] text-white font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-lg shadow-sm"
-          >
-            {isStarting ? "MENYIAPKAN KAMERA..." : "MULAI SESI FOTO"} 
-            <Camera className="ml-2" size={18} />
-          </Button>
+          {/* Folder Tabs (Tampil jika activeEvent bukan Global) */}
+          {activeEvent !== "Global" && (
+            <div className="flex gap-2 mb-4 bg-gray-50 p-1.5 rounded-xl border border-gray-150 shrink-0">
+              <button
+                onClick={() => setCurrentTab("all")}
+                className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                  currentTab === "all"
+                    ? "bg-[#4A4A4A] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                onClick={() => setCurrentTab("global")}
+                className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                  currentTab === "global"
+                    ? "bg-[#4A4A4A] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                Global (Umum)
+              </button>
+              <button
+                onClick={() => setCurrentTab("event")}
+                className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                  currentTab === "event"
+                    ? "bg-[#4A4A4A] text-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                Event: {activeEvent}
+              </button>
+            </div>
+          )}
+
+          {/* Grid Scrollable Frame */}
+          <div className="flex-1 overflow-y-auto pr-1 pb-4">
+            {loading ? (
+              <div className="h-full flex flex-col items-center justify-center gap-4 text-[#4A4A4A]/50 py-10">
+                <RefreshCw size={32} className="animate-spin" />
+                <span className="font-bold uppercase tracking-widest text-[10px]">Memuat Bingkai...</span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center p-6 text-red-500">
+                <AlertCircle size={32} className="mb-2" />
+                <span className="font-bold uppercase text-center text-xs">{error}</span>
+              </div>
+            ) : filteredFrames.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center p-6 text-[#7A7A7A] py-10">
+                <ImageIcon size={32} className="mb-2 opacity-30" />
+                <span className="font-bold uppercase text-center text-xs">Bingkai tidak ditemukan</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4 content-start">
+                {filteredFrames.map((frame) => {
+                  const isSelected = selectedFrame?.id === frame.id;
+                  
+                  return (
+                    <button
+                      key={frame.id}
+                      onClick={() => setSelectedFrame(frame)}
+                      className={`
+                        relative transition-all duration-200 aspect-[2/3]
+                        border rounded-lg flex flex-col items-center justify-center p-1.5 cursor-pointer
+                        ${isSelected 
+                          ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-md -translate-y-0.5" 
+                          : "border-[#4A4A4A]/10 bg-white hover:bg-gray-50 hover:-translate-y-0.5"
+                        }
+                      `}
+                    >
+                      {/* Thumbnail Gambar */}
+                      <div className={`w-full h-full border ${isSelected ? 'border-[#4A4A4A]/25' : 'border-[#4A4A4A]/10'} bg-white overflow-hidden p-1 flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjY2NjIi8+Cjwvc3ZnPg==')] rounded`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={frame.image_url} 
+                          alt={frame.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+
+                      {/* Indikator Terpilih */}
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 bg-[#4A4A4A] text-white rounded-full p-1 shadow border border-white">
+                          <CheckCircle2 size={10} strokeWidth={4} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* KARTU KANAN: PRATINJAU BINGKAI & TOMBOL MULAI */}
+        <div className="bg-white border border-[#4A4A4A]/10 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between h-full overflow-hidden animate-in slide-in-from-right-8 duration-700 delay-200">
+          
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+            {selectedFrame ? (
+              <div className="relative h-full w-full max-w-xs flex flex-col items-center justify-center py-4">
+                {/* Tampilan Frame Transparan */}
+                <div className="relative w-full aspect-[2/3] max-h-[48vh] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjY2NjIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNjY2MiLz48L3N2Zz4=')] border border-[#4A4A4A]/15 shadow-md bg-white overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={selectedFrame.image_url} 
+                    alt={selectedFrame.name}
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-lg"
+                  />
+                </div>
+                
+                {/* Label Nama Frame */}
+                <div className="mt-4 bg-[#4A4A4A] text-white px-5 py-1.5 rounded-full font-bold uppercase tracking-widest text-[9px] flex items-center gap-1.5 shadow-sm shrink-0">
+                  <Sparkles size={12} /> {selectedFrame.name}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-gray-300">
+                <ImageIcon size={48} className="mb-2" />
+                <span className="text-xs font-bold uppercase tracking-wider">Pilih bingkai terlebih dahulu</span>
+              </div>
+            )}
+          </div>
+
+          {/* TOMBOL LANJUTKAN */}
+          <div className="w-full pt-4 border-t border-[#4A4A4A]/10 shrink-0">
+            <Button
+              onClick={handleStartSession}
+              disabled={!selectedFrame || isStarting}
+              className="w-full h-14 text-xs bg-[#4A4A4A] hover:bg-[#333] text-white font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer border-none"
+            >
+              <span>{isStarting ? "MENYIAPKAN KAMERA..." : "MULAI SESI FOTO"}</span>
+              <Camera size={16} />
+            </Button>
+          </div>
+
         </div>
 
       </div>
 
-      {/* CSS Tambahan */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}} />
     </div>
   );
 }

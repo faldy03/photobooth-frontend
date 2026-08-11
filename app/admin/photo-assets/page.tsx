@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Plus, Edit, Trash2, Image as ImageIcon, CheckCircle2, XCircle, 
-  AlertCircle, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Upload, LayoutGrid
+  AlertCircle, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Upload, LayoutGrid, FolderClosed
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ interface PhotoAsset {
   file_path: string;
   image_url: string; 
   is_active: boolean;
+  event_name?: string;
   config?: { slots: Slot[] } | null;
   created_at: string;
 }
@@ -77,6 +78,7 @@ export default function PhotoAssetsPage() {
     name: "",
     type: "frame",
     is_active: true,
+    event_name: "Global",
   });
   
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -109,7 +111,8 @@ export default function PhotoAssetsPage() {
 
   const filteredAssets = assets.filter(a => 
     a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    a.type.toLowerCase().includes(searchTerm.toLowerCase())
+    a.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (a.event_name && a.event_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   const totalPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
   const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -161,7 +164,7 @@ export default function PhotoAssetsPage() {
 
   const openAddModal = () => {
     setIsEditMode(false);
-    setFormData({ name: "", type: "frame", is_active: true });
+    setFormData({ name: "", type: "frame", is_active: true, event_name: "Global" });
     setSlots([]); 
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -176,6 +179,7 @@ export default function PhotoAssetsPage() {
       name: asset.name,
       type: asset.type,
       is_active: asset.is_active,
+      event_name: asset.event_name || "Global",
     });
     setSlots(asset.config?.slots || []); 
     setSelectedFile(null);
@@ -197,6 +201,7 @@ export default function PhotoAssetsPage() {
       dataToSend.append("name", formData.name);
       dataToSend.append("type", formData.type);
       dataToSend.append("is_active", formData.is_active ? "1" : "0");
+      dataToSend.append("event_name", formData.event_name || "Global");
       
       if (formData.type === 'frame') {
         dataToSend.append("config", JSON.stringify({ slots: slots }));
@@ -264,7 +269,7 @@ export default function PhotoAssetsPage() {
             Pustaka Komponen Visual
           </h1>
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">
-            Pengelolaan Bingkai Overlay Kios (Format PNG Transparan)
+            Pengelolaan Bingkai Overlay Kios & Penjadwalan Event
           </p>
         </div>
 
@@ -301,7 +306,7 @@ export default function PhotoAssetsPage() {
           </span>
           <Input 
             type="text" 
-            placeholder="CARI NAMA KOMPONEN ATAU TIPE..." 
+            placeholder="CARI NAMA, TIPE, ATAU FOLDER EVENT..." 
             className="pl-11 h-11 border border-gray-200 rounded-xl font-bold uppercase tracking-wider focus-visible:ring-1 focus-visible:ring-red-500 bg-gray-50/30 w-full md:w-1/2"
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -311,27 +316,28 @@ export default function PhotoAssetsPage() {
 
       {/* TABEL DATA ASET PHOTO */}
       <div className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px]">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
               <th className="p-4 pl-6 text-center w-16">No</th>
               <th className="p-4 w-32 text-center">Pratinjau</th>
               <th className="p-4">Nama Aset</th>
+              <th className="p-4 text-center">Folder / Event</th>
               <th className="p-4 text-center">Tipe Komponen</th>
-              <th className="p-4 text-center">Status Jaringan</th>
+              <th className="p-4 text-center">Status Distribusi</th>
               <th className="p-4 pr-6 text-center w-28">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 font-semibold text-xs text-gray-700">
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
+                <td colSpan={7} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   <RefreshCw className="animate-spin inline mr-2" size={18} /> Menarik berkas aset visual...
                 </td>
               </tr>
             ) : paginatedAssets.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
+                <td colSpan={7} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   Tidak ada aset visual ditemukan di database.
                 </td>
               </tr>
@@ -355,6 +361,12 @@ export default function PhotoAssetsPage() {
                     </div>
                   </td>
                   <td className="p-4 tracking-wider uppercase font-bold text-gray-900 text-sm">{asset.name}</td>
+                  <td className="p-4 text-center">
+                    <span className="inline-flex items-center gap-1 bg-[#FF0000]/10 text-[#FF0000] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                      <FolderClosed size={10} className="mr-1" />
+                      {asset.event_name || "Global"}
+                    </span>
+                  </td>
                   <td className="p-4 text-center">
                     <span className="inline-flex items-center bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
                       {asset.type}
@@ -445,9 +457,17 @@ export default function PhotoAssetsPage() {
               
               {/* SISI KIRI: INPUT FORM */}
               <div className={formData.type === 'frame' ? "md:col-span-2 space-y-4" : "space-y-4"}>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Nama Aset Visual</label>
-                  <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20 uppercase" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Nama Aset Visual</label>
+                    <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur" className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20 uppercase" />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Folder / Event Aset</label>
+                    <Input required name="event_name" value={formData.event_name} onChange={handleInputChange} placeholder="Contoh: Global atau LUSTRUM" className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20 uppercase" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
