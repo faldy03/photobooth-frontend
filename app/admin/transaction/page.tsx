@@ -287,12 +287,12 @@ export default function AdminTransactionsPage() {
         />
         <StatCard
           title="Pembayaran Sukses"
-          value={`${Number(stats.total_success).toLocaleString("id-ID")} Tx`}
+          value={`${Number(stats.total_success).toLocaleString("id-ID")} Transaksi`}
           icon={<CheckCircle2 size={20} strokeWidth={2.5} />}
         />
         <StatCard
           title="Menunggu Pembayaran"
-          value={`${Number(stats.total_pending).toLocaleString("id-ID")} Tx`}
+          value={`${Number(stats.total_pending).toLocaleString("id-ID")} Transaksi`}
           icon={<ClockIcon size={20} strokeWidth={2.5} />}
         />
       </div>
