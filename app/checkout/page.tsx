@@ -364,8 +364,9 @@ export default function CheckoutPage() {
                 
                 {/* LEFT COLUMN: SCAN QRIS & LOGOS */}
                 <div className="flex flex-col items-center space-y-4 w-full">
-                  <div className={`flex items-center gap-2 font-bold text-sm tracking-widest px-6 py-2 rounded-full border border-[#4A4A4A]/10 bg-[#4A4A4A] text-white`}>
-                    <Clock size={16} className="animate-pulse" /> {timeLeft}
+                  <div className="flex items-center gap-2 font-black text-xs tracking-widest px-6 py-3 rounded-full border border-red-200 bg-[#FF0000] text-white shadow-md shadow-red-500/10 animate-pulse uppercase">
+                    <Clock size={14} className="shrink-0" />
+                    <span>Batas Waktu Bayar: {timeLeft}</span>
                   </div>
 
                   <div className="bg-white p-6 border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] w-full flex flex-col items-center relative rounded-lg">
