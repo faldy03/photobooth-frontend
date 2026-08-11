@@ -256,7 +256,7 @@ export default function CheckoutPage() {
           </Button>
         </Link>
 
-        <div className="w-full max-w-lg bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative overflow-hidden rounded-xl">
+        <div className={`w-full transition-all duration-300 ${qrString ? 'max-w-3xl' : 'max-w-lg'} bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative overflow-hidden rounded-xl`}>
           
           <div className="p-8 pb-6 text-center border-b border-[#4A4A4A]/10 bg-[#FAF9F6]">
             <h1 
@@ -338,77 +338,83 @@ export default function CheckoutPage() {
               </div>
 
             ) : (
-              <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start animate-in fade-in zoom-in-95 duration-500">
                 
-                <div className={`flex items-center gap-2 font-bold text-sm mb-6 tracking-widest px-6 py-2 rounded-full border border-[#4A4A4A]/10 bg-[#4A4A4A] text-white`}>
-                  <Clock size={16} className="animate-pulse" /> {timeLeft}
-                </div>
+                {/* LEFT COLUMN: SCAN QRIS & LOGOS */}
+                <div className="flex flex-col items-center space-y-4 w-full">
+                  <div className={`flex items-center gap-2 font-bold text-sm tracking-widest px-6 py-2 rounded-full border border-[#4A4A4A]/10 bg-[#4A4A4A] text-white`}>
+                    <Clock size={16} className="animate-pulse" /> {timeLeft}
+                  </div>
 
-                <div className="bg-white p-6 border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] mb-6 w-full flex flex-col items-center relative rounded-lg">
-                  <div className="flex items-center justify-center gap-2 font-black tracking-widest uppercase text-xs border-b border-[#4A4A4A]/10 pb-4 mb-4 w-full text-center text-[#7A7A7A]">
-                    <QrCode size={16} className="text-[#4A4A4A]" /> SCAN QRIS
-                  </div>
-                  
-                  <div className="border border-[#4A4A4A]/10 p-2 mb-4 bg-white rounded-lg">
-                    <QRCodeSVG value={qrString} size={200} level={"H"} includeMargin={false} />
-                  </div>
-                  
-                  <div className="w-full mt-4 text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A7A7A] mb-4">
-                      Dapat dibayar dengan E-Wallet & M-Banking apa saja:
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 px-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/qris.svg" alt="QRIS" style={{ height: '24px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/gopay.svg" alt="GoPay" style={{ height: '14px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/ovo.svg" alt="OVO" style={{ height: '16px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/dana.svg" alt="DANA" style={{ height: '16px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/shopee-pay.svg" alt="ShopeePay" style={{ height: '16px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/linkaja.svg" alt="LinkAja" style={{ height: '18px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/bca.svg" alt="BCA" style={{ height: '14px' }} className="w-auto object-contain" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/mandiri.svg" alt="Mandiri" style={{ height: '12px' }} className="w-auto object-contain" />
+                  <div className="bg-white p-6 border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] w-full flex flex-col items-center relative rounded-lg">
+                    <div className="flex items-center justify-center gap-2 font-black tracking-widest uppercase text-xs border-b border-[#4A4A4A]/10 pb-4 mb-4 w-full text-center text-[#7A7A7A]">
+                      <QrCode size={16} className="text-[#4A4A4A]" /> SCAN QRIS
+                    </div>
+                    
+                    <div className="border border-[#4A4A4A]/10 p-2 mb-4 bg-white rounded-lg">
+                      <QRCodeSVG value={qrString} size={200} level={"H"} includeMargin={false} />
+                    </div>
+                    
+                    <div className="w-full mt-2 text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#7A7A7A] mb-3">
+                        Dapat dibayar dengan E-Wallet & M-Banking apa saja:
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2.5 px-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/qris.svg" alt="QRIS" style={{ height: '22px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/gopay.svg" alt="GoPay" style={{ height: '12px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/ovo.svg" alt="OVO" style={{ height: '14px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/dana.svg" alt="DANA" style={{ height: '14px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/shopee-pay.svg" alt="ShopeePay" style={{ height: '14px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/linkaja.svg" alt="LinkAja" style={{ height: '16px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/bca.svg" alt="BCA" style={{ height: '12px' }} className="w-auto object-contain" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://cdn.jsdelivr.net/gh/hafidznoor/idn-finlogos@master/icons/mandiri.svg" alt="Mandiri" style={{ height: '10px' }} className="w-auto object-contain" />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="w-full bg-[#FAF9F6] border border-[#4A4A4A]/10 p-5 text-xs font-bold tracking-wide relative rounded-lg">
-                  <div className="flex items-center gap-2 mb-3 border-b border-[#4A4A4A]/10 pb-3 uppercase font-bold text-[#4A4A4A]/80">
-                    <ReceiptText size={16} /> RINCIAN TAGIHAN
-                  </div>
-                  
-                  <div className="flex justify-between mb-2 text-[#4A4A4A]">
-                    <span className="uppercase text-[9px] tracking-widest font-bold">Nomor Tiket</span>
-                    <span className="bg-white border border-[#4A4A4A]/10 px-2 py-0.5 rounded-sm">{invoice}</span>
-                  </div>
-                  
-                  <div className="flex justify-between mb-2 text-[#4A4A4A]/80">
-                    <span className="uppercase text-[9px] tracking-widest">Harga Normal</span>
-                    <span>Rp {finalGrossAmount.toLocaleString("id-ID")}</span>
-                  </div>
-                  
-                  {discountAmount > 0 && (
-                    <div className="flex justify-between mb-2 text-green-600">
-                      <span className="uppercase text-[9px] tracking-widest">Potongan Kupon</span>
-                      <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                {/* RIGHT COLUMN: INVOICE DETAILS & CANCEL BUTTON */}
+                <div className="flex flex-col space-y-4 w-full h-full justify-between self-stretch">
+                  <div className="w-full bg-[#FAF9F6] border border-[#4A4A4A]/10 p-5 text-xs font-bold tracking-wide relative rounded-lg flex-1">
+                    <div className="flex items-center gap-2 mb-3 border-b border-[#4A4A4A]/10 pb-3 uppercase font-bold text-[#4A4A4A]/80">
+                      <ReceiptText size={16} /> RINCIAN TAGIHAN
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between mt-4 pt-3 border-t border-[#4A4A4A]/10 text-base font-bold text-[#4A4A4A]">
-                    <span className="uppercase tracking-widest">TOTAL</span>
-                    <span className="text-lg">Rp {finalNetAmount.toLocaleString("id-ID")}</span>
+                    
+                    <div className="flex justify-between mb-2 text-[#4A4A4A]">
+                      <span className="uppercase text-[9px] tracking-widest font-bold">Nomor Tiket</span>
+                      <span className="bg-white border border-[#4A4A4A]/10 px-2 py-0.5 rounded-sm">{invoice}</span>
+                    </div>
+                    
+                    <div className="flex justify-between mb-2 text-[#4A4A4A]/80">
+                      <span className="uppercase text-[9px] tracking-widest">Harga Normal</span>
+                      <span>Rp {finalGrossAmount.toLocaleString("id-ID")}</span>
+                    </div>
+                    
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between mb-2 text-green-600">
+                        <span className="uppercase text-[9px] tracking-widest">Potongan Kupon</span>
+                        <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between mt-4 pt-3 border-t border-[#4A4A4A]/10 text-base font-bold text-[#4A4A4A]">
+                      <span className="uppercase tracking-widest">TOTAL</span>
+                      <span className="text-lg">Rp {finalNetAmount.toLocaleString("id-ID")}</span>
+                    </div>
                   </div>
-                </div>
 
-                <Button onClick={handleReset} variant="outline" className="w-full h-12 mt-6 border border-[#4A4A4A]/20 bg-white font-bold uppercase tracking-widest hover:bg-[#FAF9F6] transition-all text-[#7A7A7A] hover:text-[#4A4A4A] rounded-lg">
-                  Batal & Ulangi Transaksi
-                </Button>
+                  <Button onClick={handleReset} variant="outline" className="w-full h-14 border border-[#4A4A4A]/20 bg-white font-bold uppercase tracking-widest hover:bg-[#FAF9F6] transition-all text-[#7A7A7A] hover:text-[#4A4A4A] rounded-lg">
+                    Batal & Ulangi Transaksi
+                  </Button>
+                </div>
 
               </div>
             )}
