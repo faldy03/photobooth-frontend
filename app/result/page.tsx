@@ -26,7 +26,13 @@ const FILTERS = [
   { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)", image_url: undefined },
   { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)", image_url: undefined },
   { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)", image_url: undefined },
-  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined }
+  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined },
+  { id: "noir", name: "Dramatic Noir", value: "grayscale(100%) contrast(1.4) brightness(0.95)", image_url: undefined },
+  { id: "teal", name: "Cinematic Teal", value: "contrast(1.1) saturate(1.1) hue-rotate(-15deg) brightness(0.98)", image_url: undefined },
+  { id: "gold", name: "Summer Gold", value: "sepia(25%) saturate(1.3) contrast(1.05) brightness(1.02)", image_url: undefined },
+  { id: "lomo", name: "Lomo Retro", value: "saturate(1.4) contrast(1.25) brightness(0.98)", image_url: undefined },
+  { id: "fade", name: "Soft Fade", value: "contrast(0.85) saturate(0.9) brightness(1.08) sepia(10%)", image_url: undefined },
+  { id: "ice", name: "Cold Ice", value: "saturate(0.7) hue-rotate(15deg) brightness(1.04) contrast(0.95)", image_url: undefined }
 ];
 
 export default function ResultPage() {
