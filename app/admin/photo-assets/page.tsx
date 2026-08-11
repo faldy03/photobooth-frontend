@@ -370,7 +370,7 @@ export default function PhotoAssetsPage() {
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>
                   <td className="p-2">
-                    <div className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-xl mx-auto p-1 overflow-hidden flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                    <div className="w-16 h-16 bg-gray-55 border border-gray-100 rounded-xl mx-auto p-1 overflow-hidden flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={asset.image_url} 
@@ -599,7 +599,7 @@ export default function PhotoAssetsPage() {
                     <Eye size={14} className="text-[#FF0000]" /> Pratinjau Lubang Bingkai (Live)
                   </label>
                   
-                  <div className="relative w-full max-w-[240px] aspect-[2/3] bg-gray-50 border border-gray-150 rounded-xl overflow-hidden shadow-md flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                  <div className="relative w-full max-w-[240px] aspect-[2/3] bg-gray-50 border border-gray-150 rounded-xl overflow-hidden shadow-md flex items-center justify-center">
                     {previewUrl ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -614,10 +614,13 @@ export default function PhotoAssetsPage() {
                           const widthPct = (slot.width / 1200) * 100;
                           const heightPct = (slot.height / 1800) * 100;
                           
+                          const isEven = index % 2 === 0;
+                          const bgColor = isEven ? "bg-[#EF4444]" : "bg-[#84CC16]";
+                          
                           return (
                             <div
                               key={`live-slot-preview-${slot.id}-${index}`}
-                              className="absolute border-2 border-[#FF0000] bg-[#FF0000]/15 flex flex-col items-center justify-center text-[#FF0000] font-black text-[9px] uppercase z-20 pointer-events-none"
+                              className={`absolute ${bgColor} text-white flex flex-col items-center justify-center font-bold text-[11px] uppercase z-20 pointer-events-none border border-white/20`}
                               style={{
                                 left: `${leftPct}%`,
                                 top: `${topPct}%`,
@@ -625,8 +628,8 @@ export default function PhotoAssetsPage() {
                                 height: `${heightPct}%`,
                               }}
                             >
-                              <span>S{index + 1}</span>
-                              <span className="text-[7px] font-bold block leading-none">{slot.width}x{slot.height}</span>
+                              <span>{index + 1}</span>
+                              <span className="text-[6px] font-bold block leading-none mt-0.5 opacity-80">{slot.width}x{slot.height}</span>
                             </div>
                           );
                         })}
