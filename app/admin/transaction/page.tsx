@@ -100,7 +100,6 @@ export default function AdminTransactionsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Gagal mengambil data.");
 
-      // Laravel Pagination Structure: json.data.data (Array Item), json.data.last_page, dll.
       setTransactions(json.data.data);
       setTotalPages(json.data.last_page);
       setTotalItems(json.data.total);
@@ -115,7 +114,7 @@ export default function AdminTransactionsPage() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchTransactions();
-      fetchStatistics(); // Memanggil statistik agar selalu sinkron dengan tabel
+      fetchStatistics(); 
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
@@ -223,14 +222,16 @@ export default function AdminTransactionsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 text-retro-charcoal max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto font-sans pb-10">
+      
       {/* HEADER MANAJEMEN */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-[4px] border-retro-charcoal pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2">
-            <ReceiptText size={32} /> Manajemen Transaksi
+          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
+            <ReceiptText size={32} className="text-[#FF0000]" /> 
+            Manajemen Transaksi
           </h1>
-          <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">
             Data dimuat langsung dari server (Server-Side)
           </p>
         </div>
@@ -242,9 +243,9 @@ export default function AdminTransactionsPage() {
                 setDeleteMode("batch");
                 setIsDeleteOpen(true);
               }}
-              className="flex-1 md:flex-none border-[3px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white shadow-[3px_3px_0_0_#262626] h-12 px-4 transition-transform active:translate-y-1 active:shadow-none font-black uppercase tracking-widest flex items-center justify-center animate-in zoom-in-95 duration-200"
+              className="flex-1 md:flex-none bg-[#FF0000] hover:bg-red-700 text-white rounded-xl h-11 px-4 font-bold uppercase tracking-wider flex items-center justify-center animate-in zoom-in-95 duration-200 border-none cursor-pointer"
             >
-              <Trash2 className="mr-2" size={18} />
+              <Trash2 className="mr-2" size={16} />
               HAPUS TERPILIH ({selectedIds.length})
             </Button>
           )}
@@ -252,11 +253,11 @@ export default function AdminTransactionsPage() {
           <Button
             onClick={handleExport}
             disabled={exporting}
-            className="flex-1 md:flex-none border-[3px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white shadow-[3px_3px_0_0_#262626] h-12 px-4 transition-transform active:translate-y-1 active:shadow-none font-black uppercase tracking-widest"
+            className="flex-1 md:flex-none bg-[#FF0000] hover:bg-red-700 text-white rounded-xl h-11 px-4 font-bold uppercase tracking-wider flex items-center justify-center border-none shadow-md shadow-red-500/10 cursor-pointer"
           >
             <Download
               className={`mr-2 ${exporting ? "animate-bounce" : ""}`}
-              size={18}
+              size={16}
             />
             {exporting ? "MEMPROSES..." : "EXPORT CSV"}
           </Button>
@@ -267,7 +268,7 @@ export default function AdminTransactionsPage() {
               fetchStatistics();
             }}
             disabled={loading}
-            className="border-[3px] border-retro-charcoal bg-white hover:bg-[#EFE9DB] text-retro-charcoal shadow-[3px_3px_0_0_#262626] h-12 px-4"
+            className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-11 px-4 cursor-pointer"
           >
             <RefreshCw
               className={`${loading ? "animate-spin" : ""}`}
@@ -282,27 +283,24 @@ export default function AdminTransactionsPage() {
         <StatCard
           title="Total Pendapatan"
           value={`Rp ${Number(stats.total_revenue).toLocaleString("id-ID")}`}
-          icon={<Wallet size={24} strokeWidth={3} />}
-          variant="success"
+          icon={<Wallet size={20} strokeWidth={2.5} />}
         />
         <StatCard
           title="Pembayaran Sukses"
-          value={`${Number(stats.total_success).toLocaleString("id-ID")} Transaksi`}
-          icon={<CheckCircle2 size={24} strokeWidth={3} />}
-          variant="green"
+          value={`${Number(stats.total_success).toLocaleString("id-ID")} Tx`}
+          icon={<CheckCircle2 size={20} strokeWidth={2.5} />}
         />
         <StatCard
           title="Menunggu Pembayaran"
-          value={`${Number(stats.total_pending).toLocaleString("id-ID")} Transaksi`}
-          icon={<ClockIcon size={24} strokeWidth={3} />}
-          variant="warning"
+          value={`${Number(stats.total_pending).toLocaleString("id-ID")} Tx`}
+          icon={<ClockIcon size={20} strokeWidth={2.5} />}
         />
       </div>
 
       {/* FILTER BAR & DATE RANGE */}
-      <div className="flex flex-col lg:flex-row gap-4 bg-white p-4 border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626]">
+      <div className="flex flex-col lg:flex-row gap-4 bg-white p-4 border border-gray-100/50 rounded-2xl shadow-sm">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-retro-charcoal/50">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
             <Search size={18} />
           </span>
           <Input
@@ -310,14 +308,14 @@ export default function AdminTransactionsPage() {
             placeholder="CARI NOMOR INVOICE..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="pl-11 h-12 border-[2px] border-retro-charcoal font-bold uppercase tracking-wider focus-visible:ring-retro-charcoal"
+            className="pl-11 h-11 border border-gray-200 rounded-xl font-bold uppercase tracking-wider focus-visible:ring-1 focus-visible:ring-red-500 bg-gray-50/30"
           />
         </div>
 
         <div className="flex items-center gap-2">
           <Calendar
-            size={20}
-            className="text-retro-charcoal/50 hidden md:block"
+            size={18}
+            className="text-gray-400 hidden md:block"
           />
           <Input
             type="date"
@@ -326,9 +324,9 @@ export default function AdminTransactionsPage() {
               setStartDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-12 border-[2px] border-retro-charcoal font-bold"
+            className="h-11 border border-gray-200 rounded-xl focus:ring-1 focus:ring-red-500 focus:border-red-500 text-xs font-semibold px-3"
           />
-          <span className="font-black">-</span>
+          <span className="text-gray-400 font-bold">-</span>
           <Input
             type="date"
             value={endDate}
@@ -336,17 +334,17 @@ export default function AdminTransactionsPage() {
               setEndDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-12 border-[2px] border-retro-charcoal font-bold"
+            className="h-11 border border-gray-200 rounded-xl focus:ring-1 focus:ring-red-500 focus:border-red-500 text-xs font-semibold px-3"
           />
         </div>
       </div>
 
-      {/* TABEL TRANSAKSI RETRO */}
-      <div className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] bg-white overflow-x-auto">
+      {/* TABEL TRANSAKSI */}
+      <div className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
-            <tr className="bg-retro-charcoal text-white uppercase text-xs font-black tracking-widest border-b-[4px] border-retro-charcoal">
-              <th className="p-4 w-12 text-center">
+            <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+              <th className="p-4 pl-6 w-12 text-center">
                 <input
                   type="checkbox"
                   checked={transactions.length > 0 && selectedIds.length === transactions.length}
@@ -357,7 +355,7 @@ export default function AdminTransactionsPage() {
                       setSelectedIds([]);
                     }
                   }}
-                  className="w-4 h-4 rounded border-white/30 text-retro-charcoal focus:ring-retro-charcoal cursor-pointer bg-transparent"
+                  className="w-4 h-4 rounded border-gray-300 text-[#FF0000] focus:ring-[#FF0000] cursor-pointer"
                 />
               </th>
               <th className="p-4">Tanggal & Waktu</th>
@@ -365,15 +363,15 @@ export default function AdminTransactionsPage() {
               <th className="p-4">Harga Kotor</th>
               <th className="p-4">Total Bayar</th>
               <th className="p-4 text-center">Status</th>
-              <th className="p-4 text-center w-24">Aksi</th>
+              <th className="p-4 pr-6 text-center w-24">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y-[3px] divide-retro-charcoal font-bold text-sm">
+          <tbody className="divide-y divide-gray-50 font-semibold text-xs text-gray-700">
             {loading ? (
               <tr>
                 <td
                   colSpan={7}
-                  className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest"
+                  className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]"
                 >
                   <RefreshCw className="animate-spin inline mr-2" size={18} />{" "}
                   Sedang menarik data dari Server...
@@ -383,7 +381,7 @@ export default function AdminTransactionsPage() {
               <tr>
                 <td
                   colSpan={7}
-                  className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest"
+                  className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]"
                 >
                   Tidak ada riwayat transaksi ditemukan.
                 </td>
@@ -392,9 +390,9 @@ export default function AdminTransactionsPage() {
               transactions.map((tx) => (
                 <tr
                   key={tx.id}
-                  className={`hover:bg-[#EFE9DB]/30 transition-colors ${selectedIds.includes(tx.id) ? "bg-[#EFE9DB]/20 animate-in fade-in-50 duration-200" : ""}`}
+                  className={`hover:bg-gray-50/30 transition-colors ${selectedIds.includes(tx.id) ? "bg-red-50/10" : ""}`}
                 >
-                  <td className="p-4 text-center">
+                  <td className="p-4 pl-6 text-center">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(tx.id)}
@@ -405,35 +403,35 @@ export default function AdminTransactionsPage() {
                           setSelectedIds(selectedIds.filter((id) => id !== tx.id));
                         }
                       }}
-                      className="w-4 h-4 rounded border-retro-charcoal text-retro-charcoal focus:ring-retro-charcoal cursor-pointer"
+                      className="w-4 h-4 rounded border-gray-300 text-[#FF0000] focus:ring-[#FF0000] cursor-pointer"
                     />
                   </td>
-                  <td className="p-4 text-retro-charcoal/70">
+                  <td className="p-4 text-gray-400 font-medium">
                     {new Date(tx.created_at).toLocaleString("id-ID")}
                   </td>
-                  <td className="p-4 tracking-wider uppercase font-black">
+                  <td className="p-4 tracking-wider uppercase font-bold text-gray-900">
                     {tx.invoice_number}
                   </td>
-                  <td className="p-4 text-retro-charcoal/60">
+                  <td className="p-4 text-gray-400">
                     Rp {Number(tx.gross_amount).toLocaleString("id-ID")}
                   </td>
-                  <td className="p-4 text-lg font-black text-[#FF0000]">
+                  <td className="p-4 text-sm font-bold text-[#FF0000]">
                     Rp {Number(tx.net_amount).toLocaleString("id-ID")}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 text-center">
                     <div className="flex justify-center">
                       {tx.payment_status === "success" ? (
-                        <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-wider bg-green-100 text-green-700 border-[2px] border-green-700 rounded-full">
-                          <CheckCircle2 size={14} /> SUCCESS
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-200/50 rounded-full uppercase tracking-wider">
+                          <CheckCircle2 size={10} /> SUCCESS
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-700 border-[2px] border-amber-700 rounded-full">
-                          <Clock size={14} /> PENDING
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/50 rounded-full uppercase tracking-wider animate-pulse">
+                          <Clock size={10} /> PENDING
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 pr-6">
                     <div className="flex justify-center">
                       <Button
                         onClick={() => {
@@ -441,7 +439,7 @@ export default function AdminTransactionsPage() {
                           setDeleteMode("single");
                           setIsDeleteOpen(true);
                         }}
-                        className="border-[2px] border-retro-charcoal bg-[#FF0000] hover:bg-red-700 text-white p-2 h-8 w-8 flex items-center justify-center rounded shadow-[1px_1px_0_0_#262626] transition-transform active:translate-y-[1px] active:shadow-none"
+                        className="h-8 w-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl flex items-center justify-center border border-red-100 cursor-pointer p-0"
                       >
                         <Trash2 size={14} />
                       </Button>
@@ -454,16 +452,16 @@ export default function AdminTransactionsPage() {
         </table>
       </div>
 
-      {/* KONTROL PAGINATION (SERVER-SIDE) */}
+      {/* KONTROL PAGINATION */}
       {!loading && transactions.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t-[3px] border-dashed border-retro-charcoal pt-6">
-          <span className="text-sm font-black uppercase tracking-widest text-retro-charcoal/70">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-dashed border-gray-100 pt-6">
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
             TOTAL DATA DI DATABASE:{" "}
             <span className="text-[#FF0000]">{totalItems}</span> TRANSAKSI
           </span>
 
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold uppercase tracking-widest bg-white border-[2px] border-retro-charcoal px-3 py-2">
+            <span className="text-xs font-bold uppercase tracking-wider bg-gray-50 border border-gray-100 px-3 py-2 rounded-xl text-gray-600">
               Hal {currentPage} / {totalPages}
             </span>
 
@@ -472,7 +470,7 @@ export default function AdminTransactionsPage() {
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className="border-[3px] border-retro-charcoal font-black uppercase tracking-widest hover:bg-[#EFE9DB]"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -482,7 +480,7 @@ export default function AdminTransactionsPage() {
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="border-[3px] border-retro-charcoal font-black uppercase tracking-widest hover:bg-[#EFE9DB]"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronRight size={18} />
               </Button>
@@ -493,27 +491,27 @@ export default function AdminTransactionsPage() {
 
       {/* MODAL KONFIRMASI HAPUS */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="sm:max-w-md border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
+        <DialogContent className="sm:max-w-md border border-gray-100 rounded-2xl shadow-2xl p-6 bg-white overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-[#FF0000] border-b-[4px] border-retro-charcoal pb-4 mb-2">Peringatan Penghapusan</DialogTitle>
+            <DialogTitle className="text-xl font-bold uppercase tracking-wide text-red-600 border-b border-gray-50 pb-4 mb-4">Peringatan Penghapusan</DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
+          <div className="py-4 text-xs font-bold uppercase tracking-wider text-gray-500 leading-relaxed">
             {deleteMode === "single" 
               ? "Apakah Anda yakin ingin menghapus transaksi ini secara permanen dari database? Tindakan ini tidak dapat dibatalkan."
               : `Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih secara permanen dari database? Tindakan ini tidak dapat dibatalkan.`}
           </div>
-          <DialogFooter className="flex gap-2 border-t-[3px] border-dashed border-retro-charcoal pt-4">
+          <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
             <Button 
               variant="outline" 
               onClick={() => setIsDeleteOpen(false)} 
-              className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+              className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
             >
               Batal
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteConfirm} 
-              className="bg-[#FF0000] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+              className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none"
             >
               Ya, Hapus!
             </Button>

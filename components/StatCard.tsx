@@ -4,32 +4,21 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: ReactNode;
-  variant?: "default" | "success" | "warning" | "danger" | "green"; // 🚨 Tambahkan 'green' di sini
+  variant?: "default" | "success" | "warning" | "danger" | "green";
 }
 
 export default function StatCard({ title, value, icon, variant = "default" }: StatCardProps) {
-  // Tema warna khas retro brutalist
-  const bgColors = {
-    default: "bg-white",
-    success: "bg-[#EFE9DB]", // Warna cream retro asli Anda
-    warning: "bg-amber-100",
-    danger: "bg-[#FF0000] text-white", // Retro red
-    green: "bg-green-100 text-green-800 border-green-800", // 🚨 Warna hijau retro lembut untuk sukses
-  };
-
-  const isDanger = variant === "danger";
-
   return (
-    <div className={`p-6 border-[4px] border-retro-charcoal shadow-[6px_6px_0_0_#262626] flex items-center justify-between transition-transform hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#262626] ${bgColors[variant]}`}>
+    <div className="p-6 bg-white border border-gray-100/50 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
       <div>
-        <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-white/80' : 'text-retro-charcoal/70'}`}>
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
           {title}
         </p>
-        <h3 className={`text-3xl font-black ${isDanger ? 'text-white' : 'text-retro-charcoal'}`}>
+        <h3 className="text-2xl font-black text-gray-900 tracking-tight">
           {value}
         </h3>
       </div>
-      <div className={`p-3 border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] ${isDanger ? 'bg-white text-retro-charcoal' : 'bg-white text-retro-charcoal'}`}>
+      <div className="w-10 h-10 rounded-xl bg-[#FF0000]/10 flex items-center justify-center text-[#FF0000] group-hover:bg-[#FF0000] group-hover:text-white transition-all duration-300">
         {icon}
       </div>
     </div>

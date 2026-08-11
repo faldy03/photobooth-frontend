@@ -14,7 +14,7 @@ import {
   ShieldAlert,
   CheckCircle2,
   XCircle,
-  RefreshCw, // 🚨 Ditambahkan agar seragam dengan Kios
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -212,16 +212,16 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 text-retro-charcoal max-w-6xl mx-auto font-sans pb-10">
+    <div className="space-y-6 max-w-6xl mx-auto font-sans pb-10">
       
       {/* HEADER MANAJEMEN */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-[4px] border-retro-charcoal pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
             <Users size={32} className="text-[#FF0000]" />
             Manajemen Pengguna
           </h1>
-          <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">
             Atur Akses Staf & Pelanggan
           </p>
         </div>
@@ -229,14 +229,14 @@ export default function UsersPage() {
         <div className="flex gap-2 w-full md:w-auto">
           <Button
             onClick={openAddModal}
-            className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest h-12 px-6"
+            className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl font-bold uppercase tracking-wider h-11 px-5 shadow-md shadow-red-500/10 cursor-pointer border-none"
           >
-            <Plus size={18} strokeWidth={3} /> Tambah Akun
+            <Plus size={18} /> Tambah Akun
           </Button>
           <Button
             onClick={() => { fetchUsers(); }}
             disabled={loading}
-            className="border-[3px] border-retro-charcoal bg-white hover:bg-[#EFE9DB] text-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none h-12 px-4"
+            className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-11 px-4 cursor-pointer"
           >
             <RefreshCw className={`${loading ? "animate-spin" : ""}`} size={18} />
           </Button>
@@ -245,104 +245,104 @@ export default function UsersPage() {
 
       {/* BANNER ERROR */}
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border-[3px] border-retro-charcoal text-retro-charcoal font-bold flex items-center gap-3 shadow-[4px_4px_0_0_#262626]">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 font-semibold flex items-center gap-3 rounded-xl">
           <AlertCircle size={24} className="text-[#FF0000] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* PENCARIAN (Diselaraskan dengan Kios) */}
-      <div className="flex bg-white p-4 border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626]">
+      {/* PENCARIAN */}
+      <div className="flex bg-white p-4 border border-gray-100/50 rounded-2xl shadow-sm">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-retro-charcoal/50">
-            <Search size={18} strokeWidth={3} />
+          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+            <Search size={18} />
           </span>
           <Input
             type="text"
             placeholder="CARI NAMA ATAU EMAIL..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-11 h-12 border-[2px] border-retro-charcoal font-bold uppercase tracking-wider focus-visible:ring-retro-charcoal w-full md:w-1/2"
+            className="pl-11 h-11 border border-gray-200 rounded-xl font-bold uppercase tracking-wider focus-visible:ring-1 focus-visible:ring-red-500 bg-gray-50/30 w-full md:w-1/2"
           />
         </div>
       </div>
 
-      {/* TABEL PENGGUNA (Raw Table Retro) */}
-      <div className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] bg-white overflow-x-auto">
+      {/* TABEL PENGGUNA */}
+      <div className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
-            <tr className="bg-retro-charcoal text-white uppercase text-xs font-black tracking-widest border-b-[4px] border-retro-charcoal">
-              <th className="p-4 text-center w-16">No</th>
+            <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+              <th className="p-4 pl-6 text-center w-16">No</th>
               <th className="p-4">Pengguna</th>
               <th className="p-4">Kontak (Email)</th>
               <th className="p-4 text-center">Peran</th>
               <th className="p-4 text-center">Status</th>
-              <th className="p-4 text-center">Aksi</th>
+              <th className="p-4 pr-6 text-center w-28">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y-[3px] divide-retro-charcoal font-bold text-sm">
+          <tbody className="divide-y divide-gray-50 font-semibold text-xs text-gray-700">
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   <RefreshCw className="animate-spin inline mr-2" size={18} /> Memuat data pengguna...
                 </td>
               </tr>
             ) : paginatedUsers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   Data pengguna tidak ditemukan.
                 </td>
               </tr>
             ) : (
               paginatedUsers.map((user, index) => (
-                <tr key={user.id} className="hover:bg-[#EFE9DB]/30 transition-colors">
-                  <td className="p-4 text-center text-lg font-black text-retro-charcoal/70">
+                <tr key={user.id} className="hover:bg-gray-50/30 transition-colors">
+                  <td className="p-4 text-center text-gray-400 font-bold pl-6">
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <UserCircle size={28} strokeWidth={2} className="text-[#FF0000]" />
-                      <span className="font-black uppercase tracking-wider text-retro-charcoal">
+                      <UserCircle size={24} className="text-[#FF0000] shrink-0" />
+                      <span className="font-bold uppercase tracking-wider text-gray-900">
                         {user.name}
                       </span>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="bg-white border-[2px] border-retro-charcoal text-retro-charcoal px-3 py-1.5 font-bold tracking-widest text-xs inline-block shadow-[3px_3px_0_0_#262626]">
+                    <span className="font-mono text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-md">
                       {user.email}
                     </span>
                   </td>
                   <td className="p-4 text-center">
                     {user.role === "admin" ? (
-                      <span className="inline-flex items-center gap-1.5 bg-[#FF0000] text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
-                        <ShieldAlert size={12} strokeWidth={3} /> Admin
+                      <span className="inline-flex items-center gap-1 bg-[#FF0000]/10 text-[#FF0000] px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                        <ShieldAlert size={10} /> Admin
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 bg-white text-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                      <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
                         User
                       </span>
                     )}
                   </td>
                   <td className="p-4 text-center">
                     {user.is_active ? (
-                      <span className="inline-flex items-center gap-1.5 text-green-800 bg-green-100 border-[2px] border-green-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#166534]">
-                        <CheckCircle2 size={12} strokeWidth={3} /> Aktif
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-200/50 rounded-full uppercase tracking-wider">
+                        <CheckCircle2 size={10} /> Aktif
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-white bg-[#FF0000] border-[2px] border-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#262626]">
-                        <XCircle size={12} strokeWidth={3} /> Diblokir
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/50 rounded-full uppercase tracking-wider">
+                        <XCircle size={10} /> Diblokir
                       </span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 pr-6">
                     <div className="flex items-center justify-center gap-2">
                       <Button
                         onClick={() => openEditModal(user)}
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+                        className="h-9 w-9 border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl cursor-pointer"
                       >
-                        <Edit size={14} strokeWidth={3} />
+                        <Edit size={14} />
                       </Button>
                       <Button
                         onClick={() => {
@@ -351,9 +351,9 @@ export default function UsersPage() {
                         }}
                         variant="destructive"
                         size="icon"
-                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-[#FF0000] text-white shadow-[2px_2px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+                        className="h-9 w-9 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl cursor-pointer"
                       >
-                        <Trash2 size={14} strokeWidth={3} />
+                        <Trash2 size={14} />
                       </Button>
                     </div>
                   </td>
@@ -366,13 +366,13 @@ export default function UsersPage() {
 
       {/* KONTROL PAGINASI */}
       {!loading && filteredUsers.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t-[3px] border-dashed border-retro-charcoal pt-6">
-          <span className="text-sm font-black uppercase tracking-widest text-retro-charcoal/70">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-dashed border-gray-100 pt-6">
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
             TOTAL DATA PENGGUNA: <span className="text-[#FF0000]">{filteredUsers.length}</span> AKUN
           </span>
 
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold uppercase tracking-widest bg-white border-[2px] border-retro-charcoal px-3 py-2">
+            <span className="text-xs font-bold uppercase tracking-wider bg-gray-50 border border-gray-100 px-3 py-2 rounded-xl text-gray-600">
               Hal {currentPage} / {totalPages}
             </span>
 
@@ -381,7 +381,7 @@ export default function UsersPage() {
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -389,7 +389,7 @@ export default function UsersPage() {
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronRight size={18} />
               </Button>
@@ -400,15 +400,15 @@ export default function UsersPage() {
 
       {/* MODAL TAMBAH/EDIT */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
+        <DialogContent className="border border-gray-100 rounded-2xl shadow-2xl p-6 bg-white overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-charcoal border-b-[4px] border-retro-charcoal pb-4 mb-2">
+            <DialogTitle className="text-xl font-bold uppercase tracking-wide text-gray-900 border-b border-gray-50 pb-4 mb-4">
               {isEditMode ? "Ubah Data Akun" : "Registrasi Akun Baru"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                 Nama Lengkap
               </label>
               <Input
@@ -417,11 +417,11 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="border-[3px] border-retro-charcoal font-bold uppercase"
+                className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20 uppercase"
               />
             </div>
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                 Alamat Email
               </label>
               <Input
@@ -431,11 +431,11 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="border-[3px] border-retro-charcoal font-bold"
+                className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                 Kata Sandi {isEditMode && "(Kosongkan jika tidak diubah)"}
               </label>
               <Input
@@ -446,14 +446,14 @@ export default function UsersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="border-[3px] border-retro-charcoal font-bold"
+                className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20"
                 placeholder="Minimal 8 karakter..."
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                   Hak Akses
                 </label>
                 <select
@@ -461,14 +461,14 @@ export default function UsersPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
-                  className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none"
+                  className="flex h-11 w-full border border-gray-200 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000]"
                 >
                   <option value="user">Pelanggan (User)</option>
                   <option value="admin">Staf (Admin)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                   Status Akun
                 </label>
                 <select
@@ -479,7 +479,7 @@ export default function UsersPage() {
                       is_active: e.target.value === "true",
                     })
                   }
-                  className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none"
+                  className="flex h-11 w-full border border-gray-200 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000]"
                 >
                   <option value="true">Aktif</option>
                   <option value="false">Diblokir</option>
@@ -487,18 +487,18 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <DialogFooter className="mt-6 border-t-[3px] border-dashed border-retro-charcoal pt-4">
+            <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
               >
                 Batal
               </Button>
               <Button
                 type="submit"
-                className="bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+                className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none"
               >
                 Simpan Data
               </Button>
@@ -509,27 +509,27 @@ export default function UsersPage() {
 
       {/* MODAL HAPUS */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="sm:max-w-md border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
+        <DialogContent className="sm:max-w-md border border-gray-100 rounded-2xl shadow-2xl p-6 bg-white overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-[#FF0000] border-b-[4px] border-retro-charcoal pb-4 mb-2">
+            <DialogTitle className="text-xl font-bold uppercase tracking-wide text-red-600 border-b border-gray-50 pb-4 mb-4">
               Cabut Akses Pengguna?
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
+          <div className="py-4 text-xs font-bold uppercase tracking-wider text-gray-500 leading-relaxed">
             Apakah Anda yakin ingin menghapus akun pengguna ini secara permanen?
           </div>
-          <DialogFooter className="flex gap-2 border-t-[3px] border-dashed border-retro-charcoal pt-4">
+          <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setIsDeleteOpen(false)}
-              className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+              className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
             >
               Batal
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              className="bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest"
+              className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none"
             >
               Ya, Hapus!
             </Button>

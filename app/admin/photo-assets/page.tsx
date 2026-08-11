@@ -30,10 +30,6 @@ interface PhotoAsset {
   created_at: string;
 }
 
-// =========================================================================
-// DAFTAR PRESET LAYOUT OTOMATIS
-// Tambahkan konfigurasi frame baru di sini jika di masa depan ada desain baru
-// =========================================================================
 const LAYOUT_PRESETS = {
   "2r_strip_3": [
     { id: 1, x: 125, y: 230, width: 420, height: 320 },
@@ -43,10 +39,6 @@ const LAYOUT_PRESETS = {
     { id: 5, x: 655, y: 615, width: 420, height: 320 },
     { id: 6, x: 655, y: 1000, width: 420, height: 320 }
   ],
-  // =========================================================
-  // PRESET 2 BARU: 2R Double Strip (Lubang Kotak/Square)
-  // Cocok untuk frame Picta Anda yang terbaru!
-  // =========================================================
   "2r_strip_square": [
     { id: 1, x: 60, y: 60, width: 480, height: 480 },
     { id: 2, x: 60, y: 600, width: 480, height: 480 },
@@ -87,9 +79,7 @@ export default function PhotoAssetsPage() {
     is_active: true,
   });
   
-  // STATE BARU UNTUK KOORDINAT FRAME
   const [slots, setSlots] = useState<Slot[]>([]);
-  
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,7 +131,6 @@ export default function PhotoAssetsPage() {
     }
   };
 
-  // --- LOGIKA KOORDINAT (SLOTS & PRESETS) ---
   const handleAddSlot = () => {
     setSlots([...slots, { id: Date.now(), x: 0, y: 0, width: 480, height: 360 }]);
   };
@@ -156,13 +145,11 @@ export default function PhotoAssetsPage() {
     setSlots(updatedSlots);
   };
 
-  // Fungsi untuk mengisi otomatis dari template
   const handleApplyPreset = (presetKey: string) => {
     if (presetKey === "custom") return;
     
     const selectedPreset = LAYOUT_PRESETS[presetKey as keyof typeof LAYOUT_PRESETS];
     if (selectedPreset) {
-      // Buat ID unik baru agar React merender dengan benar
       const newSlots = selectedPreset.map((slot, index) => ({
         ...slot,
         id: Date.now() + index 
@@ -171,12 +158,11 @@ export default function PhotoAssetsPage() {
       toast.success("Template Diterapkan!", { description: "Koordinat telah diisi otomatis." });
     }
   };
-  // ------------------------------------------
 
   const openAddModal = () => {
     setIsEditMode(false);
     setFormData({ name: "", type: "frame", is_active: true });
-    setSlots([]); // Kosongkan slots saat tambah baru
+    setSlots([]); 
     setSelectedFile(null);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -191,7 +177,7 @@ export default function PhotoAssetsPage() {
       type: asset.type,
       is_active: asset.is_active,
     });
-    setSlots(asset.config?.slots || []); // Isi form slots dengan data dari database
+    setSlots(asset.config?.slots || []); 
     setSelectedFile(null);
     setPreviewUrl(asset.image_url); 
     setIsModalOpen(true);
@@ -212,7 +198,6 @@ export default function PhotoAssetsPage() {
       dataToSend.append("type", formData.type);
       dataToSend.append("is_active", formData.is_active ? "1" : "0");
       
-      // Kirim array koordinat sebagai JSON string
       if (formData.type === 'frame') {
         dataToSend.append("config", JSON.stringify({ slots: slots }));
       }
@@ -269,16 +254,16 @@ export default function PhotoAssetsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 text-retro-charcoal max-w-6xl mx-auto font-sans pb-10">
+    <div className="space-y-6 max-w-6xl mx-auto font-sans pb-10">
       
       {/* HEADER MANAJEMEN */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-[4px] border-retro-charcoal pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
             <ImageIcon size={32} className="text-[#FF0000]" />
             Pustaka Komponen Visual
           </h1>
-          <p className="text-xs font-bold uppercase tracking-widest text-retro-charcoal/60 mt-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">
             Pengelolaan Bingkai Overlay Kios (Format PNG Transparan)
           </p>
         </div>
@@ -286,15 +271,15 @@ export default function PhotoAssetsPage() {
         <div className="flex gap-2 w-full md:w-auto">
           <Button 
             onClick={openAddModal} 
-            className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest h-12 px-6"
+            className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl font-bold uppercase tracking-wider h-11 px-5 shadow-md shadow-red-500/10 cursor-pointer border-none"
           >
-            <Plus size={18} strokeWidth={3} />
+            <Plus size={18} />
             <span>Unggah Bingkai</span>
           </Button>
           <Button
             onClick={() => setRefreshTrigger(prev => prev + 1)}
             disabled={loading}
-            className="border-[3px] border-retro-charcoal bg-white hover:bg-[#EFE9DB] text-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none h-12 px-4"
+            className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-11 px-4 cursor-pointer"
           >
             <RefreshCw className={`${loading ? "animate-spin" : ""}`} size={18} />
           </Button>
@@ -302,22 +287,22 @@ export default function PhotoAssetsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border-[3px] border-retro-charcoal text-retro-charcoal font-bold flex items-center gap-3 shadow-[4px_4px_0_0_#262626]">
-          <AlertCircle size={24} className="text-[#FF0000]" />
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 font-semibold flex items-center gap-3 rounded-xl">
+          <AlertCircle size={24} className="text-[#FF0000] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* SEARCH BAR */}
-      <div className="flex bg-white p-4 border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626]">
+      <div className="flex bg-white p-4 border border-gray-100/50 rounded-2xl shadow-sm">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-retro-charcoal/50">
-            <Search size={18} strokeWidth={3} />
+          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+            <Search size={18} />
           </span>
           <Input 
             type="text" 
             placeholder="CARI NAMA KOMPONEN ATAU TIPE..." 
-            className="pl-11 h-12 border-[2px] border-retro-charcoal font-bold uppercase tracking-wider focus-visible:ring-retro-charcoal w-full md:w-1/2"
+            className="pl-11 h-11 border border-gray-200 rounded-xl font-bold uppercase tracking-wider focus-visible:ring-1 focus-visible:ring-red-500 bg-gray-50/30 w-full md:w-1/2"
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -325,39 +310,39 @@ export default function PhotoAssetsPage() {
       </div>
 
       {/* TABEL DATA ASET PHOTO */}
-      <div className="border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] bg-white overflow-x-auto">
+      <div className="border border-gray-100 bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
-            <tr className="bg-retro-charcoal text-white uppercase text-xs font-black tracking-widest border-b-[4px] border-retro-charcoal">
-              <th className="p-4 text-center w-16">No</th>
+            <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-wider border-b border-gray-100">
+              <th className="p-4 pl-6 text-center w-16">No</th>
               <th className="p-4 w-32 text-center">Pratinjau</th>
               <th className="p-4">Nama Aset</th>
               <th className="p-4 text-center">Tipe Komponen</th>
               <th className="p-4 text-center">Status Jaringan</th>
-              <th className="p-4 text-center">Aksi</th>
+              <th className="p-4 pr-6 text-center w-28">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y-[3px] divide-retro-charcoal font-bold text-sm">
+          <tbody className="divide-y divide-gray-50 font-semibold text-xs text-gray-700">
             {loading ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   <RefreshCw className="animate-spin inline mr-2" size={18} /> Menarik berkas aset visual...
                 </td>
               </tr>
             ) : paginatedAssets.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center p-12 text-retro-charcoal/60 uppercase tracking-widest">
+                <td colSpan={6} className="text-center p-12 text-gray-400 uppercase tracking-wider text-[11px]">
                   Tidak ada aset visual ditemukan di database.
                 </td>
               </tr>
             ) : (
               paginatedAssets.map((asset, index) => (
-                <tr key={asset.id} className="hover:bg-[#EFE9DB]/30 transition-colors">
-                  <td className="p-4 text-center text-lg font-black text-retro-charcoal/70">
+                <tr key={asset.id} className="hover:bg-gray-50/30 transition-colors">
+                  <td className="p-4 text-center text-gray-400 font-bold pl-6">
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>
-                  <td className="p-2 text-center">
-                    <div className="w-20 h-20 bg-retro-cream border-[2px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] mx-auto p-1 overflow-hidden flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                  <td className="p-2">
+                    <div className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-xl mx-auto p-1 overflow-hidden flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={asset.image_url} 
@@ -369,40 +354,40 @@ export default function PhotoAssetsPage() {
                       />
                     </div>
                   </td>
-                  <td className="p-4 tracking-wider uppercase font-black text-base">{asset.name}</td>
+                  <td className="p-4 tracking-wider uppercase font-bold text-gray-900 text-sm">{asset.name}</td>
                   <td className="p-4 text-center">
-                    <span className="bg-white border-[2px] border-retro-charcoal text-retro-charcoal px-3 py-1 text-xs font-black tracking-widest uppercase inline-block shadow-[2px_2px_0_0_#262626]">
+                    <span className="inline-flex items-center bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
                       {asset.type}
                     </span>
                   </td>
                   <td className="p-4 text-center">
                     {asset.is_active ? (
-                      <span className="inline-flex items-center gap-1.5 text-green-800 bg-green-100 border-[2px] border-green-800 px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#166534]">
-                        <CheckCircle2 size={12} strokeWidth={3} /> AKTIF DI KIOS
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-200/50 rounded-full uppercase tracking-wider">
+                        <CheckCircle2 size={10} /> AKTIF DI KIOS
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-white bg-[#FF0000] border-[2px] border-retro-charcoal px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#262626]">
-                        <XCircle size={12} strokeWidth={3} /> NONAKTIF
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/50 rounded-full uppercase tracking-wider">
+                        <XCircle size={10} /> NONAKTIF
                       </span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 pr-6">
                     <div className="flex items-center justify-center gap-2">
                       <Button 
                         onClick={() => openEditModal(asset)} 
                         variant="outline" 
                         size="icon" 
-                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+                        className="h-9 w-9 border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl cursor-pointer"
                       >
-                        <Edit size={14} strokeWidth={3} />
+                        <Edit size={14} />
                       </Button>
                       <Button 
                         onClick={() => openDeleteModal(asset.id)} 
                         variant="destructive" 
                         size="icon" 
-                        className="h-9 w-9 border-[2px] border-retro-charcoal bg-[#FF0000] text-white shadow-[2px_2px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+                        className="h-9 w-9 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl cursor-pointer"
                       >
-                        <Trash2 size={14} strokeWidth={3} />
+                        <Trash2 size={14} />
                       </Button>
                     </div>
                   </td>
@@ -415,13 +400,13 @@ export default function PhotoAssetsPage() {
 
       {/* CONTROLS PAGINASI */}
       {!loading && filteredAssets.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t-[3px] border-dashed border-retro-charcoal pt-6">
-          <span className="text-sm font-black uppercase tracking-widest text-retro-charcoal/70">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 border-t border-dashed border-gray-100 pt-6">
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
             TOTAL ASPEK GRAFIS: <span className="text-[#FF0000]">{filteredAssets.length}</span> BERKAS
           </span>
           
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold uppercase tracking-widest bg-white border-[2px] border-retro-charcoal px-3 py-2">
+            <span className="text-xs font-bold uppercase tracking-wider bg-gray-50 border border-gray-100 px-3 py-2 rounded-xl text-gray-600">
               Hal {currentPage} / {totalPages}
             </span>
             
@@ -430,7 +415,7 @@ export default function PhotoAssetsPage() {
                 variant="outline"
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -438,7 +423,7 @@ export default function PhotoAssetsPage() {
                 variant="outline"
                 onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="border-[3px] border-retro-charcoal bg-white shadow-[2px_2px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none font-black uppercase tracking-widest"
+                className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 rounded-xl h-9 w-9 p-0 flex items-center justify-center cursor-pointer"
               >
                 <ChevronRight size={18} />
               </Button>
@@ -449,78 +434,77 @@ export default function PhotoAssetsPage() {
 
       {/* ================= MODAL TAMBAH & EDIT ================= */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={`border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626] max-h-[90vh] overflow-y-auto transition-all duration-300 ${formData.type === 'frame' ? 'max-w-4xl' : 'max-w-2xl'}`}>
+        <DialogContent className={`border border-gray-100 rounded-2xl shadow-2xl p-6 bg-white overflow-y-auto max-h-[90vh] transition-all duration-300 ${formData.type === 'frame' ? 'max-w-4xl' : 'max-w-xl'}`}>
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-retro-charcoal border-b-[4px] border-retro-charcoal pb-4 mb-2">
+            <DialogTitle className="text-xl font-bold uppercase tracking-wide text-gray-900 border-b border-gray-50 pb-4 mb-4">
               {isEditMode ? "Ubah Komponen Grafis" : "Unggah Komponen Grafis"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="mt-2">
-            <div className={formData.type === 'frame' ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-6"}>
+          <form onSubmit={handleSubmit}>
+            <div className={formData.type === 'frame' ? "grid grid-cols-1 md:grid-cols-3 gap-6" : "space-y-4"}>
               
-              {/* SISI KIRI: INPUT FORM (Ambil 2 kolom di layar lebar) */}
-              <div className={formData.type === 'frame' ? "md:col-span-2 space-y-6" : "space-y-6"}>
+              {/* SISI KIRI: INPUT FORM */}
+              <div className={formData.type === 'frame' ? "md:col-span-2 space-y-4" : "space-y-4"}>
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">Nama Aset Visual</label>
-                  <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border-[3px] border-retro-charcoal font-bold uppercase" />
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Nama Aset Visual</label>
+                  <Input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Garis Kotak Catur Retro" className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20 uppercase" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest mb-2">Tipe Komponen</label>
-                    <select name="type" value={formData.type} onChange={handleInputChange} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Tipe Komponen</label>
+                    <select name="type" value={formData.type} onChange={handleInputChange} className="flex h-11 w-full border border-gray-200 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000]">
                       <option value="frame">Frame Overlay</option>
                       <option value="filter">Filter Visual</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest mb-2">Status Distribusi</label>
-                    <select name="is_active" value={formData.is_active.toString()} onChange={(e) => setFormData({...formData, is_active: e.target.value === "true"})} className="flex h-12 w-full border-[3px] border-retro-charcoal bg-white px-4 py-2 text-sm font-bold text-retro-charcoal uppercase tracking-wider focus:outline-none">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Status Distribusi</label>
+                    <select name="is_active" value={formData.is_active.toString()} onChange={(e) => setFormData({...formData, is_active: e.target.value === "true"})} className="flex h-11 w-full border border-gray-200 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000]">
                       <option value="true">Aktif di Kios</option>
                       <option value="false">Simpan di Gudang (Nonaktif)</option>
                     </select>
                   </div>
                 </div>
 
-                {/* KOORDINAT SLOTS DENGAN DROPDOWN PRESET */}
+                {/* KOORDINAT SLOTS */}
                 {formData.type === 'frame' && (
-                  <div className="border-[3px] border-retro-charcoal p-4 bg-[#EFE9DB]/30">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                      <label className="block text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                        <LayoutGrid size={16} /> Koordinat Lubang Foto
+                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                        <LayoutGrid size={16} className="text-[#FF0000]" /> Koordinat Lubang Foto
                       </label>
                       
-                      {/* DROPDOWN TEMPLATE CEPAT */}
-                      <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         <select 
                           onChange={(e) => handleApplyPreset(e.target.value)}
                           defaultValue="custom"
-                          className="border-[2px] border-retro-charcoal bg-white px-2 py-1 text-[10px] font-bold uppercase cursor-pointer"
+                          className="border border-gray-200 rounded-lg bg-white px-2.5 py-1 text-[10px] font-bold uppercase cursor-pointer text-gray-600 focus:outline-none"
                         >
-                          <option value="custom">-- Pilih Template Cepat --</option>
-                          <option value="2r_strip_square">Template 2R Strip (Lubang KOTAK)</option>
-                          <option value="2r_strip_3">Template 2R Strip (6 Lubang)</option>
-                          <option value="4r_grid_4">Template 4R Grid (4 Lubang)</option>
+                          <option value="custom">-- Pilih Template --</option>
+                          <option value="2r_strip_square">Template 2R (Lubang KOTAK)</option>
+                          <option value="2r_strip_3">Template 2R (6 Lubang)</option>
+                          <option value="4r_grid_4">Template 4R (4 Lubang)</option>
                         </select>
 
-                        <Button type="button" onClick={handleAddSlot} size="sm" className="bg-retro-charcoal text-white hover:bg-black font-bold uppercase text-[10px] tracking-wider border-[2px] border-retro-charcoal">
+                        <Button type="button" onClick={handleAddSlot} size="sm" className="bg-gray-800 text-white hover:bg-black font-bold uppercase text-[9px] tracking-wider rounded-lg h-7 px-3 border-none cursor-pointer">
                           + Custom Slot
                         </Button>
                       </div>
                     </div>
                     
                     {slots.length === 0 ? (
-                      <div className="text-center p-4 text-xs font-bold text-retro-charcoal/60 uppercase">Belum ada lubang foto ditentukan. Pilih Template di atas.</div>
+                      <div className="text-center p-4 text-[10px] font-bold text-gray-400 uppercase">Belum ada lubang foto ditentukan. Pilih Template di atas.</div>
                     ) : (
                       <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                         {slots.map((slot, index) => (
-                          <div key={slot.id} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-white p-3 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
-                            <div className="font-black bg-retro-charcoal text-white px-2 py-1 text-xs">#{index + 1}</div>
-                            <Input type="number" placeholder="X" value={slot.x} onChange={(e) => handleSlotChange(index, "x", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                            <Input type="number" placeholder="Y" value={slot.y} onChange={(e) => handleSlotChange(index, "y", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                            <Input type="number" placeholder="Lebar" value={slot.width} onChange={(e) => handleSlotChange(index, "width", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                            <Input type="number" placeholder="Tinggi" value={slot.height} onChange={(e) => handleSlotChange(index, "height", e.target.value)} className="w-full md:w-20 border-[2px] border-retro-charcoal font-bold text-sm h-8" />
-                            <Button type="button" onClick={() => handleRemoveSlot(index)} variant="destructive" size="icon" className="h-8 w-8 shrink-0 border-[2px] border-retro-charcoal shadow-[2px_2px_0_0_#262626]">
+                          <div key={slot.id} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-white p-3 border border-gray-100 rounded-xl shadow-sm">
+                            <div className="font-bold bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">#{index + 1}</div>
+                            <Input type="number" placeholder="X" value={slot.x} onChange={(e) => handleSlotChange(index, "x", e.target.value)} className="w-full md:w-20 border border-gray-200 rounded-lg font-bold text-xs h-8 px-2" />
+                            <Input type="number" placeholder="Y" value={slot.y} onChange={(e) => handleSlotChange(index, "y", e.target.value)} className="w-full md:w-20 border border-gray-200 rounded-lg font-bold text-xs h-8 px-2" />
+                            <Input type="number" placeholder="Lebar" value={slot.width} onChange={(e) => handleSlotChange(index, "width", e.target.value)} className="w-full md:w-20 border border-gray-200 rounded-lg font-bold text-xs h-8 px-2" />
+                            <Input type="number" placeholder="Tinggi" value={slot.height} onChange={(e) => handleSlotChange(index, "height", e.target.value)} className="w-full md:w-20 border border-gray-200 rounded-lg font-bold text-xs h-8 px-2" />
+                            <Button type="button" onClick={() => handleRemoveSlot(index)} variant="destructive" size="icon" className="h-8 w-8 shrink-0 bg-red-50 text-red-500 border border-red-100 rounded-lg flex items-center justify-center p-0 cursor-pointer">
                               <Trash2 size={12} />
                             </Button>
                           </div>
@@ -530,26 +514,26 @@ export default function PhotoAssetsPage() {
                   </div>
                 )}
 
-                {/* AREA INPUT UPLOAD FILE */}
+                {/* UPLOAD FILE */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                     Berkas Bingkai PNG {isEditMode && "(Kosongkan jika gambar tidak diganti)"}
                   </label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-[3px] border-dashed border-retro-charcoal bg-[#EFE9DB]/10 p-6 text-center cursor-pointer hover:bg-[#EFE9DB]/30 transition-colors flex flex-col items-center justify-center gap-2"
+                    className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6 text-center cursor-pointer hover:bg-gray-50 transition-all duration-200 flex flex-col items-center justify-center gap-2"
                   >
-                    <Upload size={24} className="text-retro-charcoal/50" />
-                    <span className="text-xs font-black uppercase tracking-wider">Klik untuk memilih berkas PNG transparan</span>
+                    <Upload size={24} className="text-gray-400" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Klik untuk memilih berkas PNG transparan</span>
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/jpg" className="hidden" required={!isEditMode} />
                   </div>
                 </div>
 
-                {/* AREA PREVIEW GAMBAR (Khusus untuk tipe selain Frame) */}
+                {/* AREA PREVIEW GAMBAR (Tipe Selain Frame) */}
                 {formData.type !== 'frame' && previewUrl && (
-                  <div className="border-[3px] border-retro-charcoal p-2 bg-white shadow-[4px_4px_0_0_#262626]">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-retro-charcoal/50 mb-1 flex items-center gap-1"><Eye size={12}/> Pratinjau Berkas Terpilih:</div>
-                    <div className="h-40 w-full bg-retro-cream border-[2px] border-retro-charcoal p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                  <div className="border border-gray-100 p-2 bg-white rounded-xl shadow-sm space-y-1.5">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1"><Eye size={12}/> Pratinjau Berkas Terpilih:</div>
+                    <div className="h-40 w-full bg-gray-50 border border-gray-100 rounded-lg p-2 flex items-center justify-center overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={previewUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
                     </div>
@@ -557,23 +541,22 @@ export default function PhotoAssetsPage() {
                 )}
               </div>
 
-              {/* SISI KANAN: LIVE PREVIEW LUBANG BINGKAI (Hanya untuk tipe Frame) */}
+              {/* SISI KANAN: LIVE PREVIEW (Tipe Frame) */}
               {formData.type === 'frame' && (
-                <div className="space-y-2 flex flex-col items-center border-l-[3px] border-dashed border-retro-charcoal/30 pl-0 md:pl-6">
-                  <label className="block text-xs font-black uppercase tracking-widest self-start flex items-center gap-1">
-                    <Eye size={14} /> Pratinjau Lubang Bingkai (Live)
+                <div className="space-y-2 flex flex-col items-center border-t md:border-t-0 md:border-l border-dashed border-gray-100 pt-6 md:pt-0 md:pl-6">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 self-start flex items-center gap-1">
+                    <Eye size={14} className="text-[#FF0000]" /> Pratinjau Lubang Bingkai (Live)
                   </label>
                   
-                  <div className="relative w-full max-w-[260px] aspect-[2/3] bg-retro-cream border-[3px] border-retro-charcoal shadow-[4px_4px_0_0_#262626] overflow-hidden flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
+                  <div className="relative w-full max-w-[240px] aspect-[2/3] bg-gray-50 border border-gray-150 rounded-xl overflow-hidden shadow-md flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZThlMmQ1Ii8+Cjwvc3ZnPg==')]">
                     {previewUrl ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src={previewUrl} 
                           alt="Live Preview Frame" 
-                          className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10" 
+                          className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10 animate-fade-in" 
                         />
-                        {/* Render Lubang secara Dinamis sesuai koordinat input (berdasarkan skala 1200 x 1800) */}
                         {slots.map((slot, index) => {
                           const leftPct = (slot.x / 1200) * 100;
                           const topPct = (slot.y / 1800) * 100;
@@ -583,7 +566,7 @@ export default function PhotoAssetsPage() {
                           return (
                             <div
                               key={`live-slot-preview-${slot.id}-${index}`}
-                              className="absolute border-[2px] border-[#FF0000] bg-[#FF0000]/15 flex flex-col items-center justify-center text-[#FF0000] font-black text-[9px] uppercase z-20 pointer-events-none"
+                              className="absolute border-2 border-[#FF0000] bg-[#FF0000]/15 flex flex-col items-center justify-center text-[#FF0000] font-black text-[9px] uppercase z-20 pointer-events-none"
                               style={{
                                 left: `${leftPct}%`,
                                 top: `${topPct}%`,
@@ -598,11 +581,11 @@ export default function PhotoAssetsPage() {
                         })}
                       </>
                     ) : (
-                      <div className="text-center p-6 text-xs font-bold text-retro-charcoal/40 uppercase">Belum ada gambar bingkai dipilih</div>
+                      <div className="text-center p-6 text-xs font-bold text-gray-300 uppercase">Belum ada gambar bingkai dipilih</div>
                     )}
                   </div>
                   
-                  <div className="text-[10px] font-bold text-retro-charcoal/50 leading-relaxed mt-2 text-center uppercase tracking-wide bg-white p-2 border-2 border-retro-charcoal/25 w-full">
+                  <div className="text-[9px] font-bold text-gray-400 leading-relaxed mt-2 text-center uppercase tracking-wide bg-gray-50 p-2.5 rounded-xl border border-gray-100/50 w-full">
                     Keterangan:<br/>
                     Skala Kanvas Bingkai Standar adalah <strong className="text-[#FF0000]">1200 x 1800</strong> piksel.
                   </div>
@@ -610,9 +593,9 @@ export default function PhotoAssetsPage() {
               )}
             </div>
 
-            <DialogFooter className="mt-6 border-t-[3px] border-dashed border-retro-charcoal pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest">Batal</Button>
-              <Button type="submit" className="bg-[#FF0000] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] hover:bg-[#d9383a] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest">
+            <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer">Batal</Button>
+              <Button type="submit" className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none">
                 {isEditMode ? "Simpan Perubahan" : "Terbitkan Bingkai"}
               </Button>
             </DialogFooter>
@@ -622,16 +605,16 @@ export default function PhotoAssetsPage() {
 
       {/* MODAL HAPUS */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="sm:max-w-md border-[4px] border-retro-charcoal shadow-[8px_8px_0_0_#262626]">
+        <DialogContent className="sm:max-w-md border border-gray-100 rounded-2xl shadow-2xl p-6 bg-white overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black font-serif uppercase tracking-tight text-[#FF0000] border-b-[4px] border-retro-charcoal pb-4 mb-2">Musnahkan Aset?</DialogTitle>
+            <DialogTitle className="text-xl font-bold uppercase tracking-wide text-red-600 border-b border-gray-50 pb-4 mb-4">Musnahkan Aset?</DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-sm font-bold uppercase tracking-widest text-retro-charcoal/80">
+          <div className="py-4 text-xs font-bold uppercase tracking-wider text-gray-500 leading-relaxed">
             Apakah Anda yakin ingin menghapus aset visual ini secara permanen dari server? Gambar bingkai tidak akan dapat dipilih lagi oleh kios Kiosk.
           </div>
-          <DialogFooter className="flex gap-2 border-t-[3px] border-dashed border-retro-charcoal pt-4">
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)} className="border-[3px] border-retro-charcoal bg-white shadow-[3px_3px_0_0_#262626] hover:bg-[#EFE9DB] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest">Batal</Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm} className="bg-[#FF0000] hover:bg-[#d9383a] text-white border-[3px] border-retro-charcoal shadow-[3px_3px_0_0_#262626] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none font-black uppercase tracking-widest">Ya, Hapus!</Button>
+          <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setIsDeleteOpen(false)} className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer">Batal</Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm} className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none">Ya, Hapus!</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
