@@ -21,12 +21,12 @@ import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
 
 const FILTERS = [
-  { id: "original", name: "Original", value: "none" },
-  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)" },
-  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)" },
-  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)" },
-  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)" },
-  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)" }
+  { id: "original", name: "Original", value: "none", image_url: undefined },
+  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)", image_url: undefined },
+  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)", image_url: undefined },
+  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)", image_url: undefined },
+  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)", image_url: undefined },
+  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined }
 ];
 
 export default function ResultPage() {
@@ -49,14 +49,15 @@ export default function ResultPage() {
   const [currentStep, setCurrentStep] = useState<"filter" | "print">("filter");
   const [selectedFilter, setSelectedFilter] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("selected_filter") || "none";
+      return localStorage.getItem("selected_filter") || "original";
     }
-    return "none";
+    return "original";
   });
 
-  // Fitur Reprint (Cetak Ulang / Cetak Tambahan)
+  // Fitur Reprint & Database Filters
   const [reprintPriceText, setReprintPriceText] = useState("Rp 15.000");
   const [shouldAutoPrint, setShouldAutoPrint] = useState(false);
+  const [dbFilters, setDbFilters] = useState<any[]>([]);
 
   // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
   useEffect(() => {
@@ -151,7 +152,7 @@ export default function ResultPage() {
     ctx.restore();
   };
 
-  // C. Inisialisasi Data awal dari localStorage
+  // C. Inisialisasi Data awal & database filters
   useEffect(() => {
     const frameUrlData = localStorage.getItem("selected_frame_url");
     const photosData = localStorage.getItem("captured_photos");
@@ -178,11 +179,24 @@ export default function ResultPage() {
     setRawPhotos(photos);
     setFrameUrl(frameUrlData);
 
+    // Ambil Filter Visual Aktif dari Database
+    const fetchFilters = async () => {
+      try {
+        const res = await fetch(getApiUrl("/api/kiosk/filters"));
+        const json = await res.json();
+        if (json.success && json.data) {
+          setDbFilters(json.data);
+        }
+      } catch (err) {
+        console.error("Gagal memuat filter dari database:", err);
+      }
+    };
+    fetchFilters();
+
     // Cek callback reprint pembayaran sukses
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("reprint_success") === "true") {
-        // Hapus query params di url agar tidak re-trigger cetak saat reload halaman
         window.history.replaceState({}, '', '/result');
         setShouldAutoPrint(true);
         setCurrentStep("print");
@@ -190,6 +204,28 @@ export default function ResultPage() {
       }
     }
   }, [router]);
+
+  // Gabungkan filter lokal dan filter database
+  const allFiltersList = [
+    ...FILTERS,
+    ...dbFilters.map((dbF) => {
+      let cssVal = "none";
+      if (dbF.config) {
+        try {
+          const parsed = typeof dbF.config === "string" ? JSON.parse(dbF.config) : dbF.config;
+          cssVal = parsed.css_filter || "none";
+        } catch (e) {
+          console.error("Gagal parse config css_filter:", e);
+        }
+      }
+      return {
+        id: `db-${dbF.id}`,
+        name: dbF.name,
+        value: cssVal,
+        image_url: dbF.image_url,
+      };
+    })
+  ];
 
   // D. Efek Redraw Canvas Setiap Kali Filter Berubah
   useEffect(() => {
@@ -256,7 +292,11 @@ export default function ResultPage() {
           }
         }
 
-        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP & CANVAS FILTER)
+        // Resolusi filter yang dipilih
+        const activeFilterObj = allFiltersList.find((f) => f.id === selectedFilter) || allFiltersList[0];
+        const cssFilterValue = activeFilterObj ? activeFilterObj.value : "none";
+
+        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP, CANVAS FILTER, & TEXTURE OVERLAYS)
         if (slots.length > 0) {
           for (let i = 0; i < slots.length; i++) {
             const slot = slots[i];
@@ -267,11 +307,21 @@ export default function ResultPage() {
             ctx.translate(slot.x + slot.width, slot.y);
             ctx.scale(-1, 1); 
             
-            // Terapkan Filter Visual ke Kanvas (Hanya bagian Foto)
-            ctx.filter = selectedFilter;
+            // Terapkan Filter Visual ke Kanvas
+            ctx.filter = cssFilterValue;
             
             drawImageProp(ctx, img, 0, 0, slot.width, slot.height);
             ctx.restore();
+
+            // Jika filter dari database memiliki gambar overlay png transparan
+            if (activeFilterObj && activeFilterObj.image_url) {
+              try {
+                const overlayImg = await loadSafeImage(activeFilterObj.image_url, `Overlay Filter ${activeFilterObj.name}`);
+                ctx.drawImage(overlayImg, slot.x, slot.y, slot.width, slot.height);
+              } catch (e) {
+                console.warn("Gagal memuat image filter overlay", e);
+              }
+            }
           }
         } else {
           for (let i = 0; i < rawPhotos.length; i++) {
@@ -280,16 +330,26 @@ export default function ResultPage() {
             const yPositions = [320, 720, 1120];
             const y = yPositions[i];
 
-            [60, 660].forEach((x) => {
+            [60, 660].forEach(async (x) => {
               ctx.save();
               ctx.translate(x + w, y);
               ctx.scale(-1, 1);
               
               // Terapkan Filter Visual ke Kanvas
-              ctx.filter = selectedFilter;
+              ctx.filter = cssFilterValue;
               
               drawImageProp(ctx, img, 0, 0, w, h);
               ctx.restore();
+
+              // Jika filter memiliki gambar overlay png transparan
+              if (activeFilterObj && activeFilterObj.image_url) {
+                try {
+                  const overlayImg = await loadSafeImage(activeFilterObj.image_url, `Overlay Filter ${activeFilterObj.name}`);
+                  ctx.drawImage(overlayImg, x, y, w, h);
+                } catch (e) {
+                  console.warn("Gagal memuat image filter overlay", e);
+                }
+              }
             });
           }
         }
@@ -320,7 +380,7 @@ export default function ResultPage() {
     };
 
     generatePreview();
-  }, [frameUrl, rawPhotos, selectedFilter]);
+  }, [frameUrl, rawPhotos, selectedFilter, dbFilters]);
 
   // E. Pemicu Cetak Otomatis (Jika Kembali dari Reprint Sukses)
   useEffect(() => {
@@ -330,9 +390,9 @@ export default function ResultPage() {
     }
   }, [mergedImage, shouldAutoPrint]);
 
-  const handleSelectFilter = (filterVal: string) => {
-    setSelectedFilter(filterVal);
-    localStorage.setItem("selected_filter", filterVal);
+  const handleSelectFilter = (filterId: string) => {
+    setSelectedFilter(filterId);
+    localStorage.setItem("selected_filter", filterId);
   };
 
   const handlePrint = async () => {
@@ -456,7 +516,7 @@ export default function ResultPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
+      <div className="w-full max-w-5xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center font-sans">
         
         {/* SISI KIRI: PRATINJAU CETAKAN (CANVAS PREVIEW) */}
         <div className="w-full max-w-[340px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
@@ -508,13 +568,13 @@ export default function ResultPage() {
                 <p className="text-[10px] text-[#7A7A7A] uppercase tracking-wider font-semibold">Terapkan filter visual favorit Anda ke foto</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {FILTERS.map((f) => {
-                  const isActive = selectedFilter === f.value;
+              <div className="grid grid-cols-2 gap-3 mt-2 max-h-[36vh] overflow-y-auto pr-1">
+                {allFiltersList.map((f) => {
+                  const isActive = selectedFilter === f.id;
                   return (
                     <button
                       key={f.id}
-                      onClick={() => handleSelectFilter(f.value)}
+                      onClick={() => handleSelectFilter(f.id)}
                       className={`p-4 border rounded-xl text-center transition-all font-bold uppercase text-[10px] tracking-wider cursor-pointer ${
                         isActive
                           ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-sm text-[#4A4A4A]"

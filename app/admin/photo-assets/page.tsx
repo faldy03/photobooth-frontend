@@ -27,7 +27,8 @@ interface PhotoAsset {
   image_url: string; 
   is_active: boolean;
   event_name?: string;
-  config?: { slots: Slot[] } | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config?: any;
   created_at: string;
 }
 
@@ -82,6 +83,7 @@ export default function PhotoAssetsPage() {
   });
   
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [cssFilter, setCssFilter] = useState("none");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,6 +168,7 @@ export default function PhotoAssetsPage() {
     setIsEditMode(false);
     setFormData({ name: "", type: "frame", is_active: true, event_name: "Global" });
     setSlots([]); 
+    setCssFilter("none");
     setSelectedFile(null);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -181,7 +184,24 @@ export default function PhotoAssetsPage() {
       is_active: asset.is_active,
       event_name: asset.event_name || "Global",
     });
-    setSlots(asset.config?.slots || []); 
+
+    let configObj = asset.config;
+    if (typeof configObj === 'string' && configObj.trim() !== '') {
+      try {
+        configObj = JSON.parse(configObj);
+      } catch (e) {
+        console.error("Gagal parse config", e);
+      }
+    }
+
+    if (asset.type === 'frame') {
+      setSlots(configObj?.slots || []);
+      setCssFilter("none");
+    } else {
+      setSlots([]);
+      setCssFilter(configObj?.css_filter || "none");
+    }
+    
     setSelectedFile(null);
     setPreviewUrl(asset.image_url); 
     setIsModalOpen(true);
@@ -205,6 +225,8 @@ export default function PhotoAssetsPage() {
       
       if (formData.type === 'frame') {
         dataToSend.append("config", JSON.stringify({ slots: slots }));
+      } else {
+        dataToSend.append("config", JSON.stringify({ css_filter: cssFilter }));
       }
       
       if (selectedFile) {
@@ -279,7 +301,7 @@ export default function PhotoAssetsPage() {
             className="flex-1 md:flex-none flex items-center gap-2 bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl font-bold uppercase tracking-wider h-11 px-5 shadow-md shadow-red-500/10 cursor-pointer border-none"
           >
             <Plus size={18} />
-            <span>Unggah Bingkai</span>
+            <span>Unggah Aset</span>
           </Button>
           <Button
             onClick={() => setRefreshTrigger(prev => prev + 1)}
@@ -369,7 +391,7 @@ export default function PhotoAssetsPage() {
                   </td>
                   <td className="p-4 text-center">
                     <span className="inline-flex items-center bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                      {asset.type}
+                      {asset.type === 'frame' ? 'Bingkai (Frame)' : 'Filter Visual'}
                     </span>
                   </td>
                   <td className="p-4 text-center">
@@ -487,6 +509,15 @@ export default function PhotoAssetsPage() {
                   </div>
                 </div>
 
+                {/* CSS FILTER STRING (Tampil jika type === 'filter') */}
+                {formData.type === 'filter' && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Efek Filter CSS (Opsional)</label>
+                    <Input name="css_filter" value={cssFilter} onChange={(e) => setCssFilter(e.target.value)} placeholder="Contoh: grayscale(100%) contrast(1.2)" className="border border-gray-200 rounded-xl h-11 px-4 focus:ring-1 focus:ring-[#FF0000] focus:border-[#FF0000] text-sm bg-gray-50/20" />
+                    <p className="text-[9px] text-gray-400 font-semibold uppercase mt-1">Masukkan parameter CSS filter standar (seperti grayscale(100%), sepia(60%), saturate(1.2)), atau ketik &apos;none&apos;.</p>
+                  </div>
+                )}
+
                 {/* KOORDINAT SLOTS */}
                 {formData.type === 'frame' && (
                   <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-4">
@@ -537,15 +568,15 @@ export default function PhotoAssetsPage() {
                 {/* UPLOAD FILE */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                    Berkas Bingkai PNG {isEditMode && "(Kosongkan jika gambar tidak diganti)"}
+                    {formData.type === 'frame' ? 'Berkas Bingkai PNG (Transparan)' : 'Berkas Tekstur Filter PNG (Opsional)'} {isEditMode && "(Kosongkan jika tidak diganti)"}
                   </label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6 text-center cursor-pointer hover:bg-gray-50 transition-all duration-200 flex flex-col items-center justify-center gap-2"
                   >
                     <Upload size={24} className="text-gray-400" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Klik untuk memilih berkas PNG transparan</span>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/jpg" className="hidden" required={!isEditMode} />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Klik untuk memilih berkas PNG gambar</span>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/jpg" className="hidden" required={!isEditMode && formData.type === 'frame'} />
                   </div>
                 </div>
 
@@ -616,7 +647,7 @@ export default function PhotoAssetsPage() {
             <DialogFooter className="mt-6 border-t border-dashed border-gray-100 pt-4 flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider cursor-pointer">Batal</Button>
               <Button type="submit" className="bg-[#FF0000] hover:bg-red-600 text-white rounded-xl px-5 h-11 font-bold transition-all text-xs uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none">
-                {isEditMode ? "Simpan Perubahan" : "Terbitkan Bingkai"}
+                {isEditMode ? "Simpan Perubahan" : "Terbitkan Aset"}
               </Button>
             </DialogFooter>
           </form>
