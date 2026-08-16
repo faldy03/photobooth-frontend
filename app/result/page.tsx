@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
 import { createAnimatedGifFromPhotos } from "@/lib/gif";
+import AnimatedGifPlayer from "@/components/AnimatedGifPlayer";
 
 const FILTERS = [
   { id: "original", name: "Original", value: "none", image_url: undefined, gradient: "bg-gradient-to-tr from-[#EFE9DB] via-amber-50 to-white" },
@@ -602,12 +603,11 @@ export default function ResultPage() {
               </div>
             ) : previewTab === "gif" ? (
               <div className="w-full flex flex-col items-center justify-center animate-in fade-in duration-300">
-                {gifPreviewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={gifPreviewUrl}
-                    alt="Animated GIF Preview"
-                    className="w-full h-auto border border-white/60 shadow-md rounded-xl"
+                {rawPhotos.length > 0 ? (
+                  <AnimatedGifPlayer
+                    photos={rawPhotos}
+                    intervalMs={350}
+                    className="w-full aspect-[4/3] border border-white/60 shadow-md rounded-xl"
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-gray-400 py-12">
@@ -682,18 +682,19 @@ export default function ResultPage() {
               </div>
 
               {/* CARD PRATINJAU GIF LIVE */}
-              {gifPreviewUrl && (
+              {rawPhotos.length > 0 && (
                 <div className="bg-[#FAF9F6] border border-[#4A4A4A]/10 p-3.5 rounded-xl flex items-center gap-3 shadow-inner my-2">
-                  <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#4A4A4A]/20 shrink-0 bg-black">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={gifPreviewUrl} alt="Mini GIF" className="w-full h-full object-cover" />
-                  </div>
+                  <AnimatedGifPlayer
+                    photos={rawPhotos}
+                    intervalMs={350}
+                    className="w-14 h-14 rounded-lg overflow-hidden border border-[#4A4A4A]/20 shrink-0"
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5 text-rose-600 font-bold text-xs uppercase tracking-wider">
-                      <Film size={14} /> Animasi GIF Foto Anda
+                      <Film size={14} /> Animasi GIF Foto Anda (Live)
                     </div>
                     <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                      Foto-foto Anda otomatis dianimasikan menjadi GIF bergerak yang siap diunduh lewat QR Code!
+                      Foto-foto Anda otomatis dianimasikan secara berulang menjadi GIF bergerak yang siap diunduh!
                     </p>
                   </div>
                 </div>
