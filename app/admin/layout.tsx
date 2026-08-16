@@ -8,6 +8,7 @@ import {
   Ticket,
   LogOut,
   Menu,
+  X,
   PanelLeftClose,
   PanelLeftOpen,
   MonitorSmartphone,
@@ -28,11 +29,15 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  // State untuk mengontrol Sidebar (default: terbuka)
+  // State Sidebar Desktop (Collapsible) & Mobile (Drawer)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  
+
   useEffect(() => {
+    // Tutup mobile sidebar setiap perpindahan halaman
+    setIsMobileOpen(false);
+
     if (pathname === "/admin/login") {
       setIsChecking(false);
       return;
@@ -41,193 +46,158 @@ export default function AdminLayout({
     const token = localStorage.getItem("admin_token");
     const role = localStorage.getItem("customer_role");
 
-    // Jika tidak ada token, atau role-nya BUKAN admin, tendang ke halaman depan
     if (!token || role !== "admin") {
       router.push("/");
     } else {
-      setIsChecking(false); // Valid, izinkan masuk
+      setIsChecking(false);
     }
   }, [pathname, router]);
 
-  // Pengecualian Halaman Login (agar tidak ikut render sidebar)
   if (isChecking && pathname !== "/admin/login") {
     return (
-      <div className="min-h-screen bg-[#F4F3EE] flex flex-col items-center justify-center font-sans">
-        <div className="font-black uppercase tracking-widest text-gray-700 animate-pulse text-lg">
-          Memverifikasi Otoritas...
+      <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center font-sans">
+        <div className="font-black uppercase tracking-widest text-gray-700 animate-pulse text-sm">
+          Memverifikasi Otoritas Admin...
         </div>
       </div>
     );
   }
 
-  // Pengecualian Halaman Login (agar tidak ikut render sidebar)
   if (pathname === "/admin/login") {
     return (
-      <div className="min-h-screen bg-[#F4F3EE] font-sans">{children}</div>
+      <div className="min-h-screen bg-[#FAF9F6] font-sans">{children}</div>
     );
   }
 
   const handleLogout = () => {
-    // 1. Hapus akses dari memori browser
+    setIsMobileOpen(false);
     localStorage.removeItem("admin_token");
     localStorage.removeItem("customer_role");
     
-    // 2. Munculkan notifikasi logout
     toast.success("KELUAR SISTEM!", { 
       description: "Sesi admin Anda telah diakhiri dengan aman." 
     });
 
-    // 3. Beri jeda 800 milidetik (0.8 detik) agar notifikasi terbaca
     setTimeout(() => {
       router.push("/admin/login");
-    }, 800);
+    }, 600);
   };
+
   const isActive = (path: string) => pathname === path;
 
+  const navLinks = [
+    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/voucher", label: "Voucher", icon: Ticket },
+    { href: "/admin/users", label: "Users", icon: User },
+    { href: "/admin/transaction", label: "Transactions", icon: ReceiptText },
+    { href: "/admin/kiosk", label: "Device", icon: MonitorSmartphone },
+    { href: "/admin/photo-assets", label: "Photo Assets", icon: ImageIcon },
+    { href: "/admin/settings", label: "System Settings", icon: Settings },
+  ];
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#FAF9F6] font-sans text-gray-800">
+    <div className="flex h-screen overflow-hidden bg-[#FAF9F6] font-sans text-gray-800 relative">
       <Toaster position="top-right" richColors />
       
-      {/* --- SIDEBAR KIRI --- */}
+      {/* BACKDROP MOBILE */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* --- SIDEBAR (DESKTOP & MOBILE DRAWER) --- */}
       <aside
-        className={`bg-[#141416] text-white flex flex-col z-20 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "w-64" : "w-20"
-        }`}
+        className={`
+          bg-[#141416] text-white flex flex-col z-50 transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 md:static
+          ${isMobileOpen ? "translate-x-0 w-64 shadow-2xl" : "-translate-x-full md:translate-x-0"}
+          ${isSidebarOpen ? "md:w-64" : "md:w-20"}
+        `}
       >
-        {/* Logo Area */}
-        <div className="h-20 flex items-center justify-center border-b border-white/5 overflow-hidden whitespace-nowrap px-4">
-          {isSidebarOpen ? (
-            <h2 className="text-xl font-black uppercase tracking-tighter text-white">
-              BOOTH
-              <span className="text-[#FF0000]">FLOW.</span>
-            </h2>
-          ) : (
-            <h2 className="text-xl font-black uppercase tracking-tighter text-[#FF0000]">
-              BF.
-            </h2>
-          )}
+        {/* Header / Logo Area Sidebar */}
+        <div className="h-20 flex items-center justify-between border-b border-white/5 overflow-hidden whitespace-nowrap px-5 shrink-0">
+          <div className="flex items-center gap-2">
+            {(isSidebarOpen || isMobileOpen) ? (
+              <h2 className="text-xl font-black uppercase tracking-tighter text-white">
+                BOOTH<span className="text-[#FF0000]">FLOW.</span>
+              </h2>
+            ) : (
+              <h2 className="text-xl font-black uppercase tracking-tighter text-[#FF0000] mx-auto">
+                BF.
+              </h2>
+            )}
+          </div>
+
+          {/* Tombol Tutup Mobile Sidebar */}
+          <button 
+            onClick={() => setIsMobileOpen(false)} 
+            className="md:hidden text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Navigasi Menu */}
-        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden">
-          <Link
-            href="/admin/dashboard"
-            title="Dashboard"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/dashboard")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <LayoutDashboard size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Dashboard</span>
-            )}
-          </Link>
+        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto overflow-x-hidden">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const active = isActive(link.href);
+            const showText = isSidebarOpen || isMobileOpen;
 
-          <Link
-            href="/admin/voucher"
-            title="Voucher"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/voucher")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Ticket size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Voucher</span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/users"
-            title="Users"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/users")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <User size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Users</span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/transaction"
-            title="Transactions"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/transaction")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <ReceiptText size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Transactions</span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/kiosk"
-            title="Devices"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/kiosk")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <MonitorSmartphone size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Device</span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/photo-assets"
-            title="Photo Assets"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/photo-assets")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <ImageIcon size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">Photo Assets</span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/settings"
-            title="System Settings"
-            className={`flex items-center ${isSidebarOpen ? "justify-start px-4" : "justify-center px-0"} gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
-              isActive("/admin/settings")
-                ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Settings size={18} className="shrink-0" />
-            {isSidebarOpen && (
-              <span className="whitespace-nowrap">System Settings</span>
-            )}
-          </Link>
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                title={link.label}
+                onClick={() => setIsMobileOpen(false)}
+                className={`flex items-center ${
+                  showText ? "justify-start px-4" : "justify-center px-0"
+                } gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all duration-200 ${
+                  active
+                    ? "bg-[#FF0000] text-white shadow-lg shadow-red-500/20"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Icon size={18} className="shrink-0" />
+                {showText && (
+                  <span className="whitespace-nowrap">{link.label}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
+
+        {/* --- TOMBOL LOGOUT (PINDAH KE FOOTER SIDEBAR) --- */}
+        <div className="p-4 border-t border-white/5 shrink-0">
+          <button
+            onClick={handleLogout}
+            title="Keluar dari Sistem"
+            className={`w-full flex items-center ${
+              (isSidebarOpen || isMobileOpen) ? "justify-start px-4" : "justify-center px-0"
+            } gap-3 py-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl text-red-400 bg-red-500/10 hover:bg-[#FF0000] hover:text-white transition-all duration-200 cursor-pointer border-none group`}
+          >
+            <LogOut size={18} className="shrink-0 text-red-500 group-hover:text-white transition-colors" />
+            {(isSidebarOpen || isMobileOpen) && (
+              <span className="whitespace-nowrap">Keluar</span>
+            )}
+          </button>
+        </div>
       </aside>
 
-      {/* --- AREA KANAN --- */}
-      <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+      {/* --- AREA KANAN (CONTENT & HEADER) --- */}
+      <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden min-w-0">
         {/* HEADER ATAS */}
-        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            {/* Toggle Sidebar Button */}
+        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30 shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Toggle Sidebar Desktop Button */}
             <Button
               variant="ghost"
               size="icon"
               className="hidden md:flex text-gray-500 hover:text-gray-900 rounded-xl hover:bg-gray-50 cursor-pointer"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              title={isSidebarOpen ? "Kecilkan Sidebar" : "Buka Sidebar"}
             >
               {isSidebarOpen ? (
                 <PanelLeftClose size={20} />
@@ -237,43 +207,41 @@ export default function AdminLayout({
             </Button>
 
             {/* Tombol Menu Mobile */}
-            <Button variant="ghost" size="icon" className="md:hidden text-gray-500 rounded-xl">
-              <Menu size={20} />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer"
+              onClick={() => setIsMobileOpen(true)}
+            >
+              <Menu size={22} />
             </Button>
+
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:inline-block">
+              Panel Admin
+            </span>
           </div>
 
-          <div className="ml-auto flex items-center gap-6">
-            <div className="flex items-center gap-3 hidden sm:flex">
+          <div className="ml-auto flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="flex flex-col text-right">
                 <span className="text-xs font-black text-gray-900 uppercase tracking-wider">
                   Admin Utama
                 </span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 hidden sm:inline-block">
                   Manajemen Sistem
                 </span>
               </div>
               
               {/* Clean Initials Avatar */}
-              <div className="w-10 h-10 bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full flex items-center justify-center overflow-hidden shrink-0">
                 <span className="text-xs font-black text-[#FF0000] tracking-tighter">AU</span>
               </div>
             </div>
-
-            {/* Clean Logout Button */}
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
-            >
-              <LogOut size={14} className="text-gray-500" />
-              <span>Keluar</span>
-            </Button>
           </div>
         </header>
 
-        {/* KONTEN HALAMAN */}
-        <main className="flex-1 p-6 md:p-10 max-w-screen-2xl mx-auto w-full">
-          <Toaster position="top-right" richColors />
+        {/* KONTEN HALAMAN MAIN */}
+        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-screen-2xl mx-auto w-full">
           {children}
         </main>
       </div>
