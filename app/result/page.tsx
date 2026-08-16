@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
+import { createAnimatedGifFromPhotos } from "@/lib/gif";
 
 const FILTERS = [
   { id: "original", name: "Original", value: "none", image_url: undefined, gradient: "bg-gradient-to-tr from-[#EFE9DB] via-amber-50 to-white" },
@@ -418,9 +419,18 @@ export default function ResultPage() {
     setErrorMsg(null);
 
     try {
+      // 0. Generate Animated GIF dari Foto-Foto Mentah
+      let gifImage = null;
+      try {
+        gifImage = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 400);
+      } catch (gifErr) {
+        console.warn("Gagal meng-encode GIF animasi:", gifErr);
+      }
+
       // 1. Simpan ke Database & Request QR Download Link
       const payload = {
         final_photo: mergedImage,
+        gif_photo: gifImage,
         raw_photos: rawPhotos,
         transaction_id: transactionIdNum,
         kiosk_device_id: 1,
