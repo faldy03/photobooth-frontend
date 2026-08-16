@@ -225,18 +225,21 @@ export default function SessionStartedPage() {
     // B. Hitung Mundur
     for (let c = settings.countdown_duration_seconds; c > 0; c--) {
       setCountdown(c);
+      
+      // Saat countdown tinggal 1, picu shutter 200ms sebelum flash agar pas dengan gerakan fisik lensa
+      if (c === 1) {
+        setTimeout(() => {
+          // C. SURUH CANON MENJEPRET SEKETIKA
+          fetch("http://127.0.0.1:3001/capture", { method: "POST", mode: "no-cors" }).catch(() => {});
+        }, 800);
+      }
+      
       await sleep(1000);
     }
-    setCountdown(null);
+    
+    // Tepat setelah angka 1 selesai: Nyalakan Flash Putih & Hapus Angka
     setIsFlashing(true);
-
-    // C. SURUH CANON MENJEPRET (BLOK KHUSUS EOS UTILITY / AGENT LOKAL)
-    try {
-      // Pemicu ke Agent Perantara Lokal (Port 3001) jika ada
-      await fetch("http://127.0.0.1:3001/capture", { method: "POST", mode: "no-cors" }).catch(() => {});
-    } catch (error) {
-      console.error("Gagal menembak kamera fisik:", error);
-    }
+    setCountdown(null);
 
     // D. CARI FILE BARU YANG MASUK (DUAL CHECK CLOUD & LOCALHOST 8000)
     let newPhotoUrl = null;
