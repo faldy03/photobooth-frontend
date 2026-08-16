@@ -405,13 +405,17 @@ export default function SessionStartedPage() {
         <div className={`absolute inset-0 bg-white z-40 transition-opacity duration-100 ${isFlashing ? "opacity-100" : "opacity-0 pointer-events-none"}`}></div>
 
         {countdown !== null && (
-          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-            <span 
-              className="text-[120px] md:text-[240px] font-light text-[#4A4A4A] drop-shadow-[0_4px_20px_rgba(255,255,255,0.7)] animate-in zoom-in duration-300"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
-              {countdown}
-            </span>
+          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/25 backdrop-blur-[1px] animate-in fade-in duration-150">
+            <div className="relative flex items-center justify-center">
+              <span 
+                className="text-[140px] md:text-[260px] font-black text-white animate-in zoom-in-75 duration-200 tracking-tighter"
+                style={{
+                  textShadow: "0 0 35px rgba(255, 255, 255, 0.9), 0 0 70px rgba(0, 0, 0, 0.9), 0 8px 24px rgba(0, 0, 0, 1)"
+                }}
+              >
+                {countdown}
+              </span>
+            </div>
           </div>
         )}
 
@@ -426,9 +430,9 @@ export default function SessionStartedPage() {
           <div className="absolute bottom-10 left-0 w-full flex justify-center z-20">
             <Button
               onClick={startPhotoSession}
-              className="bg-[#4A4A4A] hover:bg-[#333] text-white px-8 h-14 text-sm tracking-widest font-bold uppercase border-none rounded-lg shadow-md animate-pulse active:translate-y-1 transition-all"
+              className="bg-[#FF0000] hover:bg-[#D90000] text-white px-10 h-16 text-base tracking-widest font-extrabold uppercase border-2 border-white rounded-full shadow-[0_10px_30px_rgba(255,0,0,0.5)] animate-bounce active:scale-95 transition-all cursor-pointer"
             >
-              <Camera size={18} className="mr-2" /> MULAI BERPOSE
+              <Camera size={22} className="mr-2.5" /> MULAI BERPOSE
             </Button>
           </div>
         )}
