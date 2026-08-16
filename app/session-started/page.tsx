@@ -230,14 +230,12 @@ export default function SessionStartedPage() {
     setCountdown(null);
     setIsFlashing(true);
 
-    // C. SURUH CANON MENJEPRET (BLOK KHUSUS KAMERA)
+    // C. SURUH CANON MENJEPRET (BLOK KHUSUS EOS UTILITY / AGENT LOKAL)
     try {
-      await fetch("http://localhost:5513/?slc=capture&param1=0", { mode: "no-cors" });
+      // Pemicu ke Agent Perantara Lokal (Port 3001) jika ada
+      await fetch("http://127.0.0.1:3001/capture", { method: "POST", mode: "no-cors" }).catch(() => {});
     } catch (error) {
       console.error("Gagal menembak kamera fisik:", error);
-      setIsFlashing(false);
-      toast.error("KAMERA OFFLINE", { description: "Koneksi ke digiCamControl terputus." });
-      return null;
     }
 
     // D. CARI FILE BARU YANG MASUK (BLOK KHUSUS LARAVEL)
