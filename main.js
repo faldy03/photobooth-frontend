@@ -89,8 +89,54 @@ app.whenReady().then(() => {
   // Jalankan pemantau folder foto otomatis di background
   startFolderWatcher();
 
+  // Jalankan server agent lokal otomatis di background (Port 3001)
+  startLocalAgentServer();
+
   createWindow();
 });
+
+// =========================================================================
+// FITUR AGENT LOKAL (PORT 3001): SHUTTER KAMERA & PRINTER DNP
+// =========================================================================
+const http = require('http');
+const { exec } = require('child_process');
+
+function startLocalAgentServer() {
+  try {
+    const agentServer = http.createServer((req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      if (req.url === '/capture' && req.method === 'POST') {
+        console.log('[ELECTRON AGENT] Triggering Shutter Kamera Canon via EOS Utility...');
+        const command = `powershell -Command "$w = New-Object -ComObject WScript.Shell; $w.AppActivate('EOS R100'); $w.AppActivate('EOS Utility'); $w.SendKeys(' ')"`;
+        exec(command, (error) => {
+          if (error) console.error('[ELECTRON AGENT] Shutter error:', error.message);
+          else console.log('[ELECTRON AGENT] Shutter triggered!');
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not Found' }));
+    });
+
+    agentServer.listen(3001, '127.0.0.1', () => {
+      console.log('[ELECTRON AGENT] Server Agent Lokal berjalan otomatis di port 3001');
+    });
+  } catch (err) {
+    console.error('[ELECTRON AGENT] Gagal memulai agent server:', err.message);
+  }
+}
 
 // =========================================================================
 // FITUR SINKRONISASI OTOMATIS: DETEKSI FOTO LOKAL -> UPLOAD KE CLOUD
