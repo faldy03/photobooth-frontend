@@ -226,46 +226,44 @@ export default function SessionStartedPage() {
     for (let c = settings.countdown_duration_seconds; c > 0; c--) {
       setCountdown(c);
       
-      // Saat countdown tinggal 1, picu shutter 200ms sebelum flash agar pas dengan gerakan fisik lensa
+      // Saat c === 1: Buat jeda angka 1 lebih singkat (500ms), lalu picu shutter & flash bersamaan
       if (c === 1) {
-        setTimeout(() => {
-          // C. SURUH CANON MENJEPRET SEKETIKA
-          fetch("http://127.0.0.1:3001/capture", { method: "POST", mode: "no-cors" }).catch(() => {});
-        }, 800);
+        await sleep(400);
+        // C. SURUH CANON MENJEPRET & NYALAKAN FLASH SEKETIKA
+        setIsFlashing(true);
+        setCountdown(null);
+        fetch("http://127.0.0.1:3001/capture", { method: "POST", mode: "no-cors" }).catch(() => {});
+        break;
       }
       
       await sleep(1000);
     }
-    
-    // Tepat setelah angka 1 selesai: Nyalakan Flash Putih & Hapus Angka
-    setIsFlashing(true);
-    setCountdown(null);
 
-    // D. CARI FILE BARU YANG MASUK (DUAL CHECK CLOUD & LOCALHOST 8000)
+    // D. CARI FILE BARU YANG MASUK (HIGH-SPEED LOCAL-FIRST POLLING)
     let newPhotoUrl = null;
     let attempts = 0;
-    const maxAttempts = 14; // Sabar menunggu file dikirim lewat kabel (maksimal 7 detik)
+    const maxAttempts = 35; // Checking every 150ms = 5 seconds max patience
 
     try {
       while (attempts < maxAttempts) {
-        await sleep(500);
+        await sleep(150); // Polling super cepat (150ms) untuk hasil instan
         
-        // 1. Cek Primary API (Cloud / Hosting)
-        try {
-          const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
-          const data = await res.json();
-          if (data.success && data.filename !== lastFileName) {
-            newPhotoUrl = data.url + "?cb=" + Date.now();
-            break;
-          }
-        } catch (e) {}
-
-        // 2. Cek Laragon Lokal (http://localhost:8000)
+        // 1. DAHULUKAN CEK LARAGON LOKAL (http://localhost:8000) - Respon 1ms!
         try {
           const resLocal = await fetch(`http://localhost:8000/api/kiosk/latest-photo?t=${Date.now()}`);
           const dataLocal = await resLocal.json();
           if (dataLocal.success && dataLocal.filename !== lastFileName) {
             newPhotoUrl = dataLocal.url + "?cb=" + Date.now();
+            break;
+          }
+        } catch (e) {}
+
+        // 2. Cek Cloud API sebagai Backup
+        try {
+          const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
+          const data = await res.json();
+          if (data.success && data.filename !== lastFileName) {
+            newPhotoUrl = data.url + "?cb=" + Date.now();
             break;
           }
         } catch (e) {}
