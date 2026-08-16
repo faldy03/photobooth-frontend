@@ -442,7 +442,7 @@ export default function ResultPage() {
       // 0. Generate Animated GIF dari Foto-Foto Mentah
       let gifImage = null;
       try {
-        gifImage = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 400);
+        gifImage = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 0.35);
       } catch (gifErr) {
         console.warn("Gagal meng-encode GIF animasi:", gifErr);
       }

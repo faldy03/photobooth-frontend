@@ -8,11 +8,17 @@ export async function createAnimatedGifFromPhotos(
   photoUrls: string[],
   width = 480,
   height = 360,
-  intervalSeconds = 0.4
+  intervalSeconds = 0.35
 ): Promise<string> {
   return new Promise((resolve) => {
     if (!photoUrls || photoUrls.length === 0) {
       return resolve("");
+    }
+
+    // Normalisasi: Jika dikirim dalam milidetik (misal 350ms), ubah ke detik (0.35s)
+    let frameInterval = Number(intervalSeconds) || 0.35;
+    if (frameInterval > 10) {
+      frameInterval = frameInterval / 1000;
     }
 
     try {
@@ -22,7 +28,7 @@ export async function createAnimatedGifFromPhotos(
           images: photoUrls,
           gifWidth: width,
           gifHeight: height,
-          interval: intervalSeconds,
+          interval: frameInterval,
           numFrames: photoUrls.length,
           sampleInterval: 10,
           numWorkers: 2,
