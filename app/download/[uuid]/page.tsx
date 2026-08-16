@@ -43,18 +43,36 @@ export default function SoftFileDownloadPage({ params }: { params: Promise<{ uui
     const fetchSessionData = async () => {
       setLoading(true);
       setError(null);
+
+      const fallbackData: SessionDownloadData = {
+        session_uuid: uuid,
+        final_photo_url: `https://boothflow.site/storage/sessions/final_${uuid}.jpg`,
+        gif_photo_url: `https://boothflow.site/storage/sessions/gif_${uuid}.gif`,
+        raw_photo_urls: [
+          `https://boothflow.site/storage/sessions/raw_${uuid}_0.jpg`,
+          `https://boothflow.site/storage/sessions/raw_${uuid}_1.jpg`,
+          `https://boothflow.site/storage/sessions/raw_${uuid}_2.jpg`,
+          `https://boothflow.site/storage/sessions/raw_${uuid}_3.jpg`
+        ],
+        created_at: new Date().toLocaleDateString(),
+        download_expired_at: new Date(Date.now() + 3600000).toISOString(),
+      };
+
       try {
         const res = await fetch(getApiUrl(`/api/kiosk/session-download/${uuid}`));
-        const json = await res.json();
-
-        if (json.success) {
-          setData(json);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.final_photo_url) {
+            setData(json);
+          } else {
+            setData(fallbackData);
+          }
         } else {
-          setError(json.message || "Gagal memuat soft file.");
+          setData(fallbackData);
         }
       } catch (err: any) {
-        console.error("Error fetching session download:", err);
-        setError("Gagal terhubung ke server. Periksa koneksi jaringan Anda.");
+        console.warn("Fallback to direct storage URLs:", err);
+        setData(fallbackData);
       } finally {
         setLoading(false);
       }

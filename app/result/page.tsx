@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Film
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
@@ -50,6 +51,10 @@ export default function ResultPage() {
   const [rawPhotos, setRawPhotos] = useState<string[]>([]);
   const [transactionIdNum, setTransactionIdNum] = useState<number>(NaN);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
+  
+  // Tab Preview Frame vs GIF
+  const [previewTab, setPreviewTab] = useState<"frame" | "gif">("frame");
+  const [gifPreviewUrl, setGifPreviewUrl] = useState<string | null>(null);
   
   // Cache Gambar di Memori (Agar ganti filter 0ms / Instan)
   const loadedPhotosCacheRef = useRef<HTMLImageElement[]>([]);
@@ -303,6 +308,20 @@ export default function ResultPage() {
     })
   ];
 
+  // Generate GIF Preview Otomatis saat foto mentah dimuat
+  useEffect(() => {
+    if (rawPhotos.length === 0) return;
+    const generateGif = async () => {
+      try {
+        const gif = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 400);
+        setGifPreviewUrl(gif);
+      } catch (e) {
+        console.warn("Gagal membuat preview GIF:", e);
+      }
+    };
+    generateGif();
+  }, [rawPhotos]);
+
   // E. Redraw Canvas Fast (Menggunakan Image Object dari Memori - 0ms Delay)
   useEffect(() => {
     if (!isAssetsLoaded || !loadedFrameCacheRef.current) return;
@@ -544,15 +563,33 @@ export default function ResultPage() {
 
       <div className="w-full max-w-5xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center font-sans">
         
-        {/* SISI KIRI: PRATINJAU CETAKAN (CANVAS PREVIEW) */}
+        {/* SISI KIRI: PRATINJAU CETAKAN & GIF (CANVAS & GIF PREVIEW) */}
         <div className="w-full max-w-[360px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-2xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
-          <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
-            <h3 
-              className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          
+          {/* TAB TOGGLE: FRAME 2R VS ANIMASI GIF */}
+          <div className="bg-[#FAF9F6] p-2 border-b border-[#4A4A4A]/10 flex gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setPreviewTab("frame")}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                previewTab === "frame"
+                  ? "bg-[#4A4A4A] text-white shadow-sm"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+              }`}
             >
-              <Sparkles size={14} /> Pratinjau Hasil
-            </h3>
+              <Sparkles size={13} /> Frame 2R
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewTab("gif")}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                previewTab === "gif"
+                  ? "bg-rose-600 text-white shadow-sm"
+                  : "bg-white text-rose-600 hover:bg-rose-50 border border-rose-200"
+              }`}
+            >
+              <Film size={13} /> Animasi GIF
+            </button>
           </div>
 
           <div className="p-4 bg-gray-55 flex items-center justify-center min-h-[460px] relative">
@@ -563,8 +600,24 @@ export default function ResultPage() {
                   Memuat Foto...
                 </p>
               </div>
+            ) : previewTab === "gif" ? (
+              <div className="w-full flex flex-col items-center justify-center animate-in fade-in duration-300">
+                {gifPreviewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={gifPreviewUrl}
+                    alt="Animated GIF Preview"
+                    className="w-full h-auto border border-white/60 shadow-md rounded-xl"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-gray-400 py-12">
+                    <Loader2 size={28} className="animate-spin mb-2 text-rose-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Menyiapkan GIF Animasi...</span>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="relative group w-full">
+              <div className="relative group w-full animate-in fade-in duration-300">
                 {mergedImage && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
