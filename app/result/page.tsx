@@ -11,7 +11,6 @@ import {
   QrCode,
   AlertTriangle,
   CheckCircle2,
-  Image as ImageIcon,
   Clock,
   ArrowRight,
   ArrowLeft
@@ -21,18 +20,18 @@ import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
 
 const FILTERS = [
-  { id: "original", name: "Original", value: "none", image_url: undefined },
-  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)", image_url: undefined },
-  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)", image_url: undefined },
-  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)", image_url: undefined },
-  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)", image_url: undefined },
-  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined },
-  { id: "noir", name: "Dramatic Noir", value: "grayscale(100%) contrast(1.4) brightness(0.95)", image_url: undefined },
-  { id: "teal", name: "Cinematic Teal", value: "contrast(1.1) saturate(1.1) hue-rotate(-15deg) brightness(0.98)", image_url: undefined },
-  { id: "gold", name: "Summer Gold", value: "sepia(25%) saturate(1.3) contrast(1.05) brightness(1.02)", image_url: undefined },
-  { id: "lomo", name: "Lomo Retro", value: "saturate(1.4) contrast(1.25) brightness(0.98)", image_url: undefined },
-  { id: "fade", name: "Soft Fade", value: "contrast(0.85) saturate(0.9) brightness(1.08) sepia(10%)", image_url: undefined },
-  { id: "ice", name: "Cold Ice", value: "saturate(0.7) hue-rotate(15deg) brightness(1.04) contrast(0.95)", image_url: undefined }
+  { id: "original", name: "Original", value: "none", image_url: undefined, gradient: "bg-gradient-to-tr from-[#EFE9DB] via-amber-50 to-white" },
+  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)", image_url: undefined, gradient: "bg-gradient-to-tr from-gray-950 via-gray-700 to-gray-400" },
+  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-900 via-amber-700 to-yellow-200" },
+  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-orange-600 via-amber-500 to-yellow-300" },
+  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-slate-800 via-sky-700 to-cyan-300" },
+  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-300" },
+  { id: "noir", name: "Dramatic Noir", value: "grayscale(100%) contrast(1.4) brightness(0.95)", image_url: undefined, gradient: "bg-gradient-to-tr from-black via-zinc-800 to-zinc-500" },
+  { id: "teal", name: "Cinematic Teal", value: "contrast(1.1) saturate(1.1) hue-rotate(-15deg) brightness(0.98)", image_url: undefined, gradient: "bg-gradient-to-tr from-cyan-900 via-teal-600 to-amber-400" },
+  { id: "gold", name: "Summer Gold", value: "sepia(25%) saturate(1.3) contrast(1.05) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-700 via-yellow-500 to-amber-200" },
+  { id: "lomo", name: "Lomo Retro", value: "saturate(1.4) contrast(1.25) brightness(0.98)", image_url: undefined, gradient: "bg-gradient-to-tr from-red-700 via-amber-500 to-emerald-600" },
+  { id: "fade", name: "Soft Fade", value: "contrast(0.85) saturate(0.9) brightness(1.08) sepia(10%)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-300 via-amber-200 to-stone-300" },
+  { id: "ice", name: "Cold Ice", value: "saturate(0.7) hue-rotate(15deg) brightness(1.04) contrast(0.95)", image_url: undefined, gradient: "bg-gradient-to-tr from-blue-900 via-sky-500 to-cyan-100" }
 ];
 
 export default function ResultPage() {
@@ -51,6 +50,11 @@ export default function ResultPage() {
   const [transactionIdNum, setTransactionIdNum] = useState<number>(NaN);
   const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
   
+  // Cache Gambar di Memori (Agar ganti filter 0ms / Instan)
+  const loadedPhotosCacheRef = useRef<HTMLImageElement[]>([]);
+  const loadedFrameCacheRef = useRef<HTMLImageElement | null>(null);
+  const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
+
   // Alur Langkah & Filter
   const [currentStep, setCurrentStep] = useState<"filter" | "print">("filter");
   const [selectedFilter, setSelectedFilter] = useState<string>(() => {
@@ -65,7 +69,7 @@ export default function ResultPage() {
   const [shouldAutoPrint, setShouldAutoPrint] = useState(false);
   const [dbFilters, setDbFilters] = useState<any[]>([]);
 
-  // A. Timer Sesi Dinamis mengikuti system_setting (session_duration_minutes)
+  // A. Timer Sesi Dinamis
   useEffect(() => {
     let timerId: NodeJS.Timeout;
     
@@ -211,6 +215,70 @@ export default function ResultPage() {
     }
   }, [router]);
 
+  // D. PRELOAD ALL IMAGES ONCE INTO MEMORY CACHE
+  useEffect(() => {
+    if (!frameUrl || rawPhotos.length === 0) return;
+
+    const createImgObj = (src: string, label: string, crossOrigin = false): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (crossOrigin && !src.startsWith("data:")) img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Gagal membuat objek gambar: ${label}`));
+        img.src = src;
+      });
+    };
+
+    const loadSafeImage = async (src: string, label: string): Promise<HTMLImageElement> => {
+      try {
+        if (src.startsWith("data:")) {
+          return await createImgObj(src, label);
+        }
+
+        const res = await fetch(src, { cache: 'force-cache' });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        
+        const blob = await res.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        return await createImgObj(base64, label);
+      } catch (error) {
+        console.warn(`Fetch Blob gagal untuk ${label}, mencoba metode direct...`, error);
+        return await createImgObj(src, label, true); 
+      }
+    };
+
+    const preloadAllAssets = async () => {
+      setIsPreparingPreview(true);
+      try {
+        // Load raw photos once
+        const photoPromises = rawPhotos.map((src, i) => loadSafeImage(src, `Foto #${i + 1}`));
+        const loadedPhotos = await Promise.all(photoPromises);
+        loadedPhotosCacheRef.current = loadedPhotos;
+
+        // Load frame image once
+        let frameImg;
+        try {
+          const proxyUrl = getApiUrl(`/api/proxy-image?url=${encodeURIComponent(frameUrl)}`);
+          frameImg = await loadSafeImage(proxyUrl, "Frame Proxy");
+        } catch (e) {
+          frameImg = await loadSafeImage(frameUrl, "Frame Asli");
+        }
+        loadedFrameCacheRef.current = frameImg;
+        setIsAssetsLoaded(true);
+      } catch (err) {
+        console.error("Preload error:", err);
+      }
+    };
+
+    preloadAllAssets();
+  }, [frameUrl, rawPhotos]);
+
   // Gabungkan filter lokal dan filter database
   const allFiltersList = [
     ...FILTERS,
@@ -229,16 +297,16 @@ export default function ResultPage() {
         name: dbF.name,
         value: cssVal,
         image_url: dbF.image_url,
+        gradient: "bg-gradient-to-tr from-[#FF0000]/80 via-amber-500 to-rose-400"
       };
     })
   ];
 
-  // D. Efek Redraw Canvas Setiap Kali Filter Berubah
+  // E. Redraw Canvas Fast (Menggunakan Image Object dari Memori - 0ms Delay)
   useEffect(() => {
-    if (!frameUrl || rawPhotos.length === 0) return;
+    if (!isAssetsLoaded || !loadedFrameCacheRef.current) return;
 
-    const generatePreview = async () => {
-      setIsPreparingPreview(true);
+    const generatePreviewFast = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -249,39 +317,8 @@ export default function ResultPage() {
       ctx.fillStyle = "#EFE9DB";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const createImgObj = (src: string, label: string, crossOrigin = false): Promise<HTMLImageElement> => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          if (crossOrigin && !src.startsWith("data:")) img.crossOrigin = "anonymous";
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error(`Gagal membuat objek gambar: ${label}`));
-          img.src = src;
-        });
-      };
-
-      const loadSafeImage = async (src: string, label: string): Promise<HTMLImageElement> => {
-        try {
-          if (src.startsWith("data:")) {
-            return await createImgObj(src, label);
-          }
-
-          const res = await fetch(src, { cache: 'no-cache' });
-          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-          
-          const blob = await res.blob();
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-
-          return await createImgObj(base64, label);
-        } catch (error) {
-          console.warn(`Fetch Blob gagal untuk ${label}, mencoba metode direct...`, error);
-          return await createImgObj(src, label, true); 
-        }
-      };
+      const photoImages = loadedPhotosCacheRef.current;
+      const frameImg = loadedFrameCacheRef.current;
 
       try {
         const frameDataStr = localStorage.getItem("selected_frame_data");
@@ -302,12 +339,14 @@ export default function ResultPage() {
         const activeFilterObj = allFiltersList.find((f) => f.id === selectedFilter) || allFiltersList[0];
         const cssFilterValue = activeFilterObj ? activeFilterObj.value : "none";
 
-        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP, CANVAS FILTER, & TEXTURE OVERLAYS)
+        // 1. MENGGAMBAR FOTO RAW (DENGAN SMART CROP & CANVAS FILTER)
         if (slots.length > 0) {
           for (let i = 0; i < slots.length; i++) {
             const slot = slots[i];
-            const photoIndex = i % rawPhotos.length; 
-            const img = await loadSafeImage(rawPhotos[photoIndex], `Foto #${photoIndex + 1}`);
+            const photoIndex = i % photoImages.length; 
+            const img = photoImages[photoIndex];
+
+            if (!img) continue;
 
             ctx.save();
             ctx.translate(slot.x + slot.width, slot.y);
@@ -318,77 +357,48 @@ export default function ResultPage() {
             
             drawImageProp(ctx, img, 0, 0, slot.width, slot.height);
             ctx.restore();
-
-            // Jika filter dari database memiliki gambar overlay png transparan
-            if (activeFilterObj && activeFilterObj.image_url) {
-              try {
-                const overlayImg = await loadSafeImage(activeFilterObj.image_url, `Overlay Filter ${activeFilterObj.name}`);
-                ctx.drawImage(overlayImg, slot.x, slot.y, slot.width, slot.height);
-              } catch (e) {
-                console.warn("Gagal memuat image filter overlay", e);
-              }
-            }
           }
         } else {
-          for (let i = 0; i < rawPhotos.length; i++) {
-            const img = await loadSafeImage(rawPhotos[i], `Foto #${i + 1}`);
+          for (let i = 0; i < photoImages.length; i++) {
+            const img = photoImages[i];
+            if (!img) continue;
+
             const w = 480, h = 360;
             const yPositions = [320, 720, 1120];
             const y = yPositions[i];
 
-            [60, 660].forEach(async (x) => {
+            [60, 660].forEach((x) => {
               ctx.save();
               ctx.translate(x + w, y);
               ctx.scale(-1, 1);
               
-              // Terapkan Filter Visual ke Kanvas
               ctx.filter = cssFilterValue;
-              
               drawImageProp(ctx, img, 0, 0, w, h);
               ctx.restore();
-
-              // Jika filter memiliki gambar overlay png transparan
-              if (activeFilterObj && activeFilterObj.image_url) {
-                try {
-                  const overlayImg = await loadSafeImage(activeFilterObj.image_url, `Overlay Filter ${activeFilterObj.name}`);
-                  ctx.drawImage(overlayImg, x, y, w, h);
-                } catch (e) {
-                  console.warn("Gagal memuat image filter overlay", e);
-                }
-              }
             });
           }
         }
 
         // 2. MENGGAMBAR FRAME OVERLAY (Tanpa filter agar frame tetap tajam)
-        let frameImg;
-        try {
-          const proxyUrl = getApiUrl(`/api/proxy-image?url=${encodeURIComponent(frameUrl)}`);
-          frameImg = await loadSafeImage(proxyUrl, "Frame Proxy");
-        } catch (e) {
-          console.warn("Proxy gagal, mencoba direct frame url...");
-          frameImg = await loadSafeImage(frameUrl, "Frame Asli");
+        if (frameImg) {
+          ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
         }
-        
-        ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
 
         // 3. GENERATE HASIL AKHIR
-        const finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+        const finalDataUrl = canvas.toDataURL("image/jpeg", 0.92);
         setMergedImage(finalDataUrl);
 
       } catch (error: unknown) {
         console.error("Preview Error:", error);
-        setErrorMsg((error as Error).message || "Gagal memproses gambar");
-        toast.error("Gagal Menyiapkan Pratinjau");
       } finally {
         setIsPreparingPreview(false);
       }
     };
 
-    generatePreview();
-  }, [frameUrl, rawPhotos, selectedFilter, dbFilters]);
+    generatePreviewFast();
+  }, [selectedFilter, isAssetsLoaded]);
 
-  // E. Pemicu Cetak Otomatis (Jika Kembali dari Reprint Sukses)
+  // F. Pemicu Cetak Otomatis (Jika Kembali dari Reprint Sukses)
   useEffect(() => {
     if (mergedImage && shouldAutoPrint) {
       setShouldAutoPrint(false);
@@ -408,7 +418,7 @@ export default function ResultPage() {
     setErrorMsg(null);
 
     try {
-      // 1. Simpan ke Database & Request QR Download Link (Selalu simpan / update)
+      // 1. Simpan ke Database & Request QR Download Link
       const payload = {
         final_photo: mergedImage,
         raw_photos: rawPhotos,
@@ -525,7 +535,7 @@ export default function ResultPage() {
       <div className="w-full max-w-5xl mt-24 flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center font-sans">
         
         {/* SISI KIRI: PRATINJAU CETAKAN (CANVAS PREVIEW) */}
-        <div className="w-full max-w-[340px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
+        <div className="w-full max-w-[360px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col relative rounded-2xl overflow-hidden animate-in slide-in-from-left-8 duration-700">
           <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
             <h3 
               className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
@@ -535,12 +545,12 @@ export default function ResultPage() {
             </h3>
           </div>
 
-          <div className="p-4 bg-gray-55 flex items-center justify-center min-h-[460px]">
-            {isPreparingPreview ? (
+          <div className="p-4 bg-gray-55 flex items-center justify-center min-h-[460px] relative">
+            {isPreparingPreview && !mergedImage ? (
               <div className="flex flex-col items-center justify-center text-[#4A4A4A]">
                 <Loader2 size={36} className="animate-spin mb-3 text-[#4A4A4A]" />
                 <p className="font-bold uppercase tracking-widest text-[10px]">
-                  Memproses Filter...
+                  Memuat Foto...
                 </p>
               </div>
             ) : (
@@ -550,7 +560,7 @@ export default function ResultPage() {
                   <img
                     src={mergedImage}
                     alt="Final Print Preview"
-                    className="w-full h-auto border border-white/60 shadow-md rounded"
+                    className="w-full h-auto border border-white/60 shadow-md rounded-xl transition-all duration-200"
                   />
                 )}
                 {isPrinting && (
@@ -562,11 +572,11 @@ export default function ResultPage() {
         </div>
 
         {/* SISI KANAN: LANGKAH FILTER ATAU PRINT */}
-        <div className="flex-1 max-w-[460px] flex flex-col gap-6 animate-in slide-in-from-right-8 duration-700 delay-200">
+        <div className="flex-1 max-w-[480px] flex flex-col gap-6 animate-in slide-in-from-right-8 duration-700 delay-200">
           
           {currentStep === "filter" ? (
             /* ================= LANGKAH 1: PILIH FILTER ================= */
-            <div className="bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col gap-4 rounded-xl w-full">
+            <div className="bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col gap-4 rounded-2xl w-full">
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4A4A] mb-1">
                   Pilih Efek Filter
@@ -574,20 +584,35 @@ export default function ResultPage() {
                 <p className="text-[10px] text-[#7A7A7A] uppercase tracking-wider font-semibold">Terapkan filter visual favorit Anda ke foto</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-2 max-h-[36vh] overflow-y-auto pr-1">
+              {/* GRID KARTU FILTER DENGAN GRADASI WARNA & TEKS DI BAWAH */}
+              <div className="grid grid-cols-3 gap-3 mt-2 max-h-[42vh] overflow-y-auto pr-1">
                 {allFiltersList.map((f) => {
                   const isActive = selectedFilter === f.id;
                   return (
                     <button
                       key={f.id}
                       onClick={() => handleSelectFilter(f.id)}
-                      className={`p-4 border rounded-xl text-center transition-all font-bold uppercase text-[10px] tracking-wider cursor-pointer ${
+                      className={`flex flex-col items-center gap-2 p-2.5 border rounded-2xl transition-all duration-200 cursor-pointer text-center group ${
                         isActive
-                          ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-sm text-[#4A4A4A]"
-                          : "border-[#4A4A4A]/10 bg-white hover:bg-[#FAF9F6] text-[#7A7A7A]"
+                          ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-md ring-2 ring-[#4A4A4A]/20 scale-105"
+                          : "border-gray-200/70 bg-white hover:bg-[#FAF9F6] hover:border-gray-300"
                       }`}
                     >
-                      {f.name}
+                      {/* Swatch Box Gradasi Warna Visual Filter */}
+                      <div className={`w-full aspect-[4/3] rounded-xl ${f.gradient || "bg-gradient-to-tr from-gray-300 to-gray-100"} shadow-inner border border-white/40 flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform`}>
+                        {isActive && (
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-white drop-shadow-md" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tulisan / Nama Filter Di Bawah Box Gradasi */}
+                      <span className={`text-[10px] leading-tight font-bold uppercase tracking-wider transition-colors ${
+                        isActive ? "text-[#4A4A4A] font-black" : "text-gray-600 group-hover:text-gray-900"
+                      }`}>
+                        {f.name}
+                      </span>
                     </button>
                   );
                 })}
@@ -596,10 +621,10 @@ export default function ResultPage() {
               <Button
                 onClick={() => {
                   setCurrentStep("print");
-                  handlePrint(); // Panggil fungsi cetak & generate QR otomatis ketika klik lanjut
+                  handlePrint();
                 }}
                 disabled={isPreparingPreview}
-                className="h-14 w-full bg-[#4A4A4A] hover:bg-[#333] text-white border-none font-bold text-xs uppercase tracking-widest rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                className="h-14 w-full bg-[#4A4A4A] hover:bg-[#333] text-white border-none font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
                 <span>Lanjut ke Cetakan</span>
                 <ArrowRight size={16} />
@@ -610,7 +635,7 @@ export default function ResultPage() {
             <div className="flex flex-col gap-6 w-full">
               
               {/* Status Box */}
-              <div className="bg-white border border-[#4A4A4A]/10 p-8 shadow-sm text-center rounded-xl">
+              <div className="bg-white border border-[#4A4A4A]/10 p-8 shadow-sm text-center rounded-2xl">
                 {isPrinting ? (
                   <>
                     <Printer size={48} className="mx-auto text-[#4A4A4A] mb-4 animate-bounce" strokeWidth={1.5} />
@@ -641,7 +666,7 @@ export default function ResultPage() {
               </div>
 
               {/* QR Code Soft File Box */}
-              <div className={`bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col items-center text-center transition-all duration-500 rounded-xl ${isPrinting ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
+              <div className={`bg-white border border-[#4A4A4A]/10 p-6 shadow-sm flex flex-col items-center text-center transition-all duration-500 rounded-2xl ${isPrinting ? "opacity-50 grayscale pointer-events-none" : "opacity-100"}`}>
                 {qrUrl ? (
                   <>
                     <h3 className="text-xs font-bold uppercase tracking-[0.1em] border-b border-[#4A4A4A]/10 pb-2.5 w-full mb-4 flex items-center justify-center gap-1.5 text-[#7A7A7A]">
