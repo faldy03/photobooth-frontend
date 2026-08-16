@@ -238,29 +238,39 @@ export default function SessionStartedPage() {
       console.error("Gagal menembak kamera fisik:", error);
     }
 
-    // D. CARI FILE BARU YANG MASUK (BLOK KHUSUS LARAVEL)
+    // D. CARI FILE BARU YANG MASUK (DUAL CHECK CLOUD & LOCALHOST 8000)
     let newPhotoUrl = null;
     let attempts = 0;
-    const maxAttempts = 12; // Sabar menunggu file dikirim lewat kabel (maksimal 6 detik)
+    const maxAttempts = 14; // Sabar menunggu file dikirim lewat kabel (maksimal 7 detik)
 
     try {
       while (attempts < maxAttempts) {
         await sleep(500);
-        // 🚨 MENGGUNAKAN LOCALHOST BUKAN 127.0.0.1
-        const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
-        const data = await res.json();
+        
+        // 1. Cek Primary API (Cloud / Hosting)
+        try {
+          const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
+          const data = await res.json();
+          if (data.success && data.filename !== lastFileName) {
+            newPhotoUrl = data.url + "?cb=" + Date.now();
+            break;
+          }
+        } catch (e) {}
 
-        if (data.success && data.filename !== lastFileName) {
-          newPhotoUrl = data.url + "?cb=" + Date.now();
-          break;
-        }
+        // 2. Cek Laragon Lokal (http://localhost:8000)
+        try {
+          const resLocal = await fetch(`http://localhost:8000/api/kiosk/latest-photo?t=${Date.now()}`);
+          const dataLocal = await resLocal.json();
+          if (dataLocal.success && dataLocal.filename !== lastFileName) {
+            newPhotoUrl = dataLocal.url + "?cb=" + Date.now();
+            break;
+          }
+        } catch (e) {}
+
         attempts++;
       }
     } catch (error) {
-      console.error("Gagal mengecek folder Laravel:", error);
-      setIsFlashing(false);
-      toast.error("DATABASE OFFLINE", { description: "Gagal terhubung ke API Laravel." });
-      return null;
+      console.error("Gagal mengecek folder foto:", error);
     }
 
     setIsFlashing(false);

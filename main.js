@@ -217,21 +217,30 @@ async function uploadPhotoToCloud(filePath, filename) {
     const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
     formData.append('photo', blob, filename);
 
-    console.log('[WATCHER] Mengunggah foto ke cloud server:', filename);
+    console.log('[WATCHER] Mengunggah foto ke server:', filename);
 
-    const response = await fetch('https://boothflow.site/api/kiosk/receive-dslr-photo', {
+    // 1. Upload ke Cloud Server
+    fetch('https://boothflow.site/api/kiosk/receive-dslr-photo', {
       method: 'POST',
       body: formData
-    });
+    }).then(r => r.json()).then(data => {
+      if (data.success) console.log('[WATCHER SUCCESS CLOUD] Foto tersimpan di cloud:', data.filename);
+    }).catch(() => {});
 
-    const data = await response.json();
-    if (data.success) {
-      console.log('[WATCHER SUCCESS] Foto berhasil disimpan di cloud database:', data.filename);
-    } else {
-      console.error('[WATCHER ERROR] Server menolak upload:', data.message);
-    }
+    // 2. Upload ke Laragon Backend Lokal (Port 8000 / Localhost)
+    const formDataLocal = new FormData();
+    const blobLocal = new Blob([fileBuffer], { type: 'image/jpeg' });
+    formDataLocal.append('photo', blobLocal, filename);
+
+    fetch('http://localhost:8000/api/kiosk/receive-dslr-photo', {
+      method: 'POST',
+      body: formDataLocal
+    }).then(r => r.json()).then(data => {
+      if (data.success) console.log('[WATCHER SUCCESS LOKAL] Foto tersimpan di Laragon:', data.filename);
+    }).catch(() => {});
+
   } catch (err) {
-    console.error('[WATCHER ERROR] Gagal mengirim file ke cloud:', err.message);
+    console.error('[WATCHER ERROR] Gagal mengirim file:', err.message);
   }
 }
 
