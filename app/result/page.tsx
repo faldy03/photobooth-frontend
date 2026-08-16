@@ -681,6 +681,24 @@ export default function ResultPage() {
                 })}
               </div>
 
+              {/* CARD PRATINJAU GIF LIVE */}
+              {gifPreviewUrl && (
+                <div className="bg-[#FAF9F6] border border-[#4A4A4A]/10 p-3.5 rounded-xl flex items-center gap-3 shadow-inner my-2">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#4A4A4A]/20 shrink-0 bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={gifPreviewUrl} alt="Mini GIF" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 text-rose-600 font-bold text-xs uppercase tracking-wider">
+                      <Film size={14} /> Animasi GIF Foto Anda
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                      Foto-foto Anda otomatis dianimasikan menjadi GIF bergerak yang siap diunduh lewat QR Code!
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={() => {
                   setCurrentStep("print");
