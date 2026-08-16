@@ -177,6 +177,48 @@ function startFolderWatcher() {
 
   console.log('[WATCHER] Memulai pemantauan folder foto DSLR lokal...');
 
+  const notifyFrontendOfNewPhoto = (fullPath, file) => {
+    try {
+      const fileBuffer = fs.readFileSync(fullPath);
+      const base64Url = `data:image/jpeg;base64,${fileBuffer.toString('base64')}`;
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('dslr-photo-received', {
+          filename: file,
+          url: base64Url
+        });
+        console.log('[WATCHER IPC INSTANT] Foto dikirim ke frontend secara instan:', file);
+      }
+    } catch (e) {
+      console.error('[WATCHER IPC ERROR] Gagal membaca foto instan:', e.message);
+    }
+  };
+
+  // 1. NATIVE OS WATCHER (0ms Delay via OS Event)
+  paths.forEach(dir => {
+    try {
+      if (fs.existsSync(dir)) {
+        fs.watch(dir, (eventType, filename) => {
+          if (!filename) return;
+          const lower = filename.toLowerCase();
+          if (!lower.endsWith('.jpg') && !lower.endsWith('.jpeg')) return;
+          if (filename === 'photo_1784298780_XFWUa.jpg' || filename === 'photo_1784298962_T7EhQ.jpg') return;
+
+          const fullPath = path.join(dir, filename);
+          if (!watchedFiles.has(fullPath)) {
+            watchedFiles.add(fullPath);
+            setTimeout(() => {
+              notifyFrontendOfNewPhoto(fullPath, filename);
+              uploadPhotoToCloud(fullPath, filename);
+            }, 100);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[WATCHER] fs.watch warning:', e.message);
+    }
+  });
+
+  // 2. HIGH-SPEED POLLING BACKUP (100ms)
   setInterval(() => {
     paths.forEach(dir => {
       try {
@@ -184,10 +226,7 @@ function startFolderWatcher() {
 
         const files = fs.readdirSync(dir);
         files.forEach(file => {
-          // Hanya proses file gambar JPG/JPEG
           if (!file.toLowerCase().endsWith('.jpg') && !file.toLowerCase().endsWith('.jpeg')) return;
-          
-          // Abaikan berkas master bawaan seeder
           if (file === 'photo_1784298780_XFWUa.jpg' || file === 'photo_1784298962_T7EhQ.jpg') return;
 
           const fullPath = path.join(dir, file);
@@ -195,17 +234,15 @@ function startFolderWatcher() {
             watchedFiles.add(fullPath);
             console.log('[WATCHER] Mendeteksi foto DSLR baru:', file);
             
-            // Tunggu 500ms agar digiCamControl selesai menulis file secara utuh sebelum dibaca
             setTimeout(() => {
+              notifyFrontendOfNewPhoto(fullPath, file);
               uploadPhotoToCloud(fullPath, file);
-            }, 500);
+            }, 100);
           }
         });
-      } catch (err) {
-        // Abaikan error pembacaan sementara
-      }
+      } catch (err) {}
     });
-  }, 1000); // Polling setiap 1 detik
+  }, 100); // High-speed 100ms polling
 }
 
 async function uploadPhotoToCloud(filePath, filename) {

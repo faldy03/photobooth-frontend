@@ -239,39 +239,61 @@ export default function SessionStartedPage() {
       await sleep(1000);
     }
 
-    // D. CARI FILE BARU YANG MASUK (HIGH-SPEED LOCAL-FIRST POLLING)
-    let newPhotoUrl = null;
+    // D. CARI FILE BARU YANG MASUK (NATIVE ELECTRON OS EVENT + HIGH-SPEED FALLBACK)
+    let newPhotoUrl: string | null = null;
     let attempts = 0;
-    const maxAttempts = 35; // Checking every 150ms = 5 seconds max patience
+    const maxAttempts = 35; // Polling 100ms = 3.5 detik
 
-    try {
+    let cleanupListener: (() => void) | null = null;
+
+    // 1. Pemicu Utama: Native Electron OS File Event (0ms Delay!)
+    const electronPromise = new Promise<string>((resolve) => {
+      if (typeof window !== 'undefined' && (window as any).electron?.onPhotoReceived) {
+        const unsub = (window as any).electron.onPhotoReceived((photoData: { filename: string; url: string }) => {
+          if (photoData && photoData.url && photoData.filename !== lastFileName) {
+            console.log('[FRONTEND INSTANT] Foto diterima via Native IPC Event:', photoData.filename);
+            resolve(photoData.url);
+          }
+        });
+        if (typeof unsub === 'function') {
+          cleanupListener = unsub;
+        }
+      }
+    });
+
+    // 2. Backup Polling (100ms) untuk Laragon Lokal & Cloud
+    const pollingPromise = (async () => {
       while (attempts < maxAttempts) {
-        await sleep(150); // Polling super cepat (150ms) untuk hasil instan
+        await sleep(100);
         
-        // 1. DAHULUKAN CEK LARAGON LOKAL (http://localhost:8000) - Respon 1ms!
+        // Cek Laragon Lokal (http://localhost:8000)
         try {
           const resLocal = await fetch(`http://localhost:8000/api/kiosk/latest-photo?t=${Date.now()}`);
           const dataLocal = await resLocal.json();
           if (dataLocal.success && dataLocal.filename !== lastFileName) {
-            newPhotoUrl = dataLocal.url + "?cb=" + Date.now();
-            break;
+            return dataLocal.url + "?cb=" + Date.now();
           }
         } catch (e) {}
 
-        // 2. Cek Cloud API sebagai Backup
+        // Cek Cloud API Backup
         try {
           const res = await fetch(getApiUrl(`/api/kiosk/latest-photo?t=${Date.now()}`));
           const data = await res.json();
           if (data.success && data.filename !== lastFileName) {
-            newPhotoUrl = data.url + "?cb=" + Date.now();
-            break;
+            return data.url + "?cb=" + Date.now();
           }
         } catch (e) {}
 
         attempts++;
       }
-    } catch (error) {
-      console.error("Gagal mengecek folder foto:", error);
+      return null;
+    })();
+
+    // Ambil respon tercepat yang mendarat duluan!
+    newPhotoUrl = await Promise.race([electronPromise, pollingPromise]);
+
+    if (typeof cleanupListener === 'function') {
+      (cleanupListener as () => void)();
     }
 
     setIsFlashing(false);
