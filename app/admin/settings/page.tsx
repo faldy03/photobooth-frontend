@@ -85,7 +85,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto font-sans pb-10">
+    <div className="space-y-6 max-w-6xl mx-auto font-sans pb-10">
       
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
@@ -120,111 +120,123 @@ export default function SettingsPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white border border-gray-100/50 rounded-2xl shadow-sm p-6 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            {/* CONFIG 1: HARGA SESI */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <DollarSign size={16} className="text-[#FF0000]" /> Tarif Per Sesi Foto
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Nominal tarif dasar paket yang akan di-generate menjadi kode QRIS DOKU pada layar mesin kios.
+            {/* KARTU 1: TARIF & EVENT */}
+            <div className="bg-white border border-gray-100/50 rounded-2xl shadow-sm p-6 space-y-6 flex flex-col justify-between">
+              <div className="border-b border-gray-100 pb-3 mb-2">
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                  <DollarSign size={18} className="text-[#FF0000]" />
+                  Tarif Pembayaran & Event
+                </h2>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-0.5">
+                  Pengaturan biaya transaksi dan kategori event aktif
                 </p>
               </div>
-              <div className="w-full md:w-56 relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
-                <Input required type="number" min="0" name="price_per_session" value={formData.price_per_session} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
-              </div>
-            </div>
 
-            {/* CONFIG 1B: HARGA REPRINT */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <DollarSign size={16} className="text-[#FF0000]" /> Tarif Cetak Ulang (Reprint)
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Nominal tarif cetak tambahan per lembar bagi pelanggan yang ingin melakukan reprint dari halaman hasil cetak.
+              {/* ITEM 1: HARGA SESI */}
+              <div className="space-y-2">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <DollarSign size={14} className="text-[#FF0000]" /> Tarif Per Sesi Foto
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Nominal tarif dasar paket yang akan di-generate menjadi QRIS DOKU.
                 </p>
+                <div className="relative w-full">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
+                  <Input required type="number" min="0" name="price_per_session" value={formData.price_per_session} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
+                </div>
               </div>
-              <div className="w-full md:w-56 relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
-                <Input required type="number" min="0" name="price_per_reprint" value={formData.price_per_reprint} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
-              </div>
-            </div>
 
-            {/* CONFIG 2: NAMA EVENT AKTIF (NEW) */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <CalendarRange size={16} className="text-[#FF0000]" /> Folder / Event Aktif
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Nama event saat ini (contoh: LUSTRUM). Mesin kios akan otomatis menampilkan bingkai &apos;Global&apos; DAN bingkai khusus event tersebut.
+              {/* ITEM 2: HARGA REPRINT */}
+              <div className="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <DollarSign size={14} className="text-[#FF0000]" /> Tarif Cetak Ulang (Reprint)
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Nominal tarif cetak tambahan per lembar bagi pelanggan.
                 </p>
+                <div className="relative w-full">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-xs text-gray-400">Rp</span>
+                  <Input required type="number" min="0" name="price_per_reprint" value={formData.price_per_reprint} onChange={handleInputChange} className="pl-9 h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20" />
+                </div>
               </div>
-              <div className="w-full md:w-56 relative">
+
+              {/* ITEM 3: NAMA EVENT AKTIF */}
+              <div className="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <CalendarRange size={14} className="text-[#FF0000]" /> Folder / Event Aktif
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Nama event saat ini (contoh: LUSTRUM). Kios menampilkan bingkai &apos;Global&apos; DAN event ini.
+                </p>
                 <Input required type="text" name="active_event_name" value={formData.active_event_name} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 uppercase" placeholder="Global" />
               </div>
             </div>
 
-            {/* CONFIG 3: DURASI TOTAL SESI */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <Timer size={16} className="text-[#FF0000]" /> Batas Durasi Sesi Bilik
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Alokasi waktu maksimal dalam satuan menit bagi pengguna di dalam bilik sebelum sesi berakhir otomatis.
+            {/* KARTU 2: TIMER & KAMERA */}
+            <div className="bg-white border border-gray-100/50 rounded-2xl shadow-sm p-6 space-y-6 flex flex-col justify-between">
+              <div className="border-b border-gray-100 pb-3 mb-2">
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                  <Timer size={18} className="text-[#FF0000]" />
+                  Timer & Operasional Kamera
+                </h2>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-0.5">
+                  Pengaturan batas waktu sesi bilik dan hitung mundur DSLR
                 </p>
               </div>
-              <div className="w-full md:w-56 relative">
-                <Input required type="number" min="1" name="session_duration_minutes" value={formData.session_duration_minutes} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Menit</span>
-              </div>
-            </div>
 
-            {/* CONFIG 4: TIMER HITUNG MUNDUR KAMERA */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed border-gray-100 pb-6">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <Camera size={16} className="text-[#FF0000]" /> Waktu Hitung Mundur Potret
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Jeda waktu (detik) untuk hitung mundur otomatis di layar kios sebelum kamera melakukan pengambilan jepretan.
+              {/* ITEM 4: DURASI SESI BILIK */}
+              <div className="space-y-2">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <Timer size={14} className="text-[#FF0000]" /> Batas Durasi Sesi Bilik
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Waktu maksimal pengguna di dalam bilik sebelum sesi berakhir otomatis.
                 </p>
+                <div className="relative w-full">
+                  <Input required type="number" min="1" name="session_duration_minutes" value={formData.session_duration_minutes} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Menit</span>
+                </div>
               </div>
-              <div className="w-full md:w-56 relative">
-                <Input required type="number" min="1" name="countdown_duration_seconds" value={formData.countdown_duration_seconds} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Detik</span>
-              </div>
-            </div>
 
-            {/* CONFIG 5: JUMLAH MAKSIMAL JEPRETAN */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-              <div className="max-w-md">
-                <h3 className="font-bold text-sm uppercase tracking-wide flex items-center gap-2 text-gray-900">
-                  <Image size={16} className="text-[#FF0000]" /> Kuota Jepretan Per Sesi
-                </h3>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase mt-1">
-                  Jumlah batas pengambilan gambar yang diberikan kepada pelanggan untuk kemudian dipilih ke dalam layout bingkai.
+              {/* ITEM 5: TIMER HITUNG MUNDUR KAMERA */}
+              <div className="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <Camera size={14} className="text-[#FF0000]" /> Waktu Hitung Mundur Potret
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Jeda hitung mundur di layar sebelum kamera mengambil jepretan.
                 </p>
+                <div className="relative w-full">
+                  <Input required type="number" min="1" name="countdown_duration_seconds" value={formData.countdown_duration_seconds} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Detik</span>
+                </div>
               </div>
-              <div className="w-full md:w-56 relative">
-                <Input required type="number" min="1" name="max_photos_taken" value={formData.max_photos_taken} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
-                <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Foto</span>
+
+              {/* ITEM 6: JUMLAH JEPRETAN */}
+              <div className="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <Image size={14} className="text-[#FF0000]" /> Kuota Jepretan Per Sesi
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Jumlah jepretan gambar yang diberikan kepada pelanggan per sesi.
+                </p>
+                <div className="relative w-full">
+                  <Input required type="number" min="1" name="max_photos_taken" value={formData.max_photos_taken} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Foto</span>
+                </div>
               </div>
             </div>
 
           </div>
 
           {/* BUTTON SIMPAN */}
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full md:w-auto bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl h-12 px-6 font-bold uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none flex items-center gap-2"
+              className="w-full sm:w-auto bg-[#FF0000] hover:bg-[#d9383a] text-white rounded-xl h-12 px-8 font-bold uppercase tracking-wider shadow-md shadow-red-500/10 cursor-pointer border-none flex items-center justify-center gap-2 text-xs"
             >
               <Save size={18} />
               <span>{submitting ? "MENYIMPAN..." : "SIMPAN PARAMETER"}</span>
