@@ -75,6 +75,7 @@ export default function ResultPage() {
   const [reprintPriceText, setReprintPriceText] = useState("Rp 15.000");
   const [shouldAutoPrint, setShouldAutoPrint] = useState(false);
   const [dbFilters, setDbFilters] = useState<any[]>([]);
+  const [enableFilters, setEnableFilters] = useState<boolean>(true);
 
   // A. Timer Sesi Dinamis
   useEffect(() => {
@@ -90,6 +91,13 @@ export default function ResultPage() {
           if (json.data.price_per_reprint) {
             const price = Number(json.data.price_per_reprint);
             setReprintPriceText(`Rp ${price.toLocaleString("id-ID")}`);
+          }
+          if (json.data.enable_filters !== undefined) {
+            const isEnabled = String(json.data.enable_filters) !== "0" && String(json.data.enable_filters).toLowerCase() !== "false";
+            setEnableFilters(isEnabled);
+            if (!isEnabled) {
+              setCurrentStep("print");
+            }
           }
         }
       } catch (err) {
@@ -789,14 +797,16 @@ export default function ResultPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  onClick={() => setCurrentStep("filter")}
-                  disabled={isPrinting}
-                  variant="outline"
-                  className="h-12 flex-1 border border-[#4A4A4A]/20 bg-white text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <ArrowLeft size={16} /> Ganti Filter
-                </Button>
+                {enableFilters && (
+                  <Button
+                    onClick={() => setCurrentStep("filter")}
+                    disabled={isPrinting}
+                    variant="outline"
+                    className="h-12 flex-1 border border-[#4A4A4A]/20 bg-white text-[#4A4A4A] shadow-sm font-bold text-xs uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ArrowLeft size={16} /> Ganti Filter
+                  </Button>
+                )}
 
                 <Button
                   onClick={handleFinish}

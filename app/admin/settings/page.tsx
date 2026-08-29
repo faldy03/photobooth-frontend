@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Save, AlertCircle, RefreshCw, DollarSign, Timer, Camera, Image, CalendarRange } from "lucide-react";
+import { Settings, Save, AlertCircle, RefreshCw, DollarSign, Timer, Camera, Image, CalendarRange, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export default function SettingsPage() {
     countdown_duration_seconds: "",
     max_photos_taken: "",
     active_event_name: "",
+    enable_filters: "1",
   });
 
   // Fetch data setting dari server
@@ -41,6 +42,7 @@ export default function SettingsPage() {
           countdown_duration_seconds: json.data.countdown_duration_seconds || "5",
           max_photos_taken: json.data.max_photos_taken || "6",
           active_event_name: json.data.active_event_name || "Global",
+          enable_filters: json.data.enable_filters ?? "1",
         });
       }
     } catch (err: unknown) {
@@ -226,6 +228,25 @@ export default function SettingsPage() {
                   <Input required type="number" min="1" name="max_photos_taken" value={formData.max_photos_taken} onChange={handleInputChange} className="h-11 border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 pr-14" />
                   <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 font-bold text-[10px] uppercase text-gray-400">Foto</span>
                 </div>
+              </div>
+
+              {/* ITEM 7: FITUR FILTER FOTO */}
+              <div className="space-y-2 border-t border-dashed border-gray-100 pt-4">
+                <label className="font-bold text-xs uppercase tracking-wide flex items-center gap-1.5 text-gray-900">
+                  <Sparkles size={14} className="text-[#FF0000]" /> Fitur Filter Foto Kios
+                </label>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase">
+                  Status ketersediaan menu pemilihan filter efek foto pada layar pelanggan.
+                </p>
+                <select
+                  name="enable_filters"
+                  value={formData.enable_filters}
+                  onChange={(e) => setFormData({ ...formData, enable_filters: e.target.value })}
+                  className="h-11 w-full border border-gray-200 rounded-xl font-bold text-sm bg-gray-50/20 px-3 text-gray-900 cursor-pointer"
+                >
+                  <option value="1">AKTIF (Pelanggan Dapat Memilih Filter Foto)</option>
+                  <option value="0">NONAKTIFKAN SEMENTARA (Langsung Ke Cetak Foto / Event Wedding)</option>
+                </select>
               </div>
             </div>
 
