@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
 import { createAnimatedGifFromPhotos } from "@/lib/gif";
+import { compressBase64Image } from "@/lib/image";
 import AnimatedGifPlayer from "@/components/AnimatedGifPlayer";
 
 const FILTERS = [
@@ -446,7 +447,12 @@ export default function ResultPage() {
     setIsPrinting(true);
     setErrorMsg(null);
 
-    // 1. MEMICU PENCETAKAN & PENYIMPANAN FOTO LOKAL SEGERA (0 ms - BEBAS HAMBATAN JARINGAN)
+    // 1. TAMPILKAN BARCODE / QR CODE SOFTFILE SEKETIKA (< 0.5 DETIK)
+    if (!isNaN(transactionIdNum)) {
+      setQrUrl(getApiUrl(`/download/${transactionIdNum}`));
+    }
+
+    // 2. MEMICU PENCETAKAN & PENYIMPANAN FOTO LOKAL SEGERA (0 ms - BEBAS HAMBATAN JARINGAN)
     const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
 
     if (typeof window !== 'undefined' && (window as any).electron) {
@@ -475,19 +481,30 @@ export default function ResultPage() {
       }
     }
 
-    // 2. PROSES UPLOAD CLOUD SECARA BACKGROUND (UNTUK GENERATE QR CODE SOFTFILE)
+    // 3. PROSES KOMPRESI UPLOAD SUPER CEPAT DI BACKGROUND (40MB -> 1.8MB)
     try {
+      // Kompresi foto mentah secara paralel agar payload upload sangat kecil (~180KB per foto)
+      const compressedRawPhotosPromises = rawPhotos.map((photo) =>
+        compressBase64Image(photo, 1200, 1200, 0.78)
+      );
+      const compressedMergedPromise = compressBase64Image(mergedImage, 1500, 1500, 0.82);
+
+      const [compressedRawPhotos, compressedMerged] = await Promise.all([
+        Promise.all(compressedRawPhotosPromises),
+        compressedMergedPromise,
+      ]);
+
       let gifImage = null;
       try {
-        gifImage = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 0.35);
+        gifImage = await createAnimatedGifFromPhotos(compressedRawPhotos, 360, 270, 0.35);
       } catch (gifErr) {
         console.warn("Gagal meng-encode GIF animasi:", gifErr);
       }
 
       const payload = {
-        final_photo: mergedImage,
+        final_photo: compressedMerged,
         gif_photo: gifImage,
-        raw_photos: rawPhotos,
+        raw_photos: compressedRawPhotos,
         transaction_id: transactionIdNum,
         kiosk_device_id: 1,
       };
