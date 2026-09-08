@@ -30,7 +30,7 @@ function createWindow() {
 }
 
 // =========================================================================
-// HANDLER PENCETAKAN DIRECT KE HOT FOLDER PRINTER DNP
+// HANDLER PENCETAKAN DIRECT KE HOT FOLDER PRINTER DNP & FOLDER LOKAL LAPTOP
 // =========================================================================
 ipcMain.on('print-photo', (event, base64Data) => {
   try {
@@ -47,21 +47,27 @@ ipcMain.on('print-photo', (event, base64Data) => {
     // 2. Ubah base64 string menjadi buffer biner
     const buffer = Buffer.from(cleanBase64, 'base64');
     
-    // 3. Folder target Hot Folder DNP
-    const DNP_FOLDER = 'C:\\DNP\\HotFolderPrint\\Prints\\s6x2_2';
+    const fileName = `print_${Date.now()}.jpg`;
 
-    // Buat folder jika belum ada
+    // 3. Folder Utama Penyimpanan Hasil Cetak Lokal Laptop (C:\PhotoboothPrints)
+    const LOCAL_PRINTS_FOLDER = 'C:\\PhotoboothPrints';
+    if (!fs.existsSync(LOCAL_PRINTS_FOLDER)) {
+      fs.mkdirSync(LOCAL_PRINTS_FOLDER, { recursive: true });
+      console.log(`[ELECTRON] Folder penyimpanan lokal berhasil dibuat: ${LOCAL_PRINTS_FOLDER}`);
+    }
+    const localFilePath = path.join(LOCAL_PRINTS_FOLDER, fileName);
+    fs.writeFileSync(localFilePath, buffer);
+    console.log(`[ELECTRON SUCCESS] Foto hasil cetak tersimpan di folder lokal laptop: ${localFilePath}`);
+
+    // 4. Folder Target Hot Folder Printer DNP
+    const DNP_FOLDER = 'C:\\DNP\\HotFolderPrint\\Prints\\s6x2_2';
     if (!fs.existsSync(DNP_FOLDER)) {
       fs.mkdirSync(DNP_FOLDER, { recursive: true });
-      console.log(`[ELECTRON] Folder DNP berhasil dibuat: ${DNP_FOLDER}`);
+      console.log(`[ELECTRON] Folder HotFolder DNP berhasil dibuat: ${DNP_FOLDER}`);
     }
-
-    // 4. Buat nama file unik dan simpan
-    const fileName = `print_${Date.now()}.jpg`;
-    const filePath = path.join(DNP_FOLDER, fileName);
-
-    fs.writeFileSync(filePath, buffer);
-    console.log(`[ELECTRON SUCCESS] Foto berhasil dikirim ke printer: ${filePath}`);
+    const dnpFilePath = path.join(DNP_FOLDER, fileName);
+    fs.writeFileSync(dnpFilePath, buffer);
+    console.log(`[ELECTRON SUCCESS] Foto berhasil dikirim ke HotFolder Printer DNP: ${dnpFilePath}`);
 
   } catch (error) {
     console.error('[ELECTRON ERROR] Gagal mencetak foto:', error);

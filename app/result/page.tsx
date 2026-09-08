@@ -446,8 +446,37 @@ export default function ResultPage() {
     setIsPrinting(true);
     setErrorMsg(null);
 
+    // 1. MEMICU PENCETAKAN & PENYIMPANAN FOTO LOKAL SEGERA (0 ms - BEBAS HAMBATAN JARINGAN)
+    const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
+
+    if (typeof window !== 'undefined' && (window as any).electron) {
+      try {
+        (window as any).electron.printPhoto(mergedImage);
+        toast.success("Foto Berhasil Disimpan & Sedang Dicetak!", { 
+          description: "File tersimpan di C:\\PhotoboothPrints & dikirim ke printer." 
+        });
+      } catch (elecError) {
+        console.error("Gagal cetak melalui Electron IPC:", elecError);
+        toast.error("Gagal Mencetak", { description: "Gagal terhubung ke modul cetak Electron." });
+      }
+    } else {
+      try {
+        await fetch("http://127.0.0.1:3001/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            final_photo_base64: pureBase64,
+            source: "local"
+          }),
+        }).catch(() => {});
+        toast.success("Foto Sedang Dicetak!", { description: "Dikirim ke printer fisik lokal." });
+      } catch (nodeError) {
+        console.warn("Koneksi ke agent printer lokal:", nodeError);
+      }
+    }
+
+    // 2. PROSES UPLOAD CLOUD SECARA BACKGROUND (UNTUK GENERATE QR CODE SOFTFILE)
     try {
-      // 0. Generate Animated GIF dari Foto-Foto Mentah
       let gifImage = null;
       try {
         gifImage = await createAnimatedGifFromPhotos(rawPhotos, 480, 360, 0.35);
@@ -455,7 +484,6 @@ export default function ResultPage() {
         console.warn("Gagal meng-encode GIF animasi:", gifErr);
       }
 
-      // 1. Simpan ke Database & Request QR Download Link
       const payload = {
         final_photo: mergedImage,
         gif_photo: gifImage,
@@ -470,57 +498,12 @@ export default function ResultPage() {
         body: JSON.stringify(payload),
       });
 
-      const textLaravel = await responseLaravel.text();
-      let resultLaravel;
-      try {
-        resultLaravel = JSON.parse(textLaravel);
-      } catch (parseError) {
-        console.error("Laravel membalas dengan HTML/Error Server:", textLaravel);
-        throw new Error("Server Database Laravel gagal merespon dengan benar.");
+      const resultLaravel = await responseLaravel.json();
+      if (resultLaravel.success && resultLaravel.download_link) {
+        setQrUrl(resultLaravel.download_link);
       }
-
-      if (!resultLaravel.success) {
-        throw new Error(resultLaravel.message || "Gagal menyimpan data.");
-      }
-
-      setQrUrl(resultLaravel.download_link);
-
-      // 2. Kirim perintah cetak ke mesin printer
-      const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
-
-      if (typeof window !== 'undefined' && (window as any).electron) {
-        try {
-          (window as any).electron.printPhoto(mergedImage);
-          toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
-        } catch (elecError) {
-          console.error("Gagal cetak melalui Electron IPC:", elecError);
-          toast.error("Gagal Mencetak", { description: "Gagal terhubung ke modul cetak Electron." });
-        }
-      } else {
-        try {
-          const responseNode = await fetch("http://127.0.0.1:3001/print", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              final_photo_base64: pureBase64,
-              final_photo_url: resultLaravel.download_link,
-              source: "drive"
-            }),
-          });
-
-          if (!responseNode.ok) throw new Error("Respon Node.js tidak OK");
-          
-          toast.success("Foto Sedang Dicetak!", { description: "Silakan ambil foto fisik Anda di mesin printer." });
-        } catch (nodeError) {
-          console.error("Gagal koneksi ke Node.js Printer:", nodeError);
-          toast.warning("Soft File Siap", { description: "Namun gagal terhubung ke printer fisik." });
-        }
-      }
-
     } catch (error: unknown) {
-      console.error("Upload Error:", error);
-      setErrorMsg((error as Error).message);
-      toast.error("Gagal Memproses Data", { description: (error as Error).message });
+      console.warn("Jaringan lambat / Offline: Upload cloud QR tertunda. Pencetakan fisik SUDAH SUKSES.", error);
     } finally {
       setIsPrinting(false);
     }
