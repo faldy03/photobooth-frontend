@@ -447,12 +447,7 @@ export default function ResultPage() {
     setIsPrinting(true);
     setErrorMsg(null);
 
-    // 1. TAMPILKAN BARCODE / QR CODE SOFTFILE SEKETIKA (< 0.5 DETIK)
-    if (!isNaN(transactionIdNum)) {
-      setQrUrl(getApiUrl(`/download/${transactionIdNum}`));
-    }
-
-    // 2. MEMICU PENCETAKAN & PENYIMPANAN FOTO LOKAL SEGERA (0 ms - BEBAS HAMBATAN JARINGAN)
+    // 1. MEMICU PENCETAKAN & PENYIMPANAN FOTO LOKAL SEGERA (0 ms - BEBAS HAMBATAN JARINGAN)
     const pureBase64 = mergedImage.replace(/^data:image\/\w+;base64,/, "");
 
     if (typeof window !== 'undefined' && (window as any).electron) {
@@ -481,18 +476,19 @@ export default function ResultPage() {
       }
     }
 
-    // 3. PROSES KOMPRESI UPLOAD SUPER CEPAT DI BACKGROUND (40MB -> 1.8MB)
+    // 2. PROSES UPLOAD FOTO & GENERATE QR CODE DOWNLOAD LINK DARI BACKEND
     try {
-      // Kompresi foto mentah secara paralel agar payload upload sangat kecil (~180KB per foto)
-      const compressedRawPhotosPromises = rawPhotos.map((photo) =>
-        compressBase64Image(photo, 1200, 1200, 0.78)
-      );
-      const compressedMergedPromise = compressBase64Image(mergedImage, 1500, 1500, 0.82);
-
-      const [compressedRawPhotos, compressedMerged] = await Promise.all([
-        Promise.all(compressedRawPhotosPromises),
-        compressedMergedPromise,
-      ]);
+      // Kompresi foto mentah jika ada agar upload super cepat (~150KB per foto)
+      let compressedRawPhotos = rawPhotos;
+      if (rawPhotos && rawPhotos.length > 0) {
+        try {
+          compressedRawPhotos = await Promise.all(
+            rawPhotos.map((p) => compressBase64Image(p, 1000, 1000, 0.75))
+          );
+        } catch (cErr) {
+          console.warn("Gagal mengompres rawPhotos:", cErr);
+        }
+      }
 
       let gifImage = null;
       try {
@@ -502,7 +498,7 @@ export default function ResultPage() {
       }
 
       const payload = {
-        final_photo: compressedMerged,
+        final_photo: mergedImage,
         gif_photo: gifImage,
         raw_photos: compressedRawPhotos,
         transaction_id: transactionIdNum,
@@ -516,11 +512,17 @@ export default function ResultPage() {
       });
 
       const resultLaravel = await responseLaravel.json();
+      console.log("[SAVE PHOTOS RESPONSE]", resultLaravel);
+
       if (resultLaravel.success && resultLaravel.download_link) {
         setQrUrl(resultLaravel.download_link);
+        toast.success("Soft File Siap!", { description: "QR Code download softfile sudah aktif." });
+      } else {
+        throw new Error(resultLaravel.message || "Gagal menyimpan foto ke server.");
       }
     } catch (error: unknown) {
-      console.warn("Jaringan lambat / Offline: Upload cloud QR tertunda. Pencetakan fisik SUDAH SUKSES.", error);
+      console.error("Gagal mengunggah foto softfile:", error);
+      toast.warning("Foto Fisik Dicetak!", { description: "Namun softfile gagal diunggah ke server cloud." });
     } finally {
       setIsPrinting(false);
     }
