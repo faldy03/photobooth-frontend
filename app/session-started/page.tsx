@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles, Clock } from "lucide-react";
+import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles, Clock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
@@ -25,6 +25,7 @@ export default function SessionStartedPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [sessionState, setSessionState] = useState<'initializing' | 'ready' | 'capturing' | 'review' | 'done'>('initializing');
+  const [showFramePreviewModal, setShowFramePreviewModal] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
@@ -505,8 +506,8 @@ export default function SessionStartedPage() {
         </div>
       )}
 
-      {/* KANAN: GRID FOTO HASIL DSLR */}
-      <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col rounded-xl overflow-hidden">
+      {/* KANAN: GRID FOTO HASIL DSLR (DIPERBESAR) */}
+      <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col rounded-xl overflow-hidden">
         <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
           <h3 
             className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
@@ -516,9 +517,9 @@ export default function SessionStartedPage() {
           </h3>
         </div>
         <div className="flex-1 bg-[#FAF9F6] p-4 flex flex-col min-h-0 overflow-hidden">
-          <div className="text-[10px] font-bold uppercase text-[#7A7A7A] mb-4 text-center bg-white border border-[#4A4A4A]/10 p-2 rounded-lg shrink-0">
+          <div className="text-[11px] font-bold uppercase text-[#7A7A7A] mb-3 text-center bg-white border border-[#4A4A4A]/10 p-2.5 rounded-xl shrink-0 shadow-sm">
             {sessionState === "review" ? (
-              <span className="flex items-center justify-center gap-1">
+              <span className="flex items-center justify-center gap-1 text-[#4A4A4A]">
                 Pilih {requiredSelections} Foto Terbaik Anda
               </span>
             ) : (
@@ -526,38 +527,74 @@ export default function SessionStartedPage() {
             )}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full flex-1 overflow-y-auto pr-2 pb-4 content-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 w-full flex-1 overflow-y-auto pr-1 pb-4 content-start">
             {Array.from({ length: settings.max_photos_taken }).map((_, i) => {
               const photo = photos[i];
               const selectionOrder = selectedIndices.indexOf(i) + 1;
               const isSelected = selectionOrder > 0;
 
               return (
-                <div key={i} className={`flex flex-col border border-[#4A4A4A]/10 bg-white p-2.5 relative h-max transition-all rounded-lg shadow-sm ${isSelected ? "border-[#4A4A4A] shadow-md -translate-y-1" : ""}`}>
-                  <div onClick={() => toggleSelection(i)} className={`w-full overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/15" : "border-[#4A4A4A]/10 bg-gray-50 hover:opacity-90"}`}>
+                <div key={i} className={`flex flex-col border bg-white p-3 relative h-max transition-all rounded-2xl shadow-sm ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/20 shadow-md" : "border-gray-200/80"}`}>
+                  
+                  {/* WADAH GAMBAR JEPRETAN DIPERBESAR */}
+                  <div 
+                    onClick={() => photo && toggleSelection(i)} 
+                    className={`w-full aspect-[4/3] overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded-xl ${
+                      isSelected ? "border-[#4A4A4A]" : "border-gray-200 bg-gray-50 hover:opacity-95"
+                    }`}
+                  >
                     {photo ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photo} className="w-full h-auto object-contain scale-x-[-1]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
+                        <img src={photo} className="w-full h-full object-cover scale-x-[-1]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
                         {isSelected && (
-                          <div className="absolute inset-0 bg-black/10 flex items-center justify-center animate-in fade-in duration-200">
-                            <div className="bg-[#4A4A4A] text-white w-10 h-10 flex items-center justify-center rounded-full border border-white shadow animate-in zoom-in-50 duration-300">
-                              <Check size={20} strokeWidth={4} />
+                          <div className="absolute inset-0 bg-black/15 flex items-center justify-center animate-in fade-in duration-200">
+                            <div className="bg-[#4A4A4A] text-white w-12 h-12 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-in zoom-in-50 duration-300">
+                              <Check size={26} strokeWidth={4} />
                             </div>
-                            <div className="absolute top-2 right-2 bg-[#4A4A4A] text-white font-bold px-2 py-0.5 rounded text-[8px]">URUTAN #{selectionOrder}</div>
+                            <div className="absolute top-2.5 right-2.5 bg-[#4A4A4A] text-white font-bold px-2.5 py-1 rounded-md text-[9px] tracking-wider shadow">
+                              URUTAN #{selectionOrder}
+                            </div>
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="aspect-[4/3] w-full flex items-center justify-center bg-gray-150 rounded">
-                        <ImageIcon className="text-[#4A4A4A]/10" size={24} />
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100/70 rounded-xl text-gray-400 gap-1">
+                        <ImageIcon className="opacity-40" size={32} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Menunggu Jepretan</span>
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 bg-[#4A4A4A]/90 text-white font-bold px-2 py-0.5 text-[8px] rounded z-10 shadow-sm">#{i + 1}</div>
+                    <div className="absolute top-2.5 left-2.5 bg-[#4A4A4A]/90 text-white font-bold px-2.5 py-0.5 text-[9px] rounded-md z-10 shadow-sm">
+                      FOTO #{i + 1}
+                    </div>
                   </div>
-                  <Button onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }} disabled={sessionState !== "review"} variant="outline" className="mt-2 h-9 w-full border border-[#4A4A4A]/10 bg-white font-bold uppercase text-[10px] hover:bg-[#FAF9F6] text-[#4A4A4A] transition-all rounded-lg disabled:opacity-40">
-                    <RefreshCw size={10} className="mr-1.5" /> Retake
-                  </Button>
+
+                  {/* DUA TOMBOL AKSI: CEKLIS (PILIH) & RETAKE */}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      onClick={() => toggleSelection(i)}
+                      disabled={sessionState !== "review" || !photo}
+                      className={`flex-1 h-11 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                          : "bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <CheckCircle2 size={16} className={isSelected ? "text-white" : "text-gray-400"} />
+                      <span>{isSelected ? `TERPILIH (#${selectionOrder})` : "PILIH FOTO"}</span>
+                    </Button>
+
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }}
+                      disabled={sessionState !== "review"}
+                      variant="outline"
+                      className="h-11 px-4 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                    >
+                      <RefreshCw size={14} />
+                      <span>RETAKE</span>
+                    </Button>
+                  </div>
+
                 </div>
               );
             })}
@@ -566,16 +603,93 @@ export default function SessionStartedPage() {
           {sessionState === "review" && (
             <div className="mt-2 shrink-0 space-y-3 pt-3 border-t border-[#4A4A4A]/10">
               <div className="flex justify-between items-center px-1 font-bold uppercase text-xs text-[#7A7A7A]">
-                <span>Total Pilihan:</span>
-                <span className="text-[#4A4A4A] font-bold bg-[#FAF9F6] px-2.5 py-1 border border-[#4A4A4A]/10 rounded-lg">{selectedIndices.length} / {requiredSelections}</span>
+                <span>Total Foto Terpilih:</span>
+                <span className="text-[#4A4A4A] font-bold bg-[#FAF9F6] px-3 py-1 border border-[#4A4A4A]/10 rounded-lg text-xs">
+                  {selectedIndices.length} / {requiredSelections}
+                </span>
               </div>
-              <Button onClick={finishSession} className="w-full h-14 bg-[#4A4A4A] hover:bg-[#333] text-white font-bold text-sm tracking-widest uppercase rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
-                CETAK FOTO <CheckCircle2 size={18} />
+              
+              <Button 
+                onClick={() => setShowFramePreviewModal(true)} 
+                disabled={selectedIndices.length < requiredSelections}
+                className="w-full h-14 bg-[#FF0000] hover:bg-[#D90000] text-white font-extrabold text-xs tracking-widest uppercase rounded-xl shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span>SUDAH FIX / LIHAT BINGKAI</span>
+                <Sparkles size={18} />
               </Button>
             </div>
           )}
         </div>
       </div>
+
+      {/* MODAL TRANSISI PRATINJAU BINGKAI FOTO (MUNCUL SAAT USER KLIK SUDAH FIX) */}
+      {showFramePreviewModal && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl border border-white/20 p-6 max-w-xl w-full flex flex-col items-center gap-5 max-h-[92vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-gray-900 flex items-center justify-center gap-2" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                <Sparkles className="text-amber-500" size={24} /> Pratinjau Bingkai Foto
+              </h2>
+              <p className="text-[11px] text-gray-500 uppercase tracking-widest mt-1 font-semibold">
+                Foto-foto terpilih Anda telah dipasang ke dalam slot bingkai.
+              </p>
+            </div>
+
+            {/* Frame Preview Display (Tampil Besar & Jelas) */}
+            <div className="relative w-full max-w-[300px] md:max-w-[340px] aspect-[2/3] border border-gray-200 shadow-xl bg-gray-50 overflow-hidden rounded-2xl">
+              {frameSlots.length > 0
+                ? frameSlots.map((slot, i) => {
+                  const photoIndexToUse = i % requiredSelections;
+                  const selectedPhotoIndex = selectedIndices[photoIndexToUse];
+                  const photoData = selectedPhotoIndex !== undefined ? photos[selectedPhotoIndex] : null;
+
+                  const dynamicStyle = {
+                    left: `${(slot.x / 1200) * 100}%`,
+                    top: `${(slot.y / 1800) * 100}%`,
+                    width: `${(slot.width / 1200) * 100}%`,
+                    height: `${(slot.height / 1800) * 100}%`,
+                  };
+
+                  return (
+                    <div key={`modal-slot-${i}`} className="absolute bg-gray-200 overflow-hidden" style={dynamicStyle}>
+                      {photoData ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photoData} className="w-full h-full object-cover scale-x-[-1] animate-in zoom-in-95 duration-300" alt={`Slot-${i}`} />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-gray-400 font-bold text-[10px] uppercase">SLOT {i + 1}</span>
+                      )}
+                    </div>
+                  );
+                })
+                : null}
+              {frameUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={frameUrl} alt="Frame Overlay" className="absolute inset-0 w-full h-full object-fill pointer-events-none z-10 drop-shadow" />
+              )}
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2 border-t border-gray-100">
+              <Button
+                onClick={() => setShowFramePreviewModal(false)}
+                variant="outline"
+                className="flex-1 h-13 border border-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer hover:bg-gray-50"
+              >
+                <RotateCcw size={16} className="mr-1.5" /> Ganti / Ubah Pilihan
+              </Button>
+              <Button
+                onClick={finishSession}
+                className="flex-1 h-13 bg-[#FF0000] hover:bg-[#D90000] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer border-none"
+              >
+                CETAK FOTO SEKARANG <CheckCircle2 size={18} className="ml-1.5" />
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
