@@ -769,7 +769,7 @@ export default function SessionStartedPage() {
                 onClick={finishSession}
                 className="flex-1 h-13 bg-[#FF0000] hover:bg-[#D90000] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer border-none"
               >
-                CETAK FOTO SEKARANG <CheckCircle2 size={18} className="ml-1.5" />
+                PILIH FILTER <CheckCircle2 size={18} className="ml-1.5" />
               </Button>
             </div>
 
