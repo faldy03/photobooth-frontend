@@ -24,17 +24,17 @@ import AnimatedGifPlayer from "@/components/AnimatedGifPlayer";
 
 const FILTERS = [
   { id: "original", name: "Original", value: "none", image_url: undefined, gradient: "bg-gradient-to-tr from-[#EFE9DB] via-amber-50 to-white" },
-  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.1)", image_url: undefined, gradient: "bg-gradient-to-tr from-gray-950 via-gray-700 to-gray-400" },
-  { id: "vintage", name: "Vintage Retro", value: "sepia(50%) contrast(0.95) brightness(1.05)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-900 via-amber-700 to-yellow-200" },
-  { id: "warm", name: "Warm / Hangat", value: "sepia(20%) saturate(1.15) contrast(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-orange-600 via-amber-500 to-yellow-300" },
-  { id: "cool", name: "Cool / Nordik", value: "saturate(0.8) hue-rotate(-10deg) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-slate-800 via-sky-700 to-cyan-300" },
-  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.15) saturate(1.2) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-300" },
-  { id: "noir", name: "Dramatic Noir", value: "grayscale(100%) contrast(1.4) brightness(0.95)", image_url: undefined, gradient: "bg-gradient-to-tr from-black via-zinc-800 to-zinc-500" },
-  { id: "teal", name: "Cinematic Teal", value: "contrast(1.1) saturate(1.1) hue-rotate(-15deg) brightness(0.98)", image_url: undefined, gradient: "bg-gradient-to-tr from-cyan-900 via-teal-600 to-amber-400" },
-  { id: "gold", name: "Summer Gold", value: "sepia(25%) saturate(1.3) contrast(1.05) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-700 via-yellow-500 to-amber-200" },
-  { id: "lomo", name: "Lomo Retro", value: "saturate(1.4) contrast(1.25) brightness(0.98)", image_url: undefined, gradient: "bg-gradient-to-tr from-red-700 via-amber-500 to-emerald-600" },
-  { id: "fade", name: "Soft Fade", value: "contrast(0.85) saturate(0.9) brightness(1.08) sepia(10%)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-300 via-amber-200 to-stone-300" },
-  { id: "ice", name: "Cold Ice", value: "saturate(0.7) hue-rotate(15deg) brightness(1.04) contrast(0.95)", image_url: undefined, gradient: "bg-gradient-to-tr from-blue-900 via-sky-500 to-cyan-100" }
+  { id: "bw", name: "B&W Klasik", value: "grayscale(100%) contrast(1.35) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-gray-950 via-gray-700 to-gray-400" },
+  { id: "vintage", name: "Vintage Retro", value: "sepia(70%) contrast(1.2) saturate(1.25) brightness(0.95)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-900 via-amber-700 to-yellow-200" },
+  { id: "warm", name: "Warm Golden", value: "sepia(40%) saturate(1.55) contrast(1.15) brightness(1.02)", image_url: undefined, gradient: "bg-gradient-to-tr from-orange-600 via-amber-500 to-yellow-300" },
+  { id: "cool", name: "Cool Nordik", value: "saturate(0.9) hue-rotate(170deg) contrast(1.15) brightness(1.05)", image_url: undefined, gradient: "bg-gradient-to-tr from-slate-800 via-sky-700 to-cyan-300" },
+  { id: "vivid", name: "Vivid Cerah", value: "contrast(1.3) saturate(1.7) brightness(1.05)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-300" },
+  { id: "noir", name: "Dramatic Noir", value: "grayscale(100%) contrast(1.7) brightness(0.85)", image_url: undefined, gradient: "bg-gradient-to-tr from-black via-zinc-800 to-zinc-500" },
+  { id: "teal", name: "Cinematic Teal", value: "contrast(1.25) saturate(1.5) hue-rotate(-20deg) sepia(25%)", image_url: undefined, gradient: "bg-gradient-to-tr from-cyan-900 via-teal-600 to-amber-400" },
+  { id: "gold", name: "Summer Gold", value: "sepia(50%) saturate(1.65) contrast(1.2) brightness(1.04)", image_url: undefined, gradient: "bg-gradient-to-tr from-amber-700 via-yellow-500 to-amber-200" },
+  { id: "lomo", name: "Lomo Analog", value: "saturate(1.8) contrast(1.35) brightness(0.92)", image_url: undefined, gradient: "bg-gradient-to-tr from-red-700 via-amber-500 to-emerald-600" },
+  { id: "pink", name: "Soft Pink", value: "saturate(1.3) hue-rotate(-30deg) brightness(1.08) contrast(1.1)", image_url: undefined, gradient: "bg-gradient-to-tr from-rose-400 via-pink-300 to-stone-200" },
+  { id: "ice", name: "Cold Ice", value: "saturate(1.3) hue-rotate(185deg) brightness(1.08) contrast(1.15)", image_url: undefined, gradient: "bg-gradient-to-tr from-blue-900 via-sky-500 to-cyan-100" }
 ];
 
 export default function ResultPage() {
@@ -655,30 +655,47 @@ export default function ResultPage() {
                 <p className="text-[10px] text-[#7A7A7A] uppercase tracking-wider font-semibold">Terapkan filter visual favorit Anda ke foto</p>
               </div>
 
-              {/* GRID KARTU FILTER DENGAN GRADASI WARNA & TEKS DI BAWAH */}
+              {/* GRID KARTU FILTER DENGAN PREVIEW MINI FOTO ASLI (LIVE FILTER PREVIEW) */}
               <div className="grid grid-cols-3 gap-3 mt-2 max-h-[42vh] overflow-y-auto pr-1">
                 {allFiltersList.map((f) => {
                   const isActive = selectedFilter === f.id;
+                  const previewPhotoSrc = rawPhotos.length > 0 ? rawPhotos[0] : null;
+
                   return (
                     <button
                       key={f.id}
                       onClick={() => handleSelectFilter(f.id)}
-                      className={`flex flex-col items-center gap-2 p-2.5 border rounded-2xl transition-all duration-200 cursor-pointer text-center group ${
+                      className={`flex flex-col items-center gap-2 p-2 border rounded-2xl transition-all duration-200 cursor-pointer text-center group ${
                         isActive
                           ? "border-[#4A4A4A] bg-[#FAF9F6] shadow-md ring-2 ring-[#4A4A4A]/20 scale-105"
                           : "border-gray-200/70 bg-white hover:bg-[#FAF9F6] hover:border-gray-300"
                       }`}
                     >
-                      {/* Swatch Box Gradasi Warna Visual Filter */}
-                      <div className={`w-full aspect-[4/3] rounded-xl ${f.gradient || "bg-gradient-to-tr from-gray-300 to-gray-100"} shadow-inner border border-white/40 flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform`}>
+                      {/* Swatch / Mini Live Photo Container */}
+                      <div className={`w-full aspect-[4/3] rounded-xl bg-gray-900 shadow-inner border border-white/40 flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform`}>
+                        {previewPhotoSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img 
+                            src={previewPhotoSrc} 
+                            alt={f.name} 
+                            className="w-full h-full object-cover scale-x-[-1]" 
+                            style={{ filter: f.value }}
+                            crossOrigin="anonymous" 
+                          />
+                        ) : (
+                          <div className={`w-full h-full ${f.gradient || "bg-gradient-to-tr from-gray-300 to-gray-100"}`} />
+                        )}
+
                         {isActive && (
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                            <CheckCircle2 size={18} className="text-white drop-shadow-md" />
+                          <div className="absolute inset-0 bg-black/25 backdrop-blur-[1px] flex items-center justify-center animate-in fade-in duration-200">
+                            <div className="bg-[#4A4A4A] text-white p-1 rounded-full border border-white shadow-md">
+                              <CheckCircle2 size={16} className="text-white" />
+                            </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Tulisan / Nama Filter Di Bawah Box Gradasi */}
+                      {/* Nama Filter Di Bawah Gambar Mini */}
                       <span className={`text-[10px] leading-tight font-bold uppercase tracking-wider transition-colors ${
                         isActive ? "text-[#4A4A4A] font-black" : "text-gray-600 group-hover:text-gray-900"
                       }`}>
