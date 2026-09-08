@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles, Clock, RotateCcw } from "lucide-react";
+import { Camera, Loader2, RefreshCw, CheckCircle2, ImageIcon, MousePointerClick, Check, Sparkles, Clock, RotateCcw, X, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
 import { getApiUrl } from "@/lib/api";
@@ -26,6 +26,7 @@ export default function SessionStartedPage() {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [sessionState, setSessionState] = useState<'initializing' | 'ready' | 'capturing' | 'review' | 'done'>('initializing');
   const [showFramePreviewModal, setShowFramePreviewModal] = useState<boolean>(false);
+  const [zoomedPhotoIndex, setZoomedPhotoIndex] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
@@ -536,17 +537,23 @@ export default function SessionStartedPage() {
               return (
                 <div key={i} className={`flex flex-col border bg-white p-3 relative h-max transition-all rounded-2xl shadow-sm ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/20 shadow-md" : "border-gray-200/80"}`}>
                   
-                  {/* WADAH GAMBAR JEPRETAN DIPERBESAR */}
+                  {/* WADAH GAMBAR JEPRETAN DIPERBESAR (SENTUH UNTUK ZOOM) */}
                   <div 
-                    onClick={() => photo && toggleSelection(i)} 
-                    className={`w-full aspect-[4/3] overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded-xl ${
+                    onClick={() => photo && setZoomedPhotoIndex(i)} 
+                    className={`w-full aspect-[4/3] overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded-xl group ${
                       isSelected ? "border-[#4A4A4A]" : "border-gray-200 bg-gray-50 hover:opacity-95"
                     }`}
                   >
                     {photo ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photo} className="w-full h-full object-cover scale-x-[-1]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
+                        <img src={photo} className="w-full h-full object-cover scale-x-[-1] transition-transform duration-300 group-hover:scale-[1.03]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
+                        
+                        {/* Zoom Hint Badge */}
+                        <div className="absolute bottom-2.5 right-2.5 bg-black/60 backdrop-blur text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 z-10 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <ZoomIn size={11} /> ZOOM
+                        </div>
+
                         {isSelected && (
                           <div className="absolute inset-0 bg-black/15 flex items-center justify-center animate-in fade-in duration-200">
                             <div className="bg-[#4A4A4A] text-white w-12 h-12 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-in zoom-in-50 duration-300">
@@ -621,6 +628,85 @@ export default function SessionStartedPage() {
           )}
         </div>
       </div>
+
+      {/* MODAL ZOOM FOTO INDIVIDUAL (POP-OUT SAAT FOTO DISENTUH/DIKLIK) */}
+      {zoomedPhotoIndex !== null && photos[zoomedPhotoIndex] && (
+        <div 
+          onClick={() => setZoomedPhotoIndex(null)}
+          className="fixed inset-0 z-[110] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="bg-white rounded-3xl shadow-2xl border border-white/20 p-5 md:p-6 max-w-2xl w-full flex flex-col items-center gap-4 relative animate-in zoom-in-95 duration-200 cursor-default"
+          >
+            {/* Header Modal Zoom */}
+            <div className="w-full flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="bg-[#4A4A4A] text-white text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                  FOTO #{zoomedPhotoIndex + 1}
+                </span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider hidden sm:inline">
+                  Pratinjau Hasil Jepretan
+                </span>
+              </div>
+              
+              <button
+                onClick={() => setZoomedPhotoIndex(null)}
+                className="w-9 h-9 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full flex items-center justify-center transition-all cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Gambar Foto Zoomed High Quality */}
+            <div className="relative w-full max-h-[60vh] aspect-[4/3] bg-black rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={photos[zoomedPhotoIndex]} 
+                alt={`Zoomed Shot ${zoomedPhotoIndex + 1}`} 
+                className="w-full h-full object-contain scale-x-[-1]"
+              />
+            </div>
+
+            {/* Controls / Action Buttons inside Zoom Modal */}
+            <div className="flex gap-3 w-full pt-1">
+              <Button
+                onClick={() => {
+                  toggleSelection(zoomedPhotoIndex);
+                }}
+                disabled={sessionState !== "review"}
+                className={`flex-1 h-12 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  selectedIndices.includes(zoomedPhotoIndex)
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    : "bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
+                }`}
+              >
+                <CheckCircle2 size={18} className={selectedIndices.includes(zoomedPhotoIndex) ? "text-white" : "text-gray-400"} />
+                <span>
+                  {selectedIndices.includes(zoomedPhotoIndex) 
+                    ? `TERPILIH (#${selectedIndices.indexOf(zoomedPhotoIndex) + 1})` 
+                    : "PILIH FOTO INI"}
+                </span>
+              </Button>
+
+              <Button
+                onClick={() => {
+                  const idx = zoomedPhotoIndex;
+                  setZoomedPhotoIndex(null);
+                  handleRetakeSpecific(idx);
+                }}
+                disabled={sessionState !== "review"}
+                variant="outline"
+                className="h-12 px-5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+              >
+                <RefreshCw size={16} />
+                <span>RETAKE</span>
+              </Button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* MODAL TRANSISI PRATINJAU BINGKAI FOTO (MUNCUL SAAT USER KLIK SUDAH FIX) */}
       {showFramePreviewModal && (
