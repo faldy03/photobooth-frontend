@@ -507,18 +507,18 @@ export default function SessionStartedPage() {
         </div>
       )}
 
-      {/* KANAN: GRID FOTO HASIL DSLR (DIPERBESAR) */}
-      <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col rounded-xl overflow-hidden">
-        <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-3 border-b border-[#4A4A4A]/10 shrink-0">
+      {/* KANAN: GRID FOTO HASIL DSLR (GRID 2-KOLOM COMPACT & PROPORSIOANL) */}
+      <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 bg-white border border-[#4A4A4A]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col rounded-xl overflow-hidden">
+        <div className="bg-[#FAF9F6] text-[#4A4A4A] text-center py-2.5 border-b border-[#4A4A4A]/10 shrink-0">
           <h3 
-            className="font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-1.5"
+            className="font-normal uppercase tracking-[0.1em] text-xs md:text-sm flex items-center justify-center gap-1.5"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
             Pilihan Jepretan
           </h3>
         </div>
-        <div className="flex-1 bg-[#FAF9F6] p-4 flex flex-col min-h-0 overflow-hidden">
-          <div className="text-[11px] font-bold uppercase text-[#7A7A7A] mb-3 text-center bg-white border border-[#4A4A4A]/10 p-2.5 rounded-xl shrink-0 shadow-sm">
+        <div className="flex-1 bg-[#FAF9F6] p-3 flex flex-col min-h-0 overflow-hidden">
+          <div className="text-[10px] font-bold uppercase text-[#7A7A7A] mb-2.5 text-center bg-white border border-[#4A4A4A]/10 p-2 rounded-xl shrink-0 shadow-xs">
             {sessionState === "review" ? (
               <span className="flex items-center justify-center gap-1 text-[#4A4A4A]">
                 Pilih {requiredSelections} Foto Terbaik Anda
@@ -528,19 +528,19 @@ export default function SessionStartedPage() {
             )}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 w-full flex-1 overflow-y-auto pr-1 pb-4 content-start">
+          <div className="grid grid-cols-2 gap-2.5 w-full flex-1 overflow-y-auto pr-1 pb-2 content-start">
             {Array.from({ length: settings.max_photos_taken }).map((_, i) => {
               const photo = photos[i];
               const selectionOrder = selectedIndices.indexOf(i) + 1;
               const isSelected = selectionOrder > 0;
 
               return (
-                <div key={i} className={`flex flex-col border bg-white p-3 relative h-max transition-all rounded-2xl shadow-sm ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/20 shadow-md" : "border-gray-200/80"}`}>
+                <div key={i} className={`flex flex-col border bg-white p-2 relative h-max transition-all rounded-xl shadow-xs ${isSelected ? "border-[#4A4A4A] ring-2 ring-[#4A4A4A]/20 shadow-sm" : "border-gray-200/80"}`}>
                   
-                  {/* WADAH GAMBAR JEPRETAN DIPERBESAR (SENTUH UNTUK ZOOM) */}
+                  {/* WADAH GAMBAR JEPRETAN (SENTUH UNTUK ZOOM POP-OUT) */}
                   <div 
                     onClick={() => photo && setZoomedPhotoIndex(i)} 
-                    className={`w-full aspect-[4/3] overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded-xl group ${
+                    className={`w-full aspect-[4/3] overflow-hidden border relative flex items-center justify-center cursor-pointer transition-all rounded-lg group ${
                       isSelected ? "border-[#4A4A4A]" : "border-gray-200 bg-gray-50 hover:opacity-95"
                     }`}
                   >
@@ -550,54 +550,54 @@ export default function SessionStartedPage() {
                         <img src={photo} className="w-full h-full object-cover scale-x-[-1] transition-transform duration-300 group-hover:scale-[1.03]" alt={`Shot ${i + 1}`} crossOrigin="anonymous" />
                         
                         {/* Zoom Hint Badge */}
-                        <div className="absolute bottom-2.5 right-2.5 bg-black/60 backdrop-blur text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 z-10 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <ZoomIn size={11} /> ZOOM
+                        <div className="absolute bottom-1.5 right-1.5 bg-black/60 backdrop-blur text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 z-10 opacity-75 group-hover:opacity-100 transition-opacity">
+                          <ZoomIn size={9} /> ZOOM
                         </div>
 
                         {isSelected && (
                           <div className="absolute inset-0 bg-black/15 flex items-center justify-center animate-in fade-in duration-200">
-                            <div className="bg-[#4A4A4A] text-white w-12 h-12 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-in zoom-in-50 duration-300">
-                              <Check size={26} strokeWidth={4} />
+                            <div className="bg-[#4A4A4A] text-white w-9 h-9 flex items-center justify-center rounded-full border-2 border-white shadow-md animate-in zoom-in-50 duration-300">
+                              <Check size={20} strokeWidth={4} />
                             </div>
-                            <div className="absolute top-2.5 right-2.5 bg-[#4A4A4A] text-white font-bold px-2.5 py-1 rounded-md text-[9px] tracking-wider shadow">
-                              URUTAN #{selectionOrder}
+                            <div className="absolute top-1.5 right-1.5 bg-[#4A4A4A] text-white font-bold px-1.5 py-0.5 rounded text-[8px] tracking-wider shadow-xs">
+                              #{selectionOrder}
                             </div>
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100/70 rounded-xl text-gray-400 gap-1">
-                        <ImageIcon className="opacity-40" size={32} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Menunggu Jepretan</span>
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100/70 rounded-lg text-gray-400 gap-0.5">
+                        <ImageIcon className="opacity-40" size={24} />
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-gray-400">Kosong</span>
                       </div>
                     )}
-                    <div className="absolute top-2.5 left-2.5 bg-[#4A4A4A]/90 text-white font-bold px-2.5 py-0.5 text-[9px] rounded-md z-10 shadow-sm">
-                      FOTO #{i + 1}
+                    <div className="absolute top-1.5 left-1.5 bg-[#4A4A4A]/90 text-white font-bold px-1.5 py-0.5 text-[8px] rounded z-10 shadow-xs">
+                      #{i + 1}
                     </div>
                   </div>
 
-                  {/* DUA TOMBOL AKSI: CEKLIS (PILIH) & RETAKE */}
-                  <div className="flex gap-2 mt-3">
+                  {/* DUA TOMBOL AKSI RINGKAS: CEKLIS (PILIH) & RETAKE */}
+                  <div className="flex gap-1.5 mt-2">
                     <Button
                       onClick={() => toggleSelection(i)}
                       disabled={sessionState !== "review" || !photo}
-                      className={`flex-1 h-11 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`flex-1 h-9 text-[10px] font-extrabold uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                         isSelected
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                           : "bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
                       }`}
                     >
-                      <CheckCircle2 size={16} className={isSelected ? "text-white" : "text-gray-400"} />
-                      <span>{isSelected ? `TERPILIH (#${selectionOrder})` : "PILIH FOTO"}</span>
+                      <CheckCircle2 size={13} className={isSelected ? "text-white" : "text-gray-400"} />
+                      <span>{isSelected ? `#${selectionOrder}` : "PILIH"}</span>
                     </Button>
 
                     <Button
                       onClick={(e) => { e.stopPropagation(); handleRetakeSpecific(i); }}
                       disabled={sessionState !== "review"}
                       variant="outline"
-                      className="h-11 px-4 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                      className="h-9 px-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40"
                     >
-                      <RefreshCw size={14} />
+                      <RefreshCw size={12} />
                       <span>RETAKE</span>
                     </Button>
                   </div>
@@ -608,10 +608,10 @@ export default function SessionStartedPage() {
           </div>
           
           {sessionState === "review" && (
-            <div className="mt-2 shrink-0 space-y-3 pt-3 border-t border-[#4A4A4A]/10">
-              <div className="flex justify-between items-center px-1 font-bold uppercase text-xs text-[#7A7A7A]">
-                <span>Total Foto Terpilih:</span>
-                <span className="text-[#4A4A4A] font-bold bg-[#FAF9F6] px-3 py-1 border border-[#4A4A4A]/10 rounded-lg text-xs">
+            <div className="mt-2 shrink-0 space-y-2.5 pt-2.5 border-t border-[#4A4A4A]/10">
+              <div className="flex justify-between items-center px-1 font-bold uppercase text-[11px] text-[#7A7A7A]">
+                <span>Terpilih:</span>
+                <span className="text-[#4A4A4A] font-bold bg-[#FAF9F6] px-2.5 py-0.5 border border-[#4A4A4A]/10 rounded-lg text-[11px]">
                   {selectedIndices.length} / {requiredSelections}
                 </span>
               </div>
@@ -619,10 +619,10 @@ export default function SessionStartedPage() {
               <Button 
                 onClick={() => setShowFramePreviewModal(true)} 
                 disabled={selectedIndices.length < requiredSelections}
-                className="w-full h-14 bg-[#FF0000] hover:bg-[#D90000] text-white font-extrabold text-xs tracking-widest uppercase rounded-xl shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full h-12 bg-[#FF0000] hover:bg-[#D90000] text-white font-extrabold text-xs tracking-widest uppercase rounded-xl shadow-md shadow-red-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer border-none disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>SUDAH FIX / LIHAT BINGKAI</span>
-                <Sparkles size={18} />
+                <Sparkles size={16} />
               </Button>
             </div>
           )}
